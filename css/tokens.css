@@ -48,6 +48,20 @@
   --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
   --cp-succes: #2F6B4F;       /* confirmations (vert plus soutenu que la sauge) */
   --cp-succes-pale: #D9E6D5;
+  --cp-succes-texte: #1F5A3F;  /* texte sur --cp-succes-pale : 6,3:1 */
+
+  /* ----- Interactions (étape 3 : composants) ----- */
+  --cp-foret-survol: #1B2E28;     /* bouton principal survolé : 15:1 avec du blanc */
+  --cp-foret-actif: #14231E;      /* bouton principal enfoncé */
+  --cp-fond-survol: #E9EEE4;      /* fond d'un élément discret survolé */
+  --cp-bordure-champ: #7C9187;    /* contour des champs : 3,4:1 sur blanc (minimum WCAG 3:1) */
+  --cp-placeholder: #6B7973;      /* texte indicatif : 4,6:1 sur blanc */
+  --cp-desactive-fond: #E6E9E1;
+  --cp-desactive-texte: #66726B;
+  --cp-terre-survol: #7F3525;     /* bouton danger survolé */
+  --cp-info: #2B5560;             /* information : bleu-vert sourd, 6,7:1 sur son fond pâle */
+  --cp-info-pale: #DDEBEA;
+  --cp-focus: #243D35;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
 
   /* ----- Typographie ----- */
   --cp-police-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

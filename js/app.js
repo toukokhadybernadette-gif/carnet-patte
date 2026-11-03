@@ -14,11 +14,13 @@ import { compterEnRetard } from '../modules/animaux/rappels.js';
 import { ajouterExemples } from '../modules/animaux/exemples.js';
 import { rendre as rendreDonnees } from './donnees.js';
 import { rendre as rendreBientot, MODULES_A_VENIR } from './bientot.js';
+import { rendre as rendreComposants } from '../modules/composants/composants.js';
 
 // ----- Routes -----
 route('animaux', rendreAnimaux);
 route('donnees', rendreDonnees);
 route('bientot', rendreBientot);
+route('composants', rendreComposants); // page de référence du design, pas dans le menu
 
 // ----- Premier lancement : quelques animaux d'exemple -----
 if (!storage.exemplesDejaAjoutes()) ajouterExemples();
