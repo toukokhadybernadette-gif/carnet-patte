@@ -65,8 +65,8 @@ textarea { min-height: 80px; resize: vertical; }
   font-size: .8rem; font-weight: 600;
   background: var(--vert-pale); color: var(--vert-fonce);
 }
-.pastille.retard { background: var(--rouge-pale); color: var(--rouge); }
-.pastille.semaine { background: var(--orange-pale); color: var(--orange); }
+.pastille.retard { background: var(--rouge-pale); color: var(--cp-terre, #8f3320); } /* teintes plus foncées : contraste ≥ 4,5:1 */
+.pastille.semaine { background: var(--orange-pale); color: var(--cp-ambre, #7a4f0a); }
 .pastille.plus-tard { background: var(--vert-pale); color: var(--vert-fonce); }
 .pastille.fait { background: #eee; color: var(--gris); }
 .pastille .ic { margin-right: 4px; vertical-align: -2px; }
