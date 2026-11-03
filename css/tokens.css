@@ -109,7 +109,7 @@
   --cp-bp-tablette: 600px;
   --cp-bp-ordinateur: 1024px;   /* (indicatif : les media queries ne lisent pas les variables) */
   --cp-cible-tactile: 44px;     /* taille minimale d'un bouton au doigt */
-  --cp-largeur-barre: 260px;
+  --cp-largeur-barre: 280px;
   --cp-largeur-barre-reduite: 76px;
   --cp-hauteur-barre-bas: 68px;
   --cp-hauteur-barre-haut: 64px;

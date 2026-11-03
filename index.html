@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#4f8a6e">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F5F0">
   <title>Carnet Patte</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23243D35'%20stroke-width='1.75'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='11'%20cy='4'%20r='2'/%3E%3Ccircle%20cx='18'%20cy='8'%20r='2'/%3E%3Ccircle%20cx='20'%20cy='16'%20r='2'/%3E%3Cpath%20d='M9%2010a5%205%200%200%201%205%205v3.5a3.5%203.5%200%200%201-6.84%201.045Q6.52%2017.48%204.46%2016.84A3.5%203.5%200%200%201%205.5%2010Z'/%3E%3C/svg%3E">
 
@@ -12,18 +12,26 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/composants.css">
+  <link rel="stylesheet" href="css/navigation.css">
+  <link rel="stylesheet" href="css/pages.css">
   <!-- Un fichier de styles par module -->
   <link rel="stylesheet" href="modules/animaux/animaux.css">
 </head>
 <body>
-  <header class="entete-mobile"><svg class="ic" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg> Carnet Patte</header>
+  <button type="button" class="app-evitement" id="evitement">Aller au contenu</button>
 
-  <!-- Le menu est construit par js/app.js -->
-  <nav class="menu" id="menu" aria-label="Navigation principale"></nav>
+  <div class="app" id="app">
+    <!-- Barre latérale (tablette et ordinateur), barre du haut et barre du bas sont construites par js/navigation.js -->
+    <aside class="app-lateral cp" id="barre-laterale" aria-label="Menu latéral"></aside>
+    <header class="app-haut cp" id="barre-haut"></header>
 
-  <!-- Chaque page vient s'afficher ici -->
-  <main class="contenu" id="contenu"></main>
+    <!-- Chaque page vient s'afficher ici -->
+    <main class="contenu" id="contenu" tabindex="-1"></main>
 
+    <nav class="app-nav-bas cp" id="nav-bas" aria-label="Navigation principale"></nav>
+  </div>
+
+  <div class="cp-sr" id="annonce-page" role="status" aria-live="polite"></div>
   <div id="toasts" aria-live="polite"></div>
 
   <script type="module" src="js/app.js"></script>

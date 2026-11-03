@@ -1,4 +1,5 @@
-// Navigation entre les pages grâce à l'adresse (#/animaux, #/animaux/rappels, #/donnees...).
+// Navigation entre les pages grâce à l'adresse (#/accueil, #/animaux, #/animaux/rappels, #/donnees...).
+// Sans adresse, on arrive sur l'Accueil.
 // Chaque module déclare sa route avec route('nom', fonction).
 // La fonction reçoit : la zone où afficher la page, et le reste de l'adresse (ex. l'id d'un animal).
 
@@ -20,7 +21,7 @@ export function segments() {
 export function rafraichir() {
   const seg = segments();
   if (!seg.length) {
-    location.replace('#/animaux');
+    location.replace('#/accueil');
     return;
   }
   // Chaque affichage reçoit un conteneur neuf : les écouteurs de clic de l'ancienne page disparaissent avec lui
