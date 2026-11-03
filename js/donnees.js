@@ -68,7 +68,7 @@ export function rendre(zone) {
       toast('Données importées');
       location.hash = '#/animaux';
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     }
   });
 }

@@ -75,7 +75,7 @@ export function formulaireAnimal(animal, apres) {
         photo = await redimensionnerPhoto(fichier);
         majApercu();
       } catch (err) {
-        toast(err.message);
+        toast(err.message, 'erreur');
       }
     });
     dlg.querySelector('[data-retirer]').addEventListener('click', () => { photo = ''; majApercu(); });

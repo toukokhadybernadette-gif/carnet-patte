@@ -211,6 +211,13 @@ export function notifier(message, { type = 'succes', duree } = {}) {
   el.setAttribute('role', type === 'erreur' ? 'alert' : 'status');
   el.innerHTML = `${icone(nomIcone, { taille: 20 })}<span class="cp-notif__texte">${echapper(message)}</span>
     <button type="button" class="cp-notif__fermer" aria-label="Fermer la notification">${icone('x', { taille: 16 })}</button>`;
+  // Si une fenêtre modale est ouverte, elle masque le reste de la page : la notification doit s'afficher dans elle
+  const modaleOuverte = [...document.querySelectorAll('dialog[open]')].pop();
+  const parent = modaleOuverte ?? document.body;
+  if (zoneNotifs.parentElement !== parent) {
+    parent.append(zoneNotifs);
+    if (modaleOuverte) modaleOuverte.addEventListener('close', () => { if (zoneNotifs.parentElement === modaleOuverte) document.body.append(zoneNotifs); }, { once: true });
+  }
   zoneNotifs.append(el);
   const fermer = () => el.remove();
   el.querySelector('button').addEventListener('click', fermer);
@@ -241,6 +248,11 @@ export function ouvrirModale({ titre, contenu = '', pied = '', ouvert, icone: ic
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
   dlg.showModal();
   if (ouvert) ouvert(dlg);
+  // Focus : sur écran tactile on ne fait rien (le clavier virtuel ne doit pas s'ouvrir tout seul) ;
+  // sinon le premier champ du formulaire, plutôt que la croix de fermeture choisie par défaut par le navigateur.
+  if (!dlg.contains(dlg.querySelector('[autofocus]')) && !matchMedia('(pointer: coarse)').matches) {
+    dlg.querySelector('.cp-modale__corps :is(input:not([type=hidden],[type=file]), select, textarea)')?.focus();
+  }
   return dlg;
 }
 
@@ -260,6 +272,7 @@ export function confirmer({ titre, message, libelle = 'Confirmer', danger = true
              ${bouton({ texte: libelle, variante: danger ? 'danger' : 'principal', attrs: { 'data-oui': true } })}`,
       ouvert: (d) => {
         d.querySelector('[data-non]').addEventListener('click', () => d.close());
+        d.querySelector('[data-non]').focus(); // le choix sans danger est sélectionné d'office
         d.querySelector('[data-oui]').addEventListener('click', async (e) => {
           const b = e.currentTarget;
           if (b.getAttribute('aria-busy') === 'true') return; // déjà en cours : on ignore le deuxième clic

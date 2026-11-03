@@ -290,6 +290,18 @@ a.cp-carte:hover, .cp-carte--interactive:hover { box-shadow: var(--cp-ombre-m); 
 .cp-modale__corps p { margin: 0 0 var(--cp-espace-3); }
 .cp-modale__pied { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3); padding: var(--cp-espace-4) var(--cp-espace-5) var(--cp-espace-5); }
 .cp-modale__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: var(--cp-terre-pale); color: var(--cp-terre); margin-bottom: var(--cp-espace-3); }
+/* Sans pied de fenêtre, le corps peut occuper toute la hauteur disponible */
+.cp-modale__corps:last-child { max-height: calc(100dvh - 120px); padding-bottom: var(--cp-espace-5); }
+/* Le fond ne défile pas derrière une fenêtre ouverte */
+body:has(dialog[open]) { overflow: hidden; }
+/* Mobile : la fenêtre se pose en bas de l'écran (feuille), à portée du pouce */
+@media (max-width: 599px) {
+  .cp-modale { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: var(--cp-rayon-carte) var(--cp-rayon-carte) 0 0; max-height: calc(100dvh - 24px); padding-bottom: env(safe-area-inset-bottom); }
+  .cp-modale[open] { animation-name: cp-feuille; }
+  .cp-modale__pied { flex-direction: column-reverse; }
+  .cp-modale__pied .cp-btn { width: 100%; }
+}
+@keyframes cp-feuille { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
 
 @keyframes cp-apparition { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes cp-fondu { from { opacity: 0; } to { opacity: 1; } }
