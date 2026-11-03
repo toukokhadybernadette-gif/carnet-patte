@@ -1,0 +1,110 @@
+/* ===== Jetons de design Carnet Patte (étape 1 de la refonte) =====
+   Ce fichier DÉFINIT les polices et les variables de la nouvelle identité.
+   Il n'est pas encore utilisé par les pages : l'apparence actuelle ne change pas.
+   Les anciennes variables (--vert, --creme…) restent dans base.css jusqu'à la migration.
+   Toutes les nouvelles variables commencent par --cp- pour ne rien mélanger. */
+
+/* ----- Polices hébergées dans le projet (licence SIL OFL 1.1, voir assets/fonts/*-OFL.txt) -----
+   Un navigateur ne télécharge une police que si elle est réellement utilisée par la page. */
+@font-face {
+  font-family: "Manrope";
+  src: url("../assets/fonts/manrope-latin-wght.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/inter-latin-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* ----- Palette officielle ----- */
+  --cp-foret: #243D35;        /* texte, titres, boutons principaux, barre latérale */
+  --cp-sauge: #A8BFA5;        /* bordures, séparateurs, illustrations */
+  --cp-fond: #F6F5F0;         /* fond de l'application (blanc cassé) */
+  --cp-vert-clair: #D9E6D5;   /* sélections, badges calmes */
+  --cp-beige: #D7A879;        /* accents uniquement : jamais en texte sur fond clair (contraste 1,97) */
+  --cp-carte: #FFFFFF;        /* fond des cartes */
+
+  /* ----- Texte (contrastes mesurés WCAG) ----- */
+  --cp-texte: #243D35;        /* 10,7:1 sur --cp-fond */
+  --cp-texte-doux: #5B6B63;   /* 5,2:1 sur --cp-fond */
+  --cp-texte-inverse: #FFFFFF;/* 11,7:1 sur --cp-foret */
+
+  /* ----- Bordures ----- */
+  --cp-bordure: #DDE5D8;      /* discrète, dérivée du vert clair */
+  --cp-bordure-forte: #A8BFA5;
+
+  /* ----- États fonctionnels (alertes) : terre cuite et ambre, harmonisés avec la palette ----- */
+  --cp-terre: #9A4330;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
+  --cp-terre-pale: #F6E3DC;   /* fond du badge : texte --cp-terre dessus = 5,3:1 */
+  --cp-ambre: #7A4F0F;        /* texte « bientôt », attention : 6,5:1 sur --cp-fond */
+  --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
+  --cp-succes: #2F6B4F;       /* confirmations (vert plus soutenu que la sauge) */
+  --cp-succes-pale: #D9E6D5;
+
+  /* ----- Typographie ----- */
+  --cp-police-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cp-police-texte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cp-graisse-titre: 700;
+  --cp-graisse-texte: 400;
+  --cp-graisse-bouton: 500;   /* Inter Medium */
+
+  --cp-taille-xs: .8125rem;   /* 13 px */
+  --cp-taille-s: .875rem;     /* 14 px */
+  --cp-taille-m: 1rem;        /* 16 px */
+  --cp-taille-l: 1.25rem;     /* 20 px */
+  --cp-taille-xl: 1.625rem;   /* 26 px */
+  --cp-taille-xxl: 2.125rem;  /* 34 px */
+  --cp-interligne: 1.5;
+  --cp-interligne-titre: 1.2;
+
+  /* ----- Formes ----- */
+  --cp-rayon-carte: 20px;     /* cartes : 18 à 24 px */
+  --cp-rayon-bouton: 14px;    /* boutons : 12 à 16 px */
+  --cp-rayon-champ: 12px;     /* champs de formulaire */
+  --cp-rayon-pastille: 999px;
+
+  /* ----- Ombres très légères ----- */
+  --cp-ombre-s: 0 1px 2px rgba(36, 61, 53, .06);
+  --cp-ombre-m: 0 4px 16px rgba(36, 61, 53, .08);
+  --cp-ombre-l: 0 12px 32px rgba(36, 61, 53, .12);
+
+  /* ----- Espacements (échelle de 4 px) ----- */
+  --cp-espace-1: 4px;
+  --cp-espace-2: 8px;
+  --cp-espace-3: 12px;
+  --cp-espace-4: 16px;
+  --cp-espace-5: 24px;
+  --cp-espace-6: 32px;
+  --cp-espace-7: 48px;
+  --cp-espace-8: 64px;
+
+  /* ----- Mouvement ----- */
+  --cp-duree-rapide: 150ms;
+  --cp-duree: 220ms;
+  --cp-courbe: cubic-bezier(.2, .7, .2, 1);
+
+  /* ----- Mise en page ----- */
+  --cp-bp-tablette: 600px;
+  --cp-bp-ordinateur: 1024px;   /* (indicatif : les media queries ne lisent pas les variables) */
+  --cp-cible-tactile: 44px;     /* taille minimale d'un bouton au doigt */
+  --cp-largeur-barre: 260px;
+  --cp-largeur-barre-reduite: 76px;
+  --cp-hauteur-barre-bas: 68px;
+  --cp-hauteur-barre-haut: 64px;
+}
+
+/* Respect de la préférence « réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cp-duree-rapide: 0ms;
+    --cp-duree: 0ms;
+  }
+}
