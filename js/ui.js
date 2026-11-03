@@ -1,6 +1,7 @@
 // Éléments d'interface partagés : fenêtres modales, confirmation, messages.
 
 import { echapper } from './utils.js';
+import { icone } from './icons.js';
 
 /**
  * Ouvre une fenêtre modale. `ouvert(dialog)` est appelé une fois le contenu affiché,
@@ -12,7 +13,7 @@ export function modale(titre, contenuHtml, ouvert) {
   dlg.innerHTML = `
     <div class="modale-tete">
       <h2>${echapper(titre)}</h2>
-      <button type="button" class="fermer" aria-label="Fermer">✕</button>
+      <button type="button" class="fermer" aria-label="Fermer">${icone('x', { taille: 20 })}</button>
     </div>
     <div class="modale-corps">${contenuHtml}</div>`;
   document.body.append(dlg);

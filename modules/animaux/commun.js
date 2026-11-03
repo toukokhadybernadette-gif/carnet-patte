@@ -3,27 +3,28 @@
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, joursEntre, ajouterMois, formatDate } from '../../js/utils.js';
 import { modale, toast } from '../../js/ui.js';
+import { icone } from '../../js/icons.js';
 
 // ----- Espèces proposées dans le formulaire -----
 export const ESPECES = [
-  { id: 'chien', nom: 'Chien', emoji: '🐕' },
-  { id: 'chat', nom: 'Chat', emoji: '🐈' },
-  { id: 'lapin', nom: 'Lapin', emoji: '🐇' },
-  { id: 'cochon-inde', nom: "Cochon d'Inde", emoji: '🐹' },
-  { id: 'hamster', nom: 'Hamster', emoji: '🐹' },
-  { id: 'furet', nom: 'Furet', emoji: '🦦' },
-  { id: 'oiseau', nom: 'Oiseau', emoji: '🐦' },
-  { id: 'poule', nom: 'Poule', emoji: '🐔' },
-  { id: 'canard', nom: 'Canard', emoji: '🦆' },
-  { id: 'chevre', nom: 'Chèvre', emoji: '🐐' },
-  { id: 'mouton', nom: 'Mouton', emoji: '🐑' },
-  { id: 'cheval', nom: 'Cheval', emoji: '🐴' },
-  { id: 'ane', nom: 'Âne', emoji: '🐴' },
-  { id: 'vache', nom: 'Vache', emoji: '🐄' },
-  { id: 'cochon', nom: 'Cochon', emoji: '🐖' },
-  { id: 'tortue', nom: 'Tortue', emoji: '🐢' },
-  { id: 'poisson', nom: 'Poisson', emoji: '🐟' },
-  { id: 'autre', nom: 'Autre', emoji: '🐾' },
+  { id: 'chien', nom: 'Chien', icone: 'dog' },
+  { id: 'chat', nom: 'Chat', icone: 'cat' },
+  { id: 'lapin', nom: 'Lapin', icone: 'rabbit' },
+  { id: 'cochon-inde', nom: "Cochon d'Inde", icone: 'rat' },
+  { id: 'hamster', nom: 'Hamster', icone: 'rat' },
+  { id: 'furet', nom: 'Furet', icone: 'paw-print' },
+  { id: 'oiseau', nom: 'Oiseau', icone: 'bird' },
+  { id: 'poule', nom: 'Poule', icone: 'bird' },
+  { id: 'canard', nom: 'Canard', icone: 'bird' },
+  { id: 'chevre', nom: 'Chèvre', icone: 'paw-print' },
+  { id: 'mouton', nom: 'Mouton', icone: 'paw-print' },
+  { id: 'cheval', nom: 'Cheval', icone: 'paw-print' },
+  { id: 'ane', nom: 'Âne', icone: 'paw-print' },
+  { id: 'vache', nom: 'Vache', icone: 'paw-print' },
+  { id: 'cochon', nom: 'Cochon', icone: 'paw-print' },
+  { id: 'tortue', nom: 'Tortue', icone: 'turtle' },
+  { id: 'poisson', nom: 'Poisson', icone: 'fish' },
+  { id: 'autre', nom: 'Autre', icone: 'paw-print' },
 ];
 
 export function infosEspece(animal) {
@@ -36,22 +37,22 @@ export function nomEspece(animal) {
   return infosEspece(animal).nom;
 }
 
-/** Photo de l'animal, ou à défaut l'emoji de son espèce. */
+/** Photo de l'animal, ou à défaut l'icône de son espèce. */
 export function avatarHtml(animal, classe = '') {
   const photo = animal.photo;
   if (typeof photo === 'string' && photo.startsWith('data:image/')) {
     return `<img class="avatar ${classe}" src="${echapper(photo)}" alt="">`;
   }
-  return `<div class="avatar ${classe}" aria-hidden="true">${infosEspece(animal).emoji}</div>`;
+  return `<div class="avatar ${classe}" aria-hidden="true">${icone(infosEspece(animal).icone, { taille: classe.includes('grand') ? 44 : 30 })}</div>`;
 }
 
 // ----- Types de soins -----
 export const TYPES_SOIN = [
-  { id: 'vaccin', nom: 'Vaccin', emoji: '💉' },
-  { id: 'vermifuge', nom: 'Vermifuge', emoji: '💊' },
-  { id: 'antiparasitaire', nom: 'Antiparasitaire', emoji: '🪲' },
-  { id: 'veto', nom: 'Visite véto', emoji: '🩺' },
-  { id: 'autre', nom: 'Autre soin', emoji: '🩹' },
+  { id: 'vaccin', nom: 'Vaccin', icone: 'syringe' },
+  { id: 'vermifuge', nom: 'Vermifuge', icone: 'pill' },
+  { id: 'antiparasitaire', nom: 'Antiparasitaire', icone: 'bug' },
+  { id: 'veto', nom: 'Visite véto', icone: 'stethoscope' },
+  { id: 'autre', nom: 'Autre soin', icone: 'bandage' },
 ];
 
 export function infosType(id) {
@@ -99,7 +100,7 @@ export function ouvrirRappelFait(soin, apres) {
       <p class="discret">Le soin sera noté comme effectué aujourd'hui.</p>
       <div class="actions">
         <button type="button" class="bouton secondaire" data-annuler>Annuler</button>
-        <button type="submit" class="bouton">✓ C'est fait</button>
+        <button type="submit" class="bouton">${icone('check', { taille: 18 })} C'est fait</button>
       </div>
     </form>`;
   modale('Rappel effectué', html, (dlg) => {

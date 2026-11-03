@@ -7,6 +7,7 @@
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
+import { icone } from '../../js/icons.js';
 import { rafraichir } from '../../js/router.js';
 import { ESPECES, avatarHtml, nomEspece } from './commun.js';
 import { calculerRappels, resumeRappelsHtml, rendre as rendreRappels } from './rappels.js';
@@ -26,14 +27,14 @@ export function formulaireAnimal(animal, apres) {
   let photo = a.photo || '';
 
   const options = ESPECES.map((e) =>
-    `<option value="${e.id}" ${e.id === a.espece ? 'selected' : ''}>${e.emoji} ${e.nom}</option>`).join('');
+    `<option value="${e.id}" ${e.id === a.espece ? 'selected' : ''}>${e.nom}</option>`).join('');
 
   const html = `
     <form class="formulaire">
       <div class="photo-champ">
         <div data-apercu></div>
         <div class="photo-boutons">
-          <label class="bouton secondaire petit">📷 Choisir une photo
+          <label class="bouton secondaire petit">${icone('camera', { taille: 18 })} Choisir une photo
             <input type="file" accept="image/*" hidden data-fichier>
           </label>
           <button type="button" class="bouton lien" data-retirer>Retirer la photo</button>
@@ -116,7 +117,7 @@ function carteHtml(animal, rappelsEnRetard) {
         <strong>${echapper(animal.nom)}</strong>
         <span class="discret">${detail}</span>
         <span class="discret">${animal.naissance ? age(animal.naissance) : 'Âge inconnu'}</span>
-        ${retard ? `<span><span class="pastille retard">🔔 ${retard} rappel${retard > 1 ? 's' : ''} en retard</span></span>` : ''}
+        ${retard ? `<span><span class="pastille retard">${icone('bell-ring', { taille: 14 })} ${retard} rappel${retard > 1 ? 's' : ''} en retard</span></span>` : ''}
       </div>
     </a>`;
 }
@@ -134,19 +135,19 @@ function rendreListe(zone) {
   zone.innerHTML = `
     <div class="page-titre">
       <h1>Mes animaux</h1>
-      <button class="bouton" data-act="ajouter">＋ Ajouter un animal</button>
+      <button class="bouton" data-act="ajouter">${icone('plus', { taille: 18 })} Ajouter un animal</button>
     </div>
     ${resumeRappelsHtml()}
     ${aDesExemples ? `
       <div class="bandeau-exemples">
-        <span>👋 Les animaux marqués « exemple » servent à découvrir l'appli.</span>
+        <span class="avec-icone">${icone('info', { taille: 18 })} Les animaux marqués « exemple » servent à découvrir l'appli.</span>
         <button class="bouton secondaire petit" data-act="effacer-exemples">Supprimer les exemples</button>
       </div>` : ''}
     ${animaux.length
       ? `<div class="grille-animaux">${animaux.map((a) => carteHtml(a, enRetard)).join('')}</div>`
-      : `<div class="carte vide"><span class="grand-emoji">🐾</span>
+      : `<div class="carte vide"><span class="grand-icone">${icone('paw-print', { taille: 44 })}</span>
            Aucun animal pour l'instant.<br><br>
-           <button class="bouton" data-act="ajouter">＋ Ajouter mon premier animal</button><br><br>
+           <button class="bouton" data-act="ajouter">${icone('plus', { taille: 18 })} Ajouter mon premier animal</button><br><br>
            <button class="bouton lien" data-act="remettre-exemples">Remettre les animaux d'exemple</button>
          </div>`}`;
 

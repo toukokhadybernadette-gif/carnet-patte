@@ -42,7 +42,8 @@
   text-align: center; color: var(--gris);
   padding: 28px 12px;
 }
-.vide .grand-emoji { font-size: 2.6rem; display: block; margin-bottom: 6px; }
+.vide .grand-icone { display: block; margin-bottom: 8px; color: var(--vert); }
+.vide .grand-icone .ic { margin: 0 auto; }
 
 /* --- Formulaires --- */
 .formulaire { display: grid; gap: 14px; }
@@ -68,6 +69,7 @@ textarea { min-height: 80px; resize: vertical; }
 .pastille.semaine { background: var(--orange-pale); color: var(--orange); }
 .pastille.plus-tard { background: var(--vert-pale); color: var(--vert-fonce); }
 .pastille.fait { background: #eee; color: var(--gris); }
+.pastille .ic { margin-right: 4px; vertical-align: -2px; }
 
 /* --- Listes en lignes (soins, pesées, rappels) --- */
 .lignes { list-style: none; margin: 0; padding: 0; }
@@ -77,7 +79,7 @@ textarea { min-height: 80px; resize: vertical; }
   border-top: 1px solid var(--bordure);
 }
 .ligne:first-child { border-top: none; }
-.ligne-icone { font-size: 1.5rem; line-height: 1.2; }
+.ligne-icone { color: var(--vert-fonce); line-height: 1; padding-top: 2px; }
 .ligne-corps { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .ligne-corps .notes { overflow-wrap: anywhere; }
 .ligne-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
@@ -98,6 +100,7 @@ dialog.modale::backdrop { background: rgba(30, 25, 15, .45); }
 .modale-tete .fermer {
   border: none; background: none; font-size: 1.2rem; cursor: pointer;
   width: 40px; height: 40px; border-radius: 50%; color: var(--gris);
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .modale-tete .fermer:hover { background: var(--creme); }
 .modale-corps { padding: 20px; overflow-y: auto; max-height: calc(100dvh - 110px); }
@@ -115,3 +118,12 @@ dialog.modale::backdrop { background: rgba(30, 25, 15, .45); }
   font-size: .95rem; box-shadow: var(--ombre);
 }
 @media (min-width: 800px) { #toasts { bottom: 24px; left: 250px; } }
+
+/* --- Icônes SVG (jeu Lucide, voir js/icons.js) --- */
+.ic { display: inline-block; flex: none; vertical-align: middle; }
+.titre-icone { display: flex; align-items: center; gap: 8px; }
+.avec-icone { display: inline-flex; align-items: center; gap: 6px; }
+.icone-retard .ic { color: var(--rouge); }
+.icone-semaine .ic { color: var(--orange); }
+.icone-plus-tard .ic { color: var(--vert-fonce); }
+.formulaire label.bouton { display: inline-flex; font-weight: 600; }

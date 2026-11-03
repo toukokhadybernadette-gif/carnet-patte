@@ -2,12 +2,13 @@
 // Quand un module sera prêt, on le déplace de MODULES_A_VENIR vers le menu (js/app.js).
 
 import { echapper } from './utils.js';
+import { icone } from './icons.js';
 
 export const MODULES_A_VENIR = [
-  { id: 'toxique', icone: '☠️', titre: 'Toxique ?', texte: 'Vérifier si un aliment ou une plante est dangereux selon l\'espèce.' },
-  { id: 'ferme', icone: '🐔', titre: 'Basse-cour / ferme', texte: 'Suivi de la ponte, de l\'alimentation et des soins du troupeau.' },
-  { id: 'perdus-trouves', icone: '🔎', titre: 'Perdus / trouvés', texte: 'Signaler un animal perdu ou trouvé. Nécessitera un compte et une base en ligne.' },
-  { id: 'refuges', icone: '🏠', titre: 'Aide aux refuges', texte: 'Soutenir les refuges près de chez vous. Nécessitera un compte et une base en ligne.' },
+  { id: 'toxique', icone: 'shield-alert', titre: 'Toxique ?', texte: 'Vérifier si un aliment ou une plante est dangereux selon l\'espèce.' },
+  { id: 'ferme', icone: 'wheat', titre: 'Basse-cour / ferme', texte: 'Suivi de la ponte, de l\'alimentation et des soins du troupeau.' },
+  { id: 'perdus-trouves', icone: 'search', titre: 'Perdus / trouvés', texte: 'Signaler un animal perdu ou trouvé. Nécessitera un compte et une base en ligne.' },
+  { id: 'refuges', icone: 'house-heart', titre: 'Aide aux refuges', texte: 'Soutenir les refuges près de chez vous. Nécessitera un compte et une base en ligne.' },
 ];
 
 export function rendre(zone, segments) {
@@ -18,7 +19,7 @@ export function rendre(zone, segments) {
     <div class="liste-modules">
       ${MODULES_A_VENIR.map((m) => `
         <section class="carte" ${m.id === cible ? 'style="border-color:var(--vert);"' : ''}>
-          <span class="grand-emoji">${m.icone}</span>
+          <span class="grand-icone">${icone(m.icone, { taille: 32 })}</span>
           <h2>${echapper(m.titre)}</h2>
           <p class="discret">${echapper(m.texte)}</p>
           <span class="pastille semaine">Bientôt</span>

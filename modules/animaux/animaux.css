@@ -1,15 +1,15 @@
 /* Styles propres au module « animaux » */
 
-/* --- Avatar (photo ou emoji) --- */
+/* --- Avatar (photo ou icône de l'espèce) --- */
 .avatar {
   width: 64px; height: 64px; flex: none;
   border-radius: 50%;
   object-fit: cover;
   background: var(--vert-pale);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2rem;
+  color: var(--vert-fonce);
 }
-.avatar.grand { width: 96px; height: 96px; font-size: 3rem; }
+.avatar.grand { width: 96px; height: 96px; }
 
 /* --- Liste des animaux --- */
 .grille-animaux {
@@ -77,5 +77,5 @@
 /* --- Pages « Sauvegarde » et « Bientôt » --- */
 .liste-modules { display: grid; gap: var(--espace); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .liste-modules .carte { margin-bottom: 0; }
-.liste-modules .grand-emoji { font-size: 2rem; }
+.liste-modules .grand-icone { display: block; color: var(--vert); margin-bottom: 4px; }
 .zone-boutons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }

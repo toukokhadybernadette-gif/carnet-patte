@@ -3,6 +3,7 @@
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, formatDate, formatPoids, lireISO } from '../../js/utils.js';
 import { confirmer, toast } from '../../js/ui.js';
+import { icone } from '../../js/icons.js';
 
 /** Construit le graphique SVG. `pesees` doit être triée par date croissante. */
 export function graphiqueSvg(pesees) {
@@ -56,19 +57,19 @@ function ligneHtml(pesee, precedente) {
   if (precedente) {
     const diff = Math.round((pesee.poidsKg - precedente.poidsKg) * 1000) / 1000;
     if (diff !== 0) {
-      variation = `<span class="discret">${diff > 0 ? '▲ +' : '▼ '}${diff.toLocaleString('fr-FR')} kg</span>`;
+      variation = `<span class="discret avec-icone">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 14 })}${diff > 0 ? '+' : ''}${diff.toLocaleString('fr-FR')} kg</span>`;
     }
   }
   return `
     <li class="ligne">
-      <div class="ligne-icone">⚖️</div>
+      <div class="ligne-icone">${icone('scale', { taille: 22 })}</div>
       <div class="ligne-corps">
         <strong>${formatPoids(pesee.poidsKg)}</strong>
         <span class="discret">${formatDate(pesee.date)}</span>
       </div>
       <div class="ligne-actions">
         ${variation}
-        <button class="bouton secondaire petit icone" data-supprimer="${pesee.id}" aria-label="Supprimer la pesée">🗑</button>
+        <button class="bouton secondaire petit icone" data-supprimer="${pesee.id}" aria-label="Supprimer la pesée">${icone('trash-2', { taille: 16 })}</button>
       </div>
     </li>`;
 }
@@ -98,7 +99,7 @@ export function rendre(zone, animal) {
     <form class="formulaire form-pesee">
       <label>Date <input type="date" name="date" required value="${aujourdhui()}" max="${aujourdhui()}"></label>
       <label>Poids (kg) <input type="number" name="poids" required min="0.001" max="2000" step="0.001" inputmode="decimal" placeholder="Ex. : 4,2"></label>
-      <button type="submit" class="bouton">＋ Ajouter</button>
+      <button type="submit" class="bouton">${icone('plus', { taille: 18 })} Ajouter</button>
     </form>
     <div class="zone-graphique">${graphique}</div>
     ${pesees.length ? `<ul class="lignes">${liste}</ul>` : ''}`;

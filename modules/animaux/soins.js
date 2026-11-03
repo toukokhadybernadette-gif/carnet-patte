@@ -3,12 +3,13 @@
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, formatDate } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
+import { icone } from '../../js/icons.js';
 import { TYPES_SOIN, infosType, statutRappel, ouvrirRappelFait } from './commun.js';
 
 function formulaireSoin(animal, soin, apres) {
   const s = soin ?? { type: 'vaccin', titre: '', date: aujourdhui(), notes: '', rappel: '' };
   const options = TYPES_SOIN.map((t) =>
-    `<option value="${t.id}" ${t.id === s.type ? 'selected' : ''}>${t.emoji} ${t.nom}</option>`).join('');
+    `<option value="${t.id}" ${t.id === s.type ? 'selected' : ''}>${t.nom}</option>`).join('');
 
   const html = `
     <form class="formulaire">
@@ -60,14 +61,14 @@ function ligneHtml(soin) {
 
   let rappel = '';
   if (statut) {
-    rappel = `<span><span class="pastille ${statut.classe}">🔔 Rappel le ${formatDate(soin.rappel)} · ${statut.texte}</span></span>`;
+    rappel = `<span><span class="pastille ${statut.classe}">${icone('bell-ring', { taille: 14 })} Rappel le ${formatDate(soin.rappel)} · ${statut.texte}</span></span>`;
   } else if (soin.rappel) {
-    rappel = `<span><span class="pastille fait">✓ Rappel du ${formatDate(soin.rappel)} traité</span></span>`;
+    rappel = `<span><span class="pastille fait">${icone('check', { taille: 14 })} Rappel du ${formatDate(soin.rappel)} traité</span></span>`;
   }
 
   return `
     <li class="ligne">
-      <div class="ligne-icone">${type.emoji}</div>
+      <div class="ligne-icone">${icone(type.icone, { taille: 22 })}</div>
       <div class="ligne-corps">
         <strong>${echapper(titre)}</strong>
         <span class="discret">${formatDate(soin.date)}</span>
@@ -75,9 +76,9 @@ function ligneHtml(soin) {
         ${rappel}
       </div>
       <div class="ligne-actions">
-        ${statut ? `<button class="bouton petit" data-act="fait" data-id="${soin.id}">✓ Fait</button>` : ''}
-        <button class="bouton secondaire petit icone" data-act="modifier" data-id="${soin.id}" aria-label="Modifier">✎</button>
-        <button class="bouton secondaire petit icone" data-act="supprimer" data-id="${soin.id}" aria-label="Supprimer">🗑</button>
+        ${statut ? `<button class="bouton petit" data-act="fait" data-id="${soin.id}">${icone('check', { taille: 16 })} Fait</button>` : ''}
+        <button class="bouton secondaire petit icone" data-act="modifier" data-id="${soin.id}" aria-label="Modifier">${icone('pencil', { taille: 16 })}</button>
+        <button class="bouton secondaire petit icone" data-act="supprimer" data-id="${soin.id}" aria-label="Supprimer">${icone('trash-2', { taille: 16 })}</button>
       </div>
     </li>`;
 }
@@ -97,7 +98,7 @@ export function rendre(zone, animal) {
   section.innerHTML = `
     <div class="page-titre">
       <h2>Soins</h2>
-      <button class="bouton petit" data-act="ajouter">＋ Ajouter un soin</button>
+      <button class="bouton petit" data-act="ajouter">${icone('plus', { taille: 18 })} Ajouter un soin</button>
     </div>
     ${soins.length
       ? `<ul class="lignes">${soins.map(ligneHtml).join('')}</ul>`

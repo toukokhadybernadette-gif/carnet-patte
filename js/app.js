@@ -8,6 +8,7 @@
 import * as storage from './storage.js';
 import { route, demarrer } from './router.js';
 import { echapper } from './utils.js';
+import { icone } from './icons.js';
 import { rendre as rendreAnimaux } from '../modules/animaux/animaux.js';
 import { compterEnRetard } from '../modules/animaux/rappels.js';
 import { ajouterExemples } from '../modules/animaux/exemples.js';
@@ -25,22 +26,22 @@ if (!storage.exemplesDejaAjoutes()) ajouterExemples();
 // ----- Menu -----
 // `actif(seg)` dit si l'entrée est la page courante. `rappels: true` ajoute la pastille de rappels en retard.
 const MENU = [
-  { href: '#/animaux', icone: '🐾', titre: 'Mes animaux', actif: (s) => s[0] === 'animaux' && s[1] !== 'rappels' },
-  { href: '#/animaux/rappels', icone: '🔔', titre: 'Rappels', actif: (s) => s[0] === 'animaux' && s[1] === 'rappels', rappels: true },
+  { href: '#/animaux', icone: 'paw-print', titre: 'Mes animaux', actif: (s) => s[0] === 'animaux' && s[1] !== 'rappels' },
+  { href: '#/animaux/rappels', icone: 'bell', titre: 'Rappels', actif: (s) => s[0] === 'animaux' && s[1] === 'rappels', rappels: true },
   // Sur téléphone : un seul bouton « Bientôt »
-  { href: '#/bientot', icone: '🧭', titre: 'Bientôt', actif: (s) => s[0] === 'bientot', classe: 'mobile-seulement' },
+  { href: '#/bientot', icone: 'compass', titre: 'Bientôt', actif: (s) => s[0] === 'bientot', classe: 'mobile-seulement' },
   // Sur ordinateur : un lien par module à venir
   ...MODULES_A_VENIR.map((m) => ({
     href: `#/bientot/${m.id}`, icone: m.icone, titre: m.titre,
     actif: (s) => s[0] === 'bientot' && s[1] === m.id, classe: 'desktop-seulement', groupe: 'Bientôt',
   })),
-  { href: '#/donnees', icone: '💾', titre: 'Sauvegarde', actif: (s) => s[0] === 'donnees', groupe: 'Données' },
+  { href: '#/donnees', icone: 'save', titre: 'Sauvegarde', actif: (s) => s[0] === 'donnees', groupe: 'Données' },
 ];
 
 const menu = document.getElementById('menu');
 
 function construireMenu() {
-  let html = '<div class="marque">🐾 Carnet Patte</div><ul>';
+  let html = `<div class="marque">${icone('paw-print', { taille: 26 })} Carnet Patte</div><ul>`;
   let groupeCourant = null;
   MENU.forEach((item, i) => {
     if (item.groupe && item.groupe !== groupeCourant) {
@@ -48,7 +49,7 @@ function construireMenu() {
     }
     groupeCourant = item.groupe ?? null;
     html += `<li class="${item.classe ?? ''}">
-      <a href="${item.href}" data-i="${i}"><span class="icone">${item.icone}</span><span>${echapper(item.titre)}</span>
+      <a href="${item.href}" data-i="${i}"><span class="icone">${icone(item.icone, { taille: 22 })}</span><span>${echapper(item.titre)}</span>
       ${item.rappels ? '<span class="pastille-nav" hidden></span>' : ''}</a></li>`;
   });
   menu.innerHTML = html + '</ul>';

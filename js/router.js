@@ -2,6 +2,8 @@
 // Chaque module déclare sa route avec route('nom', fonction).
 // La fonction reçoit : la zone où afficher la page, et le reste de l'adresse (ex. l'id d'un animal).
 
+import { icone } from './icons.js';
+
 const routes = {};
 let zoneContenu = null;
 let apresAffichage = null;
@@ -28,7 +30,7 @@ export function rafraichir() {
   if (affichage) {
     affichage(page, seg.slice(1));
   } else {
-    page.innerHTML = '<div class="vide"><span class="grand-emoji">🤔</span>Page introuvable.</div>';
+    page.innerHTML = `<div class="vide"><span class="grand-icone">${icone('circle-help', { taille: 44 })}</span>Page introuvable.</div>`;
   }
   if (apresAffichage) apresAffichage(seg);
 }

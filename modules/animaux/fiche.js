@@ -4,6 +4,7 @@ import * as storage from '../../js/storage.js';
 import { echapper, age, formatDate } from '../../js/utils.js';
 import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
+import { icone } from '../../js/icons.js';
 import { avatarHtml, nomEspece } from './commun.js';
 import { formulaireAnimal } from './animaux.js';
 import * as soins from './soins.js';
@@ -13,7 +14,7 @@ export function rendre(zone, id) {
   const animal = storage.trouver('animaux', id);
   if (!animal) {
     zone.innerHTML = `
-      <div class="carte vide"><span class="grand-emoji">🤔</span>
+      <div class="carte vide"><span class="grand-icone">${icone('circle-help', { taille: 44 })}</span>
         Cet animal n'existe pas (ou plus).<br><br>
         <a class="bouton" href="#/animaux">Retour à mes animaux</a>
       </div>`;
@@ -26,7 +27,7 @@ export function rendre(zone, id) {
     : 'Date de naissance inconnue';
 
   zone.innerHTML = `
-    <p><a href="#/animaux">← Mes animaux</a></p>
+    <p><a class="avec-icone" href="#/animaux">${icone('arrow-left', { taille: 18 })} Mes animaux</a></p>
     <section class="carte fiche-entete">
       ${avatarHtml(animal, 'grand')}
       <div class="fiche-infos">
@@ -34,8 +35,8 @@ export function rendre(zone, id) {
         <p>${details}</p>
         <p class="discret">${naissance}</p>
         <div class="actions" style="justify-content:flex-start">
-          <button class="bouton secondaire petit" data-act="modifier">✎ Modifier</button>
-          <button class="bouton secondaire petit" data-act="supprimer">🗑 Supprimer</button>
+          <button class="bouton secondaire petit" data-act="modifier">${icone('pencil', { taille: 16 })} Modifier</button>
+          <button class="bouton secondaire petit" data-act="supprimer">${icone('trash-2', { taille: 16 })} Supprimer</button>
         </div>
       </div>
     </section>

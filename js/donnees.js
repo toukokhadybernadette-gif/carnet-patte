@@ -4,6 +4,7 @@ import * as storage from './storage.js';
 import { aujourdhui } from './utils.js';
 import { confirmer, toast } from './ui.js';
 import { rafraichir } from './router.js';
+import { icone } from './icons.js';
 
 export function rendre(zone) {
   zone.innerHTML = `
@@ -16,13 +17,13 @@ export function rendre(zone) {
     </section>
 
     <section class="carte">
-      <h2>⬇️ Exporter</h2>
+      <h2 class="titre-icone">${icone('download')} Exporter</h2>
       <p>Télécharge un fichier avec tous vos animaux, soins et pesées.</p>
       <div class="zone-boutons"><button class="bouton" data-act="exporter">Télécharger ma sauvegarde</button></div>
     </section>
 
     <section class="carte">
-      <h2>⬆️ Importer</h2>
+      <h2 class="titre-icone">${icone('upload')} Importer</h2>
       <p>Charge un fichier d'export. <strong>Attention : cela remplace toutes les données actuelles.</strong></p>
       <div class="zone-boutons">
         <label class="bouton secondaire">Choisir un fichier…
@@ -32,7 +33,7 @@ export function rendre(zone) {
     </section>
 
     <section class="carte">
-      <h2>🗑 Tout effacer</h2>
+      <h2 class="titre-icone">${icone('trash-2')} Tout effacer</h2>
       <p>Supprime définitivement tous les animaux, soins et pesées de cet appareil.</p>
       <div class="zone-boutons"><button class="bouton danger" data-act="effacer">Tout effacer</button></div>
     </section>`;

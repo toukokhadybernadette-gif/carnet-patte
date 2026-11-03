@@ -6,6 +6,7 @@
   background: var(--vert); color: #fff;
   padding: 12px var(--espace);
   font-weight: 700; font-size: 1.1rem;
+  display: flex; align-items: center; gap: 8px;
 }
 
 .menu {
@@ -27,7 +28,7 @@
   gap: 2px;
   font-size: .75rem; text-decoration: none; color: var(--gris);
 }
-.menu a .icone { font-size: 1.4rem; line-height: 1; }
+.menu a .icone { display: flex; line-height: 1; }
 .menu a.actif { color: var(--vert-fonce); font-weight: 700; }
 .menu .pastille-nav {
   position: absolute; top: 6px; left: calc(50% + 8px);
@@ -60,6 +61,7 @@
     display: block;
     font-size: 1.3rem; font-weight: 800; color: var(--vert-fonce);
     padding: 4px 10px 18px;
+    display: flex; align-items: center; gap: 8px;
   }
   .menu .titre-groupe {
     display: block;
