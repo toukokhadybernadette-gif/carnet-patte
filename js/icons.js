@@ -6,6 +6,7 @@
 // Sans `titre`, l'icône est décorative (cachée aux lecteurs d'écran) : le texte voisin suffit.
 
 import { echapper } from './utils.js';
+import { ICONES_ESPECES } from './icons-especes.js';
 
 const ICONES = {
   'arrow-down': '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
@@ -78,9 +79,10 @@ const ICONES = {
 /** Épaisseur du trait : 1,75 pour un rendu fin et élégant (Lucide utilise 2 par défaut). */
 const EPAISSEUR = 1.75;
 
-/** Retourne le code HTML (<svg>) de l'icône demandée. Une icône inconnue donne la patte (jamais de trou dans l'interface). */
+/** Retourne le code HTML (<svg>) de l'icône demandée : d'abord Lucide, puis les icônes d'espèces sur mesure (js/icons-especes.js).
+ *  Une icône inconnue donne la patte (jamais de trou dans l'interface). */
 export function icone(nom, { taille = 20, classe = '', titre = '' } = {}) {
-  const contenu = ICONES[nom] ?? ICONES['paw-print'];
+  const contenu = ICONES[nom] ?? ICONES_ESPECES[nom] ?? ICONES['paw-print'];
   const accessibilite = titre
     ? `role="img" aria-label="${echapper(titre)}"`
     : 'aria-hidden="true" focusable="false"';

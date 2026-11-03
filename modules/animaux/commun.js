@@ -6,22 +6,25 @@ import { modale, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 
 // ----- Espèces proposées dans le formulaire -----
+// `icone` : nom d'une icône Lucide (js/icons.js) ou d'une icône sur mesure (js/icons-especes.js).
+// Pour ajouter une espèce : une ligne ici + son dessin dans js/icons-especes.js. L'espèce « Autre » (et toute espèce
+// inconnue, par exemple venue d'un fichier d'une version future) affiche la patte, symbole de Carnet Patte.
 export const ESPECES = [
   { id: 'chien', nom: 'Chien', icone: 'dog' },
   { id: 'chat', nom: 'Chat', icone: 'cat' },
   { id: 'lapin', nom: 'Lapin', icone: 'rabbit' },
-  { id: 'cochon-inde', nom: "Cochon d'Inde", icone: 'rat' },
-  { id: 'hamster', nom: 'Hamster', icone: 'rat' },
-  { id: 'furet', nom: 'Furet', icone: 'paw-print' },
+  { id: 'cochon-inde', nom: "Cochon d'Inde", icone: 'cochon-inde' },
+  { id: 'hamster', nom: 'Hamster', icone: 'hamster' },
+  { id: 'furet', nom: 'Furet', icone: 'furet' },
   { id: 'oiseau', nom: 'Oiseau', icone: 'bird' },
-  { id: 'poule', nom: 'Poule', icone: 'bird' },
-  { id: 'canard', nom: 'Canard', icone: 'bird' },
-  { id: 'chevre', nom: 'Chèvre', icone: 'paw-print' },
-  { id: 'mouton', nom: 'Mouton', icone: 'paw-print' },
-  { id: 'cheval', nom: 'Cheval', icone: 'paw-print' },
-  { id: 'ane', nom: 'Âne', icone: 'paw-print' },
-  { id: 'vache', nom: 'Vache', icone: 'paw-print' },
-  { id: 'cochon', nom: 'Cochon', icone: 'paw-print' },
+  { id: 'poule', nom: 'Poule', icone: 'poule' },
+  { id: 'canard', nom: 'Canard', icone: 'canard' },
+  { id: 'chevre', nom: 'Chèvre', icone: 'chevre' },
+  { id: 'mouton', nom: 'Mouton', icone: 'mouton' },
+  { id: 'cheval', nom: 'Cheval', icone: 'cheval' },
+  { id: 'ane', nom: 'Âne', icone: 'ane' },
+  { id: 'vache', nom: 'Vache', icone: 'vache' },
+  { id: 'cochon', nom: 'Cochon', icone: 'cochon' },
   { id: 'tortue', nom: 'Tortue', icone: 'turtle' },
   { id: 'poisson', nom: 'Poisson', icone: 'fish' },
   { id: 'autre', nom: 'Autre', icone: 'paw-print' },

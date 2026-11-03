@@ -3,6 +3,7 @@
 // Adresse : #/composants   (pas encore dans le menu : la navigation sera refaite à l'étape 4)
 
 import { icone, NOMS_ICONES } from '../../js/icons.js';
+import { NOMS_ICONES_ESPECES } from '../../js/icons-especes.js';
 import {
   bouton, badge, statut, compteur, champ, selecteur, caseACocher, interrupteur, choix, avatar,
   carteAnimal, carteStat, carteProduit, alerte, vide, squelette,
@@ -11,7 +12,7 @@ import {
 import { ESPECES } from '../animaux/commun.js';
 
 const SECTIONS = [
-  ['fondations', 'Fondations'], ['boutons', 'Boutons'], ['champs', 'Formulaires'], ['cartes', 'Cartes'],
+  ['fondations', 'Fondations'], ['especes', "Icônes d'espèces"], ['boutons', 'Boutons'], ['champs', 'Formulaires'], ['cartes', 'Cartes'],
   ['badges', 'Badges'], ['modales', 'Modales'], ['notifications', 'Notifications'], ['filtres', 'Filtres et onglets'],
   ['navigation', 'Navigation'], ['tableaux', 'Tableaux et listes'], ['chargement', 'Chargement et vide'],
 ];
@@ -66,6 +67,30 @@ function fondations() {
      ${groupe('Rayons', rayons)}
      ${groupe('Ombres (très légères)', ombres, 'cp-ref__bac--fond')}
      ${groupe(`Icônes (${NOMS_ICONES.length}, trait fin 1,75)`, `<div class="cp-ref__icones" style="width:100%">${icones}</div>`)}`);
+}
+
+function especes() {
+  const carte = (e) => {
+    const sur = NOMS_ICONES_ESPECES.includes(e.icone);
+    return `
+      <div class="cp-ref__espece">
+        <span class="cp-avatar cp-avatar--grand">${icone(e.icone, { taille: 44 })}</span>
+        <strong>${e.nom}</strong>
+        <span class="cp-ref__code">${e.id}</span>
+        <span class="cp-ref__tailles">${icone(e.icone, { taille: 16 })}${icone(e.icone, { taille: 24 })}${icone(e.icone, { taille: 32 })}</span>
+        ${badge({ texte: sur ? 'Sur mesure' : e.icone === 'paw-print' ? 'Patte (générique)' : 'Lucide', variante: sur ? 'succes' : 'neutre' })}
+      </div>`;
+  };
+  return section('especes', "Icônes d'espèces",
+    `Les ${ESPECES.length} espèces proposées : ${NOMS_ICONES_ESPECES.length} icônes dessinées sur mesure (<code>js/icons-especes.js</code>), dans le même style que Lucide, et ${ESPECES.length - NOMS_ICONES_ESPECES.length - 1} icônes Lucide. La patte, symbole de Carnet Patte, sert pour « Autre » et pour toute espèce inconnue.`,
+    `<div class="cp-ref__groupe"><h3>Planche de contact</h3><div class="cp-ref__bac cp-ref__bac--fond"><div class="cp-ref__especes">${ESPECES.map(carte).join('')}</div></div></div>
+     ${groupe('Dans leur contexte', `
+        ${cas('Pastilles de choix', choix({ nom: 'ref-esp', legende: 'Espèce', options: ESPECES.map((e) => ({ valeur: e.id, texte: e.nom, icone: e.icone })), valeur: 'cheval' }), true)}
+        ${cas("Carte d'animal", carteAnimal({ nom: 'Pomme', espece: 'Cheval', details: 'Comtois', icone: 'cheval', badges: badge({ texte: 'À jour', variante: 'succes' }) }), true)}
+        ${cas('Espèce inconnue : la patte', carteAnimal({ nom: 'Inconnu', espece: 'Espèce inconnue', icone: 'espece-qui-n-existe-pas' }), true)}`, 'cp-ref__bac--grille')}
+     <div class="cp-ref__groupe"><h3>Ajouter une espèce</h3>
+       ${alerte({ type: 'info', titre: 'Deux étapes', texte: "Dessiner l'icône dans js/icons-especes.js (grille 24 × 24, sans remplissage, trait arrondi), puis ajouter une ligne dans ESPECES (modules/animaux/commun.js) avec le même identifiant. Rien d'autre à modifier : les listes, les cartes et les avatars la prennent en compte." })}
+     </div>`);
 }
 
 function boutons() {
@@ -293,7 +318,7 @@ export function rendre(zone, segments) {
       <nav class="cp-ref__sommaire" aria-label="Sections de la page">
         ${SECTIONS.map(([id, nom]) => `<button type="button" class="cp-filtre" data-vers="cp-${id}">${nom}</button>`).join('')}
       </nav>
-      ${fondations()}${boutons()}${champs()}${cartes()}${badges()}${modales()}${notifications()}${filtres()}${navigation()}${tableaux()}${chargement()}
+      ${fondations()}${especes()}${boutons()}${champs()}${cartes()}${badges()}${modales()}${notifications()}${filtres()}${navigation()}${tableaux()}${chargement()}
     </div>`;
 
   const racine = zone.querySelector('.cp');
