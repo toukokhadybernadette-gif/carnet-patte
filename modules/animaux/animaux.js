@@ -9,8 +9,9 @@ import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.j
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { rafraichir } from '../../js/router.js';
-import { ESPECES, avatarHtml, nomEspece } from './commun.js';
-import { calculerRappels, resumeRappelsHtml, rendre as rendreRappels } from './rappels.js';
+import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres } from '../../js/composants.js';
+import { ESPECES, infosEspece, nomEspece } from './commun.js';
+import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
 import { ajouterExemples } from './exemples.js';
 
@@ -22,36 +23,58 @@ export function rendre(zone, segments) {
 
 // ----- Formulaire (ajout et modification) -----
 
+/** Photo de l'animal, ou à défaut l'icône de son espèce (grand rond du formulaire). */
+function apercuHtml(espece, photo) {
+  const contenu = typeof photo === 'string' && photo.startsWith('data:image/')
+    ? `<img src="${echapper(photo)}" alt="">`
+    : icone(infosEspece({ espece }).icone, { taille: 44 });
+  return `<span class="cp-avatar cp-avatar--grand" aria-hidden="true">${contenu}</span>`;
+}
+
+/** Affiche (ou efface, si `message` est vide) l'erreur sous un champ, reliée au champ pour les lecteurs d'écran. */
+function erreurChamp(input, message) {
+  const bloc = input.closest('.cp-champ');
+  bloc.querySelector('.cp-champ__erreur')?.remove();
+  if (!message) {
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+    return;
+  }
+  const id = `${input.id}-erreur`;
+  bloc.insertAdjacentHTML('beforeend',
+    `<p class="cp-champ__erreur" id="${id}">${icone('circle-alert', { taille: 16 })}<span>${echapper(message)}</span></p>`);
+  input.setAttribute('aria-invalid', 'true');
+  input.setAttribute('aria-describedby', id);
+}
+
 export function formulaireAnimal(animal, apres) {
   const a = animal ?? { nom: '', espece: 'chien', especeAutre: '', race: '', naissance: '', photo: '' };
   let photo = a.photo || '';
-
-  const options = ESPECES.map((e) =>
-    `<option value="${e.id}" ${e.id === a.espece ? 'selected' : ''}>${e.nom}</option>`).join('');
+  // Une espèce inconnue (fichier d'une version future) est présentée comme « Autre » plutôt que remplacée par « Chien »
+  const especeInitiale = ESPECES.some((e) => e.id === a.espece) ? a.espece : 'autre';
 
   const html = `
-    <form class="formulaire">
-      <div class="photo-champ">
+    <form class="cp-formulaire al-form" novalidate>
+      <div class="al-photo">
         <div data-apercu></div>
-        <div class="photo-boutons">
-          <label class="bouton secondaire petit">${icone('camera', { taille: 18 })} Choisir une photo
-            <input type="file" accept="image/*" hidden data-fichier>
+        <div class="al-photo__actions">
+          <label class="cp-btn cp-btn--secondaire cp-btn--s">${icone('camera', { taille: 16 })}<span>Choisir une photo</span>
+            <input type="file" accept="image/*" class="cp-sr" data-fichier>
           </label>
-          <button type="button" class="bouton lien" data-retirer>Retirer la photo</button>
+          ${bouton({ texte: 'Retirer la photo', variante: 'discret', taille: 's', attrs: { 'data-retirer': true } })}
         </div>
       </div>
-      <label>Nom <input name="nom" required maxlength="40" value="${echapper(a.nom)}"></label>
-      <label>Espèce <select name="espece">${options}</select></label>
-      <label data-champ-autre>Précisez l'espèce
-        <input name="especeAutre" maxlength="40" value="${echapper(a.especeAutre)}" placeholder="Ex. : Perroquet, Lama...">
-      </label>
-      <label>Race (facultatif) <input name="race" maxlength="60" value="${echapper(a.race)}"></label>
-      <label>Date de naissance (facultatif)
-        <input type="date" name="naissance" max="${aujourdhui()}" value="${a.naissance ?? ''}">
-      </label>
-      <div class="actions">
-        <button type="button" class="bouton secondaire" data-annuler>Annuler</button>
-        <button type="submit" class="bouton">Enregistrer</button>
+      ${champ({ id: 'animal-nom', label: 'Nom', valeur: a.nom, requis: true, attrs: { name: 'nom', maxlength: 40, autocomplete: 'off' } })}
+      ${choix({
+        nom: 'espece', legende: 'Espèce', valeur: especeInitiale, classe: 'cp-choix--especes',
+        options: ESPECES.map((e) => ({ valeur: e.id, texte: e.nom, icone: e.icone })),
+      })}
+      <div data-champ-autre>${champ({ id: 'animal-autre', label: "Précisez l'espèce", valeur: a.especeAutre ?? '', placeholder: 'Ex. : Perroquet, Lama…', attrs: { name: 'especeAutre', maxlength: 40 } })}</div>
+      ${champ({ id: 'animal-race', label: 'Race (facultatif)', valeur: a.race ?? '', attrs: { name: 'race', maxlength: 60 } })}
+      ${champ({ id: 'animal-naissance', label: 'Date de naissance (facultatif)', type: 'date', valeur: a.naissance ?? '', attrs: { name: 'naissance', max: aujourdhui() } })}
+      <div class="al-form__actions">
+        ${bouton({ texte: 'Annuler', variante: 'secondaire', attrs: { 'data-annuler': true } })}
+        ${bouton({ texte: 'Enregistrer', type: 'submit', icone: 'check' })}
       </div>
     </form>`;
 
@@ -59,17 +82,22 @@ export function formulaireAnimal(animal, apres) {
     const form = dlg.querySelector('form');
     const apercu = dlg.querySelector('[data-apercu]');
     const champAutre = dlg.querySelector('[data-champ-autre]');
+    const boutonRetirer = dlg.querySelector('[data-retirer]');
 
     const majApercu = () => {
-      apercu.innerHTML = avatarHtml({ espece: form.espece.value, photo }, 'grand');
+      apercu.innerHTML = apercuHtml(form.espece.value, photo);
+      boutonRetirer.hidden = !photo;
     };
     const majAutre = () => { champAutre.hidden = form.espece.value !== 'autre'; };
     majApercu(); majAutre();
 
-    form.espece.addEventListener('change', () => { majApercu(); majAutre(); });
+    // Les pastilles d'espèce sont des boutons radio : on écoute le formulaire entier
+    form.addEventListener('change', (e) => { if (e.target.name === 'espece') { majApercu(); majAutre(); } });
+    form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
 
     dlg.querySelector('[data-fichier]').addEventListener('change', async (e) => {
       const fichier = e.target.files[0];
+      e.target.value = ''; // permet de rechoisir la même photo après l'avoir retirée
       if (!fichier) return;
       try {
         photo = await redimensionnerPhoto(fichier);
@@ -78,7 +106,7 @@ export function formulaireAnimal(animal, apres) {
         toast(err.message, 'erreur');
       }
     });
-    dlg.querySelector('[data-retirer]').addEventListener('click', () => { photo = ''; majApercu(); });
+    boutonRetirer.addEventListener('click', () => { photo = ''; majApercu(); });
     dlg.querySelector('[data-annuler]').addEventListener('click', () => dlg.close());
 
     form.addEventListener('submit', (e) => {
@@ -92,7 +120,16 @@ export function formulaireAnimal(animal, apres) {
         naissance: f.get('naissance') || '',
         photo,
       };
-      if (!champs.nom) return;
+      // Vérifications, avec un message clair sous chaque champ concerné
+      const problemes = [];
+      if (!champs.nom) problemes.push([form.nom, 'Indiquez le nom de votre animal.']);
+      if (champs.naissance && champs.naissance > aujourdhui()) problemes.push([form.naissance, 'La date de naissance ne peut pas être dans le futur.']);
+      form.querySelectorAll('[aria-invalid]').forEach((c) => erreurChamp(c, ''));
+      if (problemes.length) {
+        problemes.forEach(([c, m]) => erreurChamp(c, m));
+        problemes[0][0].focus();
+        return;
+      }
       if (animal) {
         storage.modifier('animaux', animal.id, champs);
       } else {
@@ -107,54 +144,164 @@ export function formulaireAnimal(animal, apres) {
 
 // ----- Liste -----
 
-function carteHtml(animal, rappelsEnRetard) {
-  const retard = rappelsEnRetard.get(animal.id) ?? 0;
-  const detail = [nomEspece(animal), animal.race].filter(Boolean).map(echapper).join(' · ');
+const SEUIL_RECHERCHE = 8; // en dessous, la recherche de la barre du haut suffit
+const sansAccents = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+
+function carteHtml(animal, rappels) {
+  const retard = rappels.filter((r) => r.statut.classe === 'retard').length;
+  const semaine = rappels.filter((r) => r.statut.classe === 'semaine').length;
+  let badges = '';
+  if (retard) badges = badge({ texte: `${pluriel(retard, 'rappel')} en retard`, variante: 'alerte', icone: 'bell-ring' });
+  else if (semaine) badges = badge({ texte: `${pluriel(semaine, 'rappel')} cette semaine`, variante: 'attention', icone: 'bell' });
+  return carteAnimal({
+    nom: animal.nom,
+    espece: nomEspece(animal),
+    details: [animal.race, animal.naissance ? age(animal.naissance) : 'Âge inconnu'].filter(Boolean).join(' · '),
+    icone: infosEspece(animal).icone,
+    photo: typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '',
+    badges,
+    href: `#/animaux/${encodeURIComponent(animal.id)}`,
+  });
+}
+
+/** Résumé des rappels : un seul bloc, cliquable, vers la page Rappels. */
+function resumeHtml(rappels) {
+  if (!rappels.length) return '';
+  const retard = rappels.filter((r) => r.statut.classe === 'retard').length;
+  const semaine = rappels.filter((r) => r.statut.classe === 'semaine').length;
+  const variante = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' };
+  const lignes = rappels.slice(0, 3).map((r) => `
+    <li>${badge({ texte: r.statut.texte, variante: variante[r.statut.classe] })}
+      <span>${echapper([r.soin.titre || '', r.animal.nom].filter(Boolean).join(' · '))}</span></li>`).join('');
   return `
-    <a class="carte carte-animal" href="#/animaux/${encodeURIComponent(animal.id)}">
-      ${avatarHtml(animal)}
-      <div class="carte-animal-texte">
-        <strong>${echapper(animal.nom)}</strong>
-        <span class="discret">${detail}</span>
-        <span class="discret">${animal.naissance ? age(animal.naissance) : 'Âge inconnu'}</span>
-        ${retard ? `<span><span class="pastille retard">${icone('bell-ring', { taille: 14 })} ${retard} rappel${retard > 1 ? 's' : ''} en retard</span></span>` : ''}
+    <a class="cp-carte al-rappels${retard ? ' al-rappels--retard' : ''}" href="#/animaux/rappels">
+      <span class="al-rappels__icone">${icone(retard ? 'bell-ring' : 'bell', { taille: 22 })}</span>
+      <div class="al-rappels__corps">
+        <strong class="al-rappels__titre">${pluriel(rappels.length, 'rappel')} à venir</strong>
+        <span class="al-rappels__sous">${retard ? `${retard} en retard · ` : ''}${semaine} cette semaine</span>
+        <ul>${lignes}</ul>
       </div>
+      <span class="al-rappels__lien">Voir les rappels ${icone('chevron-right', { taille: 18 })}</span>
     </a>`;
 }
 
 function rendreListe(zone) {
+  zone.classList.add('page-large');
   const animaux = storage.lister('animaux').sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
-  const enRetard = new Map();
-  for (const r of calculerRappels()) {
-    if (r.statut.classe === 'retard') enRetard.set(r.animal.id, (enRetard.get(r.animal.id) ?? 0) + 1);
+  const rappelsParAnimal = new Map();
+  const rappels = calculerRappels();
+  for (const r of rappels) {
+    if (!rappelsParAnimal.has(r.animal.id)) rappelsParAnimal.set(r.animal.id, []);
+    rappelsParAnimal.get(r.animal.id).push(r);
   }
 
   const aDesExemples = animaux.some((a) => a.exemple);
 
-  zone.innerHTML = `
-    <div class="page-titre">
-      <h1>Mes animaux</h1>
-      <button class="bouton" data-act="ajouter">${icone('plus', { taille: 18 })} Ajouter un animal</button>
+  // Espèces présentes (une espèce inconnue est regroupée avec « Autre »), dans l'ordre habituel des espèces
+  const compteurs = new Map();
+  for (const a of animaux) compteurs.set(infosEspece(a).id, (compteurs.get(infosEspece(a).id) ?? 0) + 1);
+  const especesPresentes = ESPECES.filter((e) => compteurs.has(e.id));
+
+  const enteteHtml = `
+    <header class="pg-entete al-entete">
+      <div>
+        <h1>Mes animaux</h1>
+        <p>${animaux.length === 0 ? 'Le carnet de santé de vos compagnons, au même endroit.' : animaux.length === 1 ? '1 animal suivi' : `${animaux.length} animaux suivis`}</p>
+      </div>
+      ${animaux.length ? bouton({ texte: 'Ajouter un animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } }) : ''}
+    </header>`;
+
+  const videHtml = vide({
+    niveau: 2,
+    icone: 'paw-print',
+    titre: "Aucun animal pour l'instant",
+    texte: 'Ajoutez votre premier compagnon pour suivre ses soins, ses pesées et ses rappels.',
+    action: `${bouton({ texte: 'Ajouter mon premier animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } })}
+             ${bouton({ texte: "Remettre les animaux d'exemple", variante: 'discret', attrs: { 'data-act': 'remettre-exemples' } })}`,
+  });
+
+  const outilsHtml = `
+    <div class="al-outils">
+      ${animaux.length >= SEUIL_RECHERCHE ? `
+        <div class="cp-champ__zone al-recherche">${icone('search', { taille: 20 })}
+          <input type="search" class="cp-input" id="liste-recherche" placeholder="Rechercher par nom, espèce ou race" aria-label="Rechercher un animal dans la liste" autocomplete="off">
+        </div>` : ''}
+      ${especesPresentes.length > 1 ? `
+        <div class="cp-filtres" role="group" aria-label="Filtrer par espèce">
+          ${especesPresentes.map((e) => `
+            <button type="button" class="cp-filtre" aria-pressed="false" data-valeur="${e.id}">
+              ${icone(e.icone, { taille: 18 })}${echapper(e.nom)} <span class="cp-filtre__nombre">${compteurs.get(e.id)}</span>
+            </button>`).join('')}
+        </div>` : ''}
+      <p class="al-resultat" data-resultat role="status" hidden></p>
+    </div>`;
+
+  const grilleHtml = `
+    <div class="pg-animaux al-grille" data-grille>
+      ${animaux.map((a) => carteHtml(a, rappelsParAnimal.get(a.id) ?? [])
+        .replace('<a ', `<a data-espece="${infosEspece(a).id}" data-recherche="${echapper(sansAccents([a.nom, nomEspece(a), a.race].join(' ')))}" `)).join('')}
     </div>
-    ${resumeRappelsHtml()}
-    ${aDesExemples ? `
-      <div class="bandeau-exemples">
-        <span class="avec-icone">${icone('info', { taille: 18 })} Les animaux marqués « exemple » servent à découvrir l'appli.</span>
-        <button class="bouton secondaire petit" data-act="effacer-exemples">Supprimer les exemples</button>
-      </div>` : ''}
-    ${animaux.length
-      ? `<div class="grille-animaux">${animaux.map((a) => carteHtml(a, enRetard)).join('')}</div>`
-      : `<div class="carte vide"><span class="grand-icone">${icone('paw-print', { taille: 44 })}</span>
-           Aucun animal pour l'instant.<br><br>
-           <button class="bouton" data-act="ajouter">${icone('plus', { taille: 18 })} Ajouter mon premier animal</button><br><br>
-           <button class="bouton lien" data-act="remettre-exemples">Remettre les animaux d'exemple</button>
-         </div>`}`;
+    <div class="al-aucun" data-aucun hidden>${vide({
+      niveau: 2, icone: 'search', titre: 'Aucun animal ne correspond',
+      texte: 'Essayez une autre recherche ou retirez un filtre.',
+      action: bouton({ texte: 'Tout afficher', variante: 'secondaire', attrs: { 'data-act': 'reinitialiser' } }),
+    })}</div>`;
+
+  zone.innerHTML = `
+    <div class="cp pg">
+      ${enteteHtml}
+      ${animaux.length ? `
+        ${resumeHtml(rappels)}
+        ${aDesExemples ? `
+          <div class="cp-alerte cp-alerte--info al-exemples">
+            ${icone('info', { taille: 20 })}
+            <div class="cp-alerte__texte">Les animaux marqués « exemple » servent à découvrir l'appli.</div>
+            ${bouton({ texte: 'Supprimer les exemples', variante: 'secondaire', taille: 's', attrs: { 'data-act': 'effacer-exemples' } })}
+          </div>` : ''}
+        ${outilsHtml}
+        ${grilleHtml}` : videHtml}
+    </div>`;
+
+  // ----- Filtres et recherche (affichage seulement : rien n'est modifié dans les données) -----
+  const grille = zone.querySelector('[data-grille]');
+  if (grille) {
+    const champRecherche = zone.querySelector('#liste-recherche');
+    const filtres = zone.querySelector('.cp-filtres');
+    const resultat = zone.querySelector('[data-resultat]');
+    const aucun = zone.querySelector('[data-aucun]');
+    const cartes = [...grille.children];
+
+    const appliquer = () => {
+      const actifs = filtres ? [...filtres.querySelectorAll('[aria-pressed="true"]')].map((f) => f.dataset.valeur) : [];
+      const mot = sansAccents(champRecherche?.value.trim() ?? '');
+      let visibles = 0;
+      for (const c of cartes) {
+        const ok = (!actifs.length || actifs.includes(c.dataset.espece)) && (!mot || c.dataset.recherche.includes(mot));
+        c.hidden = !ok;
+        if (ok) visibles++;
+      }
+      const filtre = actifs.length > 0 || mot !== '';
+      aucun.hidden = visibles > 0;
+      grille.hidden = visibles === 0;
+      resultat.hidden = !filtre;
+      resultat.textContent = filtre ? `${visibles} sur ${animaux.length} animaux affichés` : '';
+    };
+    if (filtres) activerFiltres(filtres, appliquer);
+    champRecherche?.addEventListener('input', appliquer);
+    zone.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-act="reinitialiser"]')) return;
+      filtres?.querySelectorAll('[aria-pressed="true"]').forEach((f) => f.setAttribute('aria-pressed', 'false'));
+      if (champRecherche) champRecherche.value = '';
+      appliquer();
+    });
+  }
 
   zone.addEventListener('click', async (e) => {
-    const bouton = e.target.closest('[data-act]');
-    if (!bouton) return;
-    switch (bouton.dataset.act) {
+    const declencheur = e.target.closest('[data-act]');
+    if (!declencheur) return;
+    switch (declencheur.dataset.act) {
       case 'ajouter':
         formulaireAnimal(null, rafraichir);
         break;

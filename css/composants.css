@@ -191,6 +191,15 @@
 .cp-choix__option input:focus-visible + span { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
 .cp-choix__option input:disabled + span { background: var(--cp-desactive-fond); color: var(--cp-desactive-texte); border-color: transparent; cursor: not-allowed; }
 
+/* Variante « espèces » : pastilles en grille, icône au-dessus du nom (18 choix lisibles sur mobile) */
+.cp-choix--especes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 104px), 1fr)); gap: var(--cp-espace-2); }
+.cp-choix--especes legend { grid-column: 1 / -1; }
+.cp-choix--especes .cp-choix__option span {
+  flex-direction: column; justify-content: center; gap: 4px; width: 100%; min-height: 68px; padding: var(--cp-espace-2);
+  border-radius: var(--cp-rayon-champ); text-align: center; font-size: var(--cp-taille-xs); line-height: 1.25;
+}
+.cp-choix--especes .cp-choix__option .ic { width: 26px; height: 26px; }
+
 /* =========================================================
    3. CARTES
    ========================================================= */

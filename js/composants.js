@@ -104,12 +104,12 @@ export function interrupteur({ id, label, actif = false, desactive = false }) {
     <input${attributs({ type: 'checkbox', role: 'switch', id, name: id, checked: actif, disabled: desactive })}><span class="cp-interrupteur__piste" aria-hidden="true"></span></label>`;
 }
 
-/** Groupe de choix en pastilles (boutons radio). options : [{ valeur, texte, icone? }] */
-export function choix({ nom, legende, options = [], valeur = '', desactive = false }) {
+/** Groupe de choix en pastilles (boutons radio). options : [{ valeur, texte, icone? }]. `classe` : variante (ex. cp-choix--especes). */
+export function choix({ nom, legende, options = [], valeur = '', desactive = false, classe = '' }) {
   const items = options.map((o) => `
     <label class="cp-choix__option"><input${attributs({ type: 'radio', name: nom, value: o.valeur, checked: o.valeur === valeur, disabled: desactive })}>
       <span>${o.icone ? icone(o.icone, { taille: 18 }) : ''}${echapper(o.texte)}</span></label>`).join('');
-  return `<fieldset class="cp-choix"><legend>${echapper(legende)}</legend>${items}</fieldset>`;
+  return `<fieldset class="cp-choix${classe ? ` ${classe}` : ''}"><legend>${echapper(legende)}</legend>${items}</fieldset>`;
 }
 
 /** Avatar rond : photo si fournie (data:image ou URL), sinon icône. */
@@ -172,12 +172,12 @@ export function alerte({ type = 'info', titre = '', texte }) {
     </div>`;
 }
 
-/** État vide : icône, titre, texte et éventuellement un bouton (HTML déjà construit avec bouton()). */
-export function vide({ icone: nomIcone = 'paw-print', titre, texte = '', action = '' }) {
+/** État vide : icône, titre, texte et éventuellement un bouton (HTML déjà construit avec bouton()). `niveau` : niveau du titre (h2, h3…). */
+export function vide({ icone: nomIcone = 'paw-print', titre, texte = '', action = '', niveau = 3 }) {
   return `
     <div class="cp-vide">
       <span class="cp-vide__icone">${icone(nomIcone, { taille: 32 })}</span>
-      <h3 class="cp-vide__titre">${echapper(titre)}</h3>
+      <h${niveau} class="cp-vide__titre">${echapper(titre)}</h${niveau}>
       ${texte ? `<p>${echapper(texte)}</p>` : ''}
       ${action}
     </div>`;

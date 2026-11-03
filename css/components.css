@@ -4,12 +4,12 @@
 .bouton {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 44px; padding: 0 18px;
-  border: 1px solid var(--vert); border-radius: 12px;
-  background: var(--vert); color: #fff;
+  border: 1px solid var(--vert-fonce); border-radius: 12px;
+  background: var(--vert-fonce); color: #fff; /* vert foncé : 6:1 avec du blanc (le vert clair n'atteignait que 4,04:1) */
   font: inherit; font-weight: 600; text-decoration: none;
   cursor: pointer;
 }
-.bouton:hover { background: var(--vert-fonce); }
+.bouton:hover { background: var(--cp-foret, #243d35); border-color: var(--cp-foret, #243d35); }
 .bouton.secondaire { background: var(--carte); color: var(--vert-fonce); }
 .bouton.secondaire:hover { background: var(--vert-pale); }
 .bouton.danger { background: var(--rouge); border-color: var(--rouge); }

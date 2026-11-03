@@ -79,3 +79,66 @@
 .liste-modules .carte { margin-bottom: 0; }
 .liste-modules .grand-icone { display: block; color: var(--vert); margin-bottom: 4px; }
 .zone-boutons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+/* =========================================================
+   Refonte 5c : liste des animaux et formulaire (Premium naturel)
+   ========================================================= */
+
+/* En-tête de la liste */
+.al-entete { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--cp-espace-5); row-gap: var(--cp-espace-2); }
+.al-entete .cp-btn { align-self: end; }
+@media (max-width: 599px) { .al-entete { grid-template-columns: 1fr; } .al-entete .cp-btn { width: 100%; } }
+
+/* Résumé des rappels */
+a.cp-carte.al-rappels { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: start; border-left: 4px solid var(--cp-ambre); }
+a.cp-carte.al-rappels--retard { border-left-color: var(--cp-terre); }
+.al-rappels__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--cp-ambre-pale); color: var(--cp-ambre); }
+.al-rappels--retard .al-rappels__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.al-rappels__corps { display: grid; gap: 2px; min-width: 0; }
+.al-rappels__titre { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); }
+.al-rappels__sous { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.al-rappels ul { list-style: none; margin: var(--cp-espace-3) 0 0; padding: 0; display: grid; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); }
+.al-rappels li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
+.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; font-size: var(--cp-taille-s); font-weight: 500; color: var(--cp-foret); white-space: nowrap; align-self: center; }
+@media (max-width: 599px) {
+  a.cp-carte.al-rappels { grid-template-columns: auto 1fr; }
+  .al-rappels__lien { grid-column: 2; justify-self: start; }
+}
+
+/* Bandeau des exemples */
+.al-exemples { align-items: center; flex-wrap: wrap; }
+.al-exemples .cp-alerte__texte { flex: 1 1 220px; }
+
+/* Barre d'outils : recherche et filtres */
+.al-outils { display: grid; gap: var(--cp-espace-3); }
+.al-recherche { max-width: 460px; }
+.al-resultat { margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.al-resultat[hidden], .al-grille[hidden], .al-aucun[hidden], .al-grille [hidden], .al-photo [hidden] { display: none !important; }
+.cp-filtres { max-width: 100%; }
+@media (max-width: 599px) { /* sur mobile, une seule ligne défilante plutôt que 8 lignes de pastilles */
+  .al-outils .cp-filtres { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) var(--cp-espace-2); scrollbar-width: none; }
+}
+
+/* Cartes d'animaux : avatar un peu plus grand dans la liste, cartes assez larges pour les badges */
+.pg-animaux.al-grille { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.al-grille .cp-badge { white-space: normal; }
+.al-grille .cp-avatar { width: 68px; height: 68px; }
+.al-grille .cp-avatar .ic { width: 32px; height: 32px; }
+.al-grille a.cp-carte.cp-carte-animal { padding: var(--cp-espace-4) var(--cp-espace-5); }
+
+/* Formulaire */
+.al-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
+.al-photo { display: flex; align-items: center; gap: var(--cp-espace-5); }
+.al-photo__actions { display: grid; gap: var(--cp-espace-1, 4px); justify-items: start; }
+label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.al-form [hidden] { display: none !important; }
+.al-form__actions {
+  position: sticky; bottom: calc(var(--cp-espace-5) * -1); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3);
+  margin: 0 calc(var(--cp-espace-5) * -1) calc(var(--cp-espace-5) * -1); padding: var(--cp-espace-4) var(--cp-espace-5) var(--cp-espace-5);
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%); border-top: 0;
+}
+@media (max-width: 599px) {
+  .al-form__actions { flex-wrap: nowrap; }
+  .al-form__actions .cp-btn { flex: 1 1 0; }
+  .al-form__actions .cp-btn[type=submit] { flex-grow: 1.6; }
+}
