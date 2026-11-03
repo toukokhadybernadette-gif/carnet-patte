@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4f8a6e">
+  <title>Carnet Patte</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <!-- Un fichier de styles par module -->
+  <link rel="stylesheet" href="modules/animaux/animaux.css">
+</head>
+<body>
+  <header class="entete-mobile">🐾 Carnet Patte</header>
+
+  <!-- Le menu est construit par js/app.js -->
+  <nav class="menu" id="menu" aria-label="Navigation principale"></nav>
+
+  <!-- Chaque page vient s'afficher ici -->
+  <main class="contenu" id="contenu"></main>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

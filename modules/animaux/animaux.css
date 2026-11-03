@@ -1,0 +1,81 @@
+/* Styles propres au module « animaux » */
+
+/* --- Avatar (photo ou emoji) --- */
+.avatar {
+  width: 64px; height: 64px; flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--vert-pale);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+}
+.avatar.grand { width: 96px; height: 96px; font-size: 3rem; }
+
+/* --- Liste des animaux --- */
+.grille-animaux {
+  display: grid; gap: var(--espace);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.carte-animal {
+  display: flex; gap: 14px; align-items: center;
+  margin-bottom: 0;
+  color: inherit; text-decoration: none;
+  transition: transform .12s, box-shadow .12s;
+}
+.carte-animal:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(60, 50, 30, .14); }
+.carte-animal-texte { display: grid; gap: 1px; min-width: 0; }
+.carte-animal-texte strong { font-size: 1.15rem; }
+
+/* --- Résumé des rappels --- */
+.resume-rappels { display: block; color: inherit; text-decoration: none; border-left: 5px solid var(--corail); }
+.resume-rappels:hover { background: #fffdf9; }
+.resume-rappels h2 { margin-bottom: 6px; }
+.resume-rappels ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .95rem; }
+.texte-rouge { color: var(--rouge); }
+
+.bandeau-exemples {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  background: var(--orange-pale); border-radius: var(--rayon);
+  padding: 10px 14px; margin-bottom: var(--espace);
+  font-size: .95rem;
+}
+
+/* --- Fiche d'un animal --- */
+.fiche-entete { display: flex; gap: 18px; align-items: center; }
+.fiche-infos p { margin-bottom: .25em; }
+.fiche-infos .actions { margin-top: 10px; }
+@media (max-width: 480px) {
+  .fiche-entete { flex-direction: column; text-align: center; }
+  .fiche-infos .actions { justify-content: center !important; }
+}
+
+/* --- Formulaire : photo --- */
+.photo-champ { display: flex; align-items: center; gap: 16px; }
+.photo-boutons { display: grid; gap: 4px; justify-items: start; }
+.photo-boutons label.bouton { font-weight: 600; }
+
+/* --- Pesées et graphique --- */
+.form-pesee {
+  grid-template-columns: 1fr 1fr; align-items: end;
+  margin-bottom: 16px;
+}
+.form-pesee .bouton { grid-column: 1 / -1; }
+@media (min-width: 600px) {
+  .form-pesee { grid-template-columns: 1fr 1fr auto; }
+  .form-pesee .bouton { grid-column: auto; }
+}
+
+.graphique { width: 100%; height: auto; display: block; }
+.graph-grille { stroke: var(--bordure); stroke-width: 1; }
+.graph-texte { fill: var(--gris); font-size: 12px; }
+.graph-ligne { fill: none; stroke: var(--vert); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.graph-point { fill: #fff; stroke: var(--vert-fonce); stroke-width: 3; }
+.graph-point:hover { fill: var(--corail); }
+.graph-unite { margin: 0 0 8px; text-align: right; }
+.zone-graphique { margin-bottom: 8px; }
+
+/* --- Pages « Sauvegarde » et « Bientôt » --- */
+.liste-modules { display: grid; gap: var(--espace); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.liste-modules .carte { margin-bottom: 0; }
+.liste-modules .grand-emoji { font-size: 2rem; }
+.zone-boutons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }

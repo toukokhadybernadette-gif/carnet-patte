@@ -1,0 +1,16 @@
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Dépendances et journaux
+node_modules/
+*.log
+
+# Fichiers locaux
+.env
+.claude/
