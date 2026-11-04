@@ -158,7 +158,8 @@ function historiqueHtml(animal, limite) {
 
 // ----- Page -----
 
-export function rendre(zone, id) {
+/** `soinCible` (facultatif) : identifiant d'un soin à mettre en évidence dans l'onglet Santé. */
+export function rendre(zone, id, soinCible = '') {
   zone.classList.add('page-large');
   const animal = storage.trouver('animaux', id);
   if (!animal) {
@@ -172,6 +173,7 @@ export function rendre(zone, id) {
   }
 
   if (memoire.id !== animal.id) memoire = { id: animal.id, onglet: 'sante' };
+  if (soinCible) memoire.onglet = 'sante';
 
   const details = [nomEspece(animal), animal.race].filter(Boolean).map(echapper).join(' · ');
   const idOnglet = (o) => `fi-onglet-${o}`;
@@ -218,6 +220,21 @@ export function rendre(zone, id) {
     </div>`;
 
   soins.rendre(zone.querySelector('#zone-soins'), animal);
+  if (soinCible) {
+    // Seuls les soins de CET animal sont dans #zone-soins : un soin d'un autre animal n'est jamais trouvé ici
+    const carte = zone.querySelector(`#zone-soins [data-soin="${CSS.escape(soinCible)}"]`);
+    if (carte) {
+      carte.classList.add('sn-carte--cible');
+      carte.tabIndex = -1;
+      // après le retour en haut de page fait par le routeur lors d'un changement d'adresse
+      setTimeout(() => {
+        carte.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        carte.focus({ preventScroll: true });
+      });
+    } else {
+      toast("Ce soin n'existe plus dans la fiche de cet animal.", 'info');
+    }
+  }
   pesees.rendre(zone.querySelector('#zone-pesees'), animal);
 
   // Onglets

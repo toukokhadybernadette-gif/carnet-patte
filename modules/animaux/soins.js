@@ -80,7 +80,7 @@ function carteHtml(soin) {
   }
 
   return `
-    <li class="cp-carte sn-carte">
+    <li class="cp-carte sn-carte" data-soin="${echapper(soin.id)}">
       <span class="sn-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="sn-carte__corps">
         ${soin.titre ? `<span class="sn-carte__type">${echapper(type.nom)}</span>` : ''}

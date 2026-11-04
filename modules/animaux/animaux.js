@@ -3,6 +3,7 @@
 //   #/animaux            → liste
 //   #/animaux/rappels    → rappels
 //   #/animaux/<id>       → fiche d'un animal
+//   #/animaux/<id>/soin/<idSoin> → fiche, onglet Santé, ce soin mis en évidence (lien « Voir le soin » des rappels)
 
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.js';
@@ -17,7 +18,7 @@ import { ajouterExemples } from './exemples.js';
 
 export function rendre(zone, segments) {
   if (segments[0] === 'rappels') return rendreRappels(zone);
-  if (segments[0]) return rendreFiche(zone, segments[0]);
+  if (segments[0]) return rendreFiche(zone, segments[0], segments[1] === 'soin' ? segments[2] : '');
   rendreListe(zone);
 }
 

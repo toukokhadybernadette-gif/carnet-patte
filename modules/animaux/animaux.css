@@ -260,3 +260,85 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rf-delais { display: flex; flex-wrap: wrap; }
 .rf-date[hidden] { display: none; }
 .rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret); font-size: var(--cp-taille-s); }
+
+/* =========================================================
+   Refonte 5f : page Rappels
+   ========================================================= */
+.rp-page h1:focus { outline: none; }
+.rp-page h1:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 4px; }
+
+/* Chiffres clés : quatre cartes, deux par ligne sur mobile */
+.rp-chiffres { display: grid; gap: var(--cp-espace-4); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rp-chiffre { padding: var(--cp-espace-4) var(--cp-espace-5); gap: var(--cp-espace-1); }
+.rp-chiffre .cp-stat__valeur { font-size: var(--cp-taille-xl); }
+.rp-chiffre__sous { font-size: var(--cp-taille-xs); color: var(--cp-texte-doux); }
+.rp-chiffre--retard { border-left: 4px solid var(--cp-terre); }
+.rp-chiffre--retard .cp-stat__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.rp-chiffre--semaine { border-left: 4px solid var(--cp-ambre); }
+.rp-chiffre--semaine .cp-stat__icone { background: var(--cp-ambre-pale); color: var(--cp-ambre); }
+.rp-chiffre--plus-tard { border-left: 4px solid var(--cp-sauge); }
+.rp-chiffre--faits { border-left: 4px solid var(--cp-succes); }
+@media (max-width: 899px) { .rp-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); } }
+@media (max-width: 599px) {
+  .rp-chiffre { padding: var(--cp-espace-3) var(--cp-espace-4); }
+  .rp-chiffre .cp-stat__icone { width: 32px; height: 32px; }
+  .rp-chiffre .cp-stat__icone .ic { width: 18px; height: 18px; }
+}
+
+/* Filtres : statut (pastilles) et animal (liste) */
+.rp-outils { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cp-espace-4); }
+/* le nombre est un <span> DANS l'étiquette : on annule le style de pastille que .cp-choix__option span lui donnerait */
+.rp-statuts .cp-choix__option span.rp-nombre {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 22px; min-height: 0; height: 22px; padding: 0 6px;
+  border: 0; box-shadow: none; border-radius: var(--cp-rayon-pastille); background: var(--cp-fond); font-size: var(--cp-taille-xs); font-weight: 600;
+}
+.rp-statuts input:checked + span .rp-nombre { background: var(--cp-carte); }
+.rp-animaux { min-width: min(100%, 240px); }
+@media (max-width: 599px) {
+  .rp-outils { display: grid; justify-content: stretch; }
+  .rp-animaux { width: 100%; }
+  .rp-statuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rp-statuts legend { grid-column: 1 / -1; }
+  .rp-statuts .cp-choix__option > span { width: 100%; justify-content: space-between; white-space: nowrap; }
+}
+
+/* Groupes et cartes */
+.rp-groupes { display: grid; gap: var(--cp-espace-6); }
+.rp-groupe { display: grid; gap: var(--cp-espace-3); }
+.rp-groupe > .cp-btn { justify-self: center; }
+.rp-groupe__titre { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-l); }
+.rp-groupe__titre .cp-compteur { margin-left: var(--cp-espace-1); }
+/* compteur rouge réservé aux retards ; vert calme pour les autres groupes */
+.rp-groupe__titre .cp-compteur { background: var(--cp-vert-clair); color: var(--cp-foret); }
+.rp-groupe--retard .rp-groupe__titre .cp-compteur { background: var(--cp-terre); color: var(--cp-texte-inverse); }
+.rp-groupe__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.rp-groupe--retard .rp-groupe__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.rp-groupe--semaine .rp-groupe__icone { background: var(--cp-ambre-pale); color: var(--cp-ambre); }
+.rp-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+
+.rp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: start; padding: var(--cp-espace-4) var(--cp-espace-5); }
+.rp-carte--retard { border-left: 4px solid var(--cp-terre); }
+.rp-carte--semaine { border-left: 4px solid var(--cp-ambre); }
+.rp-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.rp-carte--fait .rp-carte__icone { background: var(--cp-fond); }
+.rp-carte__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.rp-carte__type { font-size: var(--cp-taille-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cp-texte-doux); }
+.rp-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2) var(--cp-espace-3); }
+.rp-carte__nom { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rp-animal { display: inline-flex; align-items: center; gap: var(--cp-espace-2); justify-self: start; min-height: 32px; margin: 2px 0; font-weight: 500; font-size: var(--cp-taille-s); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rp-animal .cp-avatar { width: 28px; height: 28px; flex: none; }
+.rp-animal .cp-avatar .ic { width: 16px; height: 16px; }
+.rp-ligne { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.rp-ligne .ic { flex: none; }
+.rp-carte__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-2); }
+@media (max-width: 599px) {
+  .rp-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); gap: var(--cp-espace-3); }
+  .rp-carte__icone { width: 40px; height: 40px; }
+  .rp-carte__actions { grid-column: 1 / -1; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
+  .rp-carte__actions .cp-btn { flex: 1 1 0; }
+}
+
+/* Soin ouvert depuis « Voir le soin » (page Rappels) */
+.sn-carte--cible { border-color: var(--cp-foret); box-shadow: 0 0 0 1px var(--cp-foret), var(--cp-ombre-m); }
+.sn-carte--cible:focus { outline: none; }
+.sn-carte--cible:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
