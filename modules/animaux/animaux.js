@@ -10,7 +10,7 @@ import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { rafraichir } from '../../js/router.js';
 import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres } from '../../js/composants.js';
-import { ESPECES, infosEspece, nomEspece } from './commun.js';
+import { ESPECES, infosEspece, nomEspece, erreurChamp } from './commun.js';
 import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
 import { ajouterExemples } from './exemples.js';
@@ -29,22 +29,6 @@ function apercuHtml(espece, photo) {
     ? `<img src="${echapper(photo)}" alt="">`
     : icone(infosEspece({ espece }).icone, { taille: 44 });
   return `<span class="cp-avatar cp-avatar--grand" aria-hidden="true">${contenu}</span>`;
-}
-
-/** Affiche (ou efface, si `message` est vide) l'erreur sous un champ, reliée au champ pour les lecteurs d'écran. */
-function erreurChamp(input, message) {
-  const bloc = input.closest('.cp-champ');
-  bloc.querySelector('.cp-champ__erreur')?.remove();
-  if (!message) {
-    input.removeAttribute('aria-invalid');
-    input.removeAttribute('aria-describedby');
-    return;
-  }
-  const id = `${input.id}-erreur`;
-  bloc.insertAdjacentHTML('beforeend',
-    `<p class="cp-champ__erreur" id="${id}">${icone('circle-alert', { taille: 16 })}<span>${echapper(message)}</span></p>`);
-  input.setAttribute('aria-invalid', 'true');
-  input.setAttribute('aria-describedby', id);
 }
 
 export function formulaireAnimal(animal, apres) {

@@ -210,3 +210,53 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
   .fi-onglets .cp-onglet { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 60px; padding: var(--cp-espace-2) 2px; font-size: var(--cp-taille-xs); }
   .fi-onglets .cp-onglet[aria-selected="true"]::after { left: var(--cp-espace-2); right: var(--cp-espace-2); }
 }
+
+/* =========================================================
+   Refonte 5e : soins et traitements
+   ========================================================= */
+.sn { display: grid; gap: var(--cp-espace-4); }
+.sn-entete { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-4); flex-wrap: wrap; }
+.sn-entete h2 { margin: 0; font-size: var(--cp-taille-l); }
+.sn-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+.sn-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: start; padding: var(--cp-espace-4) var(--cp-espace-5); }
+.sn-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.sn-carte__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.sn-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2) var(--cp-espace-3); }
+.sn-carte__nom { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.sn-ligne { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.sn-ligne .ic { flex: none; }
+.sn-carte__type { font-size: var(--cp-taille-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cp-texte-doux); }
+.sn-carte .sn-carte__notes { margin: var(--cp-espace-1) 0 0; font-size: var(--cp-taille-s); color: var(--cp-texte); overflow-wrap: anywhere; white-space: pre-line; }
+.sn-carte__actions { display: flex; gap: var(--cp-espace-2); align-items: center; }
+@media (max-width: 599px) {
+  .sn-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); }
+  .sn-carte__icone { width: 40px; height: 40px; }
+  .sn-carte__actions { grid-column: 1 / -1; justify-content: flex-end; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
+  .sn-carte__actions .cp-btn:not(.cp-btn--icone) { margin-right: auto; }
+}
+
+/* Formulaire de soin */
+.sn-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
+.sn-rappel-champ { border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-champ); padding: var(--cp-espace-4); margin: 0; background: var(--cp-fond); }
+.sn-rappel-champ legend { padding: 0 var(--cp-espace-2); font-weight: 600; font-size: var(--cp-taille-s); color: var(--cp-foret); }
+.sn-form .cp-choix--tuiles { grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr)); }
+.sn-form__actions, .rf-actions {
+  position: sticky; bottom: calc(var(--cp-espace-5) * -1); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3);
+  margin: 0 calc(var(--cp-espace-5) * -1) calc(var(--cp-espace-5) * -1); padding: var(--cp-espace-4) var(--cp-espace-5) var(--cp-espace-5);
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%);
+}
+@media (max-width: 599px) {
+  .sn-form__actions, .rf-actions { flex-wrap: nowrap; }
+  .sn-form__actions .cp-btn, .rf-actions .cp-btn { flex: 1 1 0; }
+  .sn-form__actions .cp-btn[type=submit], .rf-actions .cp-btn[type=submit] { flex-grow: 1.6; }
+}
+
+/* Fenêtre « Rappel effectué » */
+.rf-form { gap: var(--cp-espace-5); }
+.rf-resume { display: flex; align-items: center; gap: var(--cp-espace-4); flex-wrap: wrap; padding: var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-fond); border: 1px solid var(--cp-bordure); }
+.rf-resume__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); flex: none; }
+.rf-resume__texte { display: grid; gap: 2px; flex: 1 1 160px; min-width: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.rf-resume__texte strong { font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rf-delais { display: flex; flex-wrap: wrap; }
+.rf-date[hidden] { display: none; }
+.rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret); font-size: var(--cp-taille-s); }
