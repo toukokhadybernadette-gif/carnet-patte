@@ -3,7 +3,7 @@
 // Chaque module déclare sa route avec route('nom', fonction).
 // La fonction reçoit : la zone où afficher la page, et le reste de l'adresse (ex. l'id d'un animal).
 
-import { icone } from './icons.js';
+import { vide, bouton } from './composants.js';
 
 const routes = {};
 let zoneContenu = null;
@@ -31,7 +31,7 @@ export function rafraichir() {
   if (affichage) {
     affichage(page, seg.slice(1));
   } else {
-    page.innerHTML = `<div class="vide"><span class="grand-icone">${icone('circle-help', { taille: 44 })}</span>Page introuvable.</div>`;
+    page.innerHTML = `<div class="cp pg"><div class="cp-carte">${vide({ niveau: 1, icone: 'circle-help', titre: 'Page introuvable', texte: "Cette page n'existe pas.", action: bouton({ texte: "Retour à l'accueil", icone: 'house', href: '#/accueil' }) })}</div></div>`;
   }
   if (apresAffichage) apresAffichage(seg);
 }

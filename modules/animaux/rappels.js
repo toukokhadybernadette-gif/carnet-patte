@@ -20,27 +20,6 @@ export function compterEnRetard() {
   return calculerRappels().filter((r) => r.statut.classe === 'retard').length;
 }
 
-/** Petit résumé affiché en haut de la liste des animaux. */
-export function resumeRappelsHtml() {
-  const rappels = calculerRappels();
-  if (!rappels.length) return '';
-  const retard = rappels.filter((r) => r.statut.classe === 'retard').length;
-  const semaine = rappels.filter((r) => r.statut.classe === 'semaine').length;
-  const prochains = rappels.slice(0, 3).map((r) =>
-    `<li><span class="pastille ${r.statut.classe}">${r.statut.texte}</span>
-       ${echapper(nomCourtSoin(r.soin))} · ${echapper(r.animal.nom)}</li>`
-  ).join('');
-  return `
-    <a class="carte resume-rappels" href="#/animaux/rappels">
-      <h2 class="titre-icone">${icone('bell', { taille: 20 })} Rappels</h2>
-      <p>
-        ${retard ? `<strong class="texte-rouge">${retard} en retard</strong> · ` : ''}
-        ${semaine} cette semaine · ${rappels.length} au total
-      </p>
-      <ul>${prochains}</ul>
-    </a>`;
-}
-
 // ----- Page Rappels -----
 // Tout ce qui suit ne fait qu'afficher : les seules écritures passent par ouvrirRappelFait() (commun.js).
 

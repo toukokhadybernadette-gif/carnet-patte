@@ -1,5 +1,4 @@
 /* Styles propres au module « animaux » */
-
 /* --- Avatar (photo ou icône de l'espèce) --- */
 .avatar {
   width: 64px; height: 64px; flex: none;
@@ -10,85 +9,23 @@
   color: var(--vert-fonce);
 }
 .avatar.grand { width: 96px; height: 96px; }
-
 /* --- Liste des animaux --- */
-.grille-animaux {
-  display: grid; gap: var(--espace);
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-.carte-animal {
-  display: flex; gap: 14px; align-items: center;
-  margin-bottom: 0;
-  color: inherit; text-decoration: none;
-  transition: transform .12s, box-shadow .12s;
-}
-.carte-animal:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(60, 50, 30, .14); }
-.carte-animal-texte { display: grid; gap: 1px; min-width: 0; }
-.carte-animal-texte strong { font-size: 1.15rem; }
-
 /* --- Résumé des rappels --- */
-.resume-rappels { display: block; color: inherit; text-decoration: none; border-left: 5px solid var(--corail); }
-.resume-rappels:hover { background: #fffdf9; }
-.resume-rappels h2 { margin-bottom: 6px; }
-.resume-rappels ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .95rem; }
 .texte-rouge { color: var(--rouge); }
-
-.bandeau-exemples {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
-  background: var(--orange-pale); border-radius: var(--rayon);
-  padding: 10px 14px; margin-bottom: var(--espace);
-  font-size: .95rem;
-}
-
 /* --- Fiche d'un animal --- */
-.fiche-entete { display: flex; gap: 18px; align-items: center; }
-.fiche-infos p { margin-bottom: .25em; }
-.fiche-infos .actions { margin-top: 10px; }
-@media (max-width: 480px) {
-  .fiche-entete { flex-direction: column; text-align: center; }
-  .fiche-infos .actions { justify-content: center !important; }
-}
-
 /* --- Formulaire : photo --- */
-.photo-champ { display: flex; align-items: center; gap: 16px; }
-.photo-boutons { display: grid; gap: 4px; justify-items: start; }
-.photo-boutons label.bouton { font-weight: 600; }
-
 /* --- Pesées et graphique --- */
-.form-pesee {
-  grid-template-columns: 1fr 1fr; align-items: end;
-  margin-bottom: 16px;
-}
-.form-pesee .bouton { grid-column: 1 / -1; }
-@media (min-width: 600px) {
-  .form-pesee { grid-template-columns: 1fr 1fr auto; }
-  .form-pesee .bouton { grid-column: auto; }
-}
-
-.graphique { width: 100%; height: auto; display: block; }
-.graph-grille { stroke: var(--bordure); stroke-width: 1; }
-.graph-texte { fill: var(--gris); font-size: 12px; }
-.graph-ligne { fill: none; stroke: var(--vert); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-.graph-point { fill: #fff; stroke: var(--vert-fonce); stroke-width: 3; }
-.graph-point:hover { fill: var(--corail); }
-.graph-unite { margin: 0 0 8px; text-align: right; }
-.zone-graphique { margin-bottom: 8px; }
-
 /* --- Pages « Sauvegarde » et « Bientôt » --- */
-.liste-modules { display: grid; gap: var(--espace); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-.liste-modules .carte { margin-bottom: 0; }
-.liste-modules .grand-icone { display: block; color: var(--vert); margin-bottom: 4px; }
-.zone-boutons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
-
 /* =========================================================
    Refonte 5c : liste des animaux et formulaire (Premium naturel)
    ========================================================= */
-
 /* En-tête de la liste */
 .al-entete { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--cp-espace-5); row-gap: var(--cp-espace-2); }
 .al-entete .cp-btn { align-self: end; }
-@media (max-width: 599px) { .al-entete { grid-template-columns: 1fr; } .al-entete .cp-btn { width: 100%; } }
-
+@media (max-width: 599px) {
+.al-entete { grid-template-columns: 1fr; }
+.al-entete .cp-btn { width: 100%; }
+}
 /* Résumé des rappels */
 a.cp-carte.al-rappels { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: start; border-left: 4px solid var(--cp-ambre); }
 a.cp-carte.al-rappels--retard { border-left-color: var(--cp-terre); }
@@ -102,31 +39,28 @@ a.cp-carte.al-rappels--retard { border-left-color: var(--cp-terre); }
 .al-rappels .al-rappels__autres { color: var(--cp-texte-doux); font-weight: 500; }
 .al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; font-size: var(--cp-taille-s); font-weight: 500; color: var(--cp-foret); white-space: nowrap; align-self: center; }
 @media (max-width: 599px) {
-  a.cp-carte.al-rappels { grid-template-columns: auto 1fr; }
-  .al-rappels__lien { grid-column: 2; justify-self: start; }
+a.cp-carte.al-rappels { grid-template-columns: auto 1fr; }
+.al-rappels__lien { grid-column: 2; justify-self: start; }
 }
-
 /* Bandeau des exemples */
 .al-exemples { align-items: center; flex-wrap: wrap; }
 .al-exemples .cp-alerte__texte { flex: 1 1 220px; }
-
 /* Barre d'outils : recherche et filtres */
 .al-outils { display: grid; gap: var(--cp-espace-3); }
 .al-recherche { max-width: 460px; }
 .al-resultat { margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .al-resultat[hidden], .al-grille[hidden], .al-aucun[hidden], .al-grille [hidden], .al-photo [hidden] { display: none !important; }
 .cp-filtres { max-width: 100%; }
-@media (max-width: 599px) { /* sur mobile, une seule ligne défilante plutôt que 8 lignes de pastilles */
-  .al-outils .cp-filtres { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) var(--cp-espace-2); scrollbar-width: none; }
+@media (max-width: 599px) {
+ /* sur mobile, une seule ligne défilante plutôt que 8 lignes de pastilles */
+.al-outils .cp-filtres { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) var(--cp-espace-2); scrollbar-width: none; }
 }
-
 /* Cartes d'animaux : avatar un peu plus grand dans la liste, cartes assez larges pour les badges */
 .pg-animaux.al-grille { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
 .al-grille .cp-badge { white-space: normal; }
 .al-grille .cp-avatar { width: 68px; height: 68px; }
 .al-grille .cp-avatar .ic { width: 32px; height: 32px; }
 .al-grille a.cp-carte.cp-carte-animal { padding: var(--cp-espace-4) var(--cp-espace-5); }
-
 /* Formulaire */
 .al-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
 .al-photo { display: flex; align-items: center; gap: var(--cp-espace-5); }
@@ -139,16 +73,14 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
   background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%); border-top: 0;
 }
 @media (max-width: 599px) {
-  .al-form__actions { flex-wrap: nowrap; }
-  .al-form__actions .cp-btn { flex: 1 1 0; }
-  .al-form__actions .cp-btn[type=submit] { flex-grow: 1.6; }
+.al-form__actions { flex-wrap: nowrap; }
+.al-form__actions .cp-btn { flex: 1 1 0; }
+.al-form__actions .cp-btn[type=submit] { flex-grow: 1.6; }
 }
-
 /* =========================================================
    Refonte 5d : fiche d'un animal
    ========================================================= */
 .fi-retour { justify-self: start; }
-
 /* En-tête */
 .fi-entete { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--cp-espace-5) var(--cp-espace-6); padding: var(--cp-espace-6); }
 .fi-avatar { width: 120px; height: 120px; }
@@ -162,16 +94,15 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .cp-btn.fi-danger { color: var(--cp-terre); border-color: var(--cp-terre); }
 .cp-btn.fi-danger:hover:not(:disabled) { background: var(--cp-terre-pale); border-color: var(--cp-terre); color: var(--cp-terre); }
 @media (max-width: 899px) {
-  .fi-entete { grid-template-columns: auto 1fr; padding: var(--cp-espace-5); }
-  .fi-entete__actions { grid-column: 1 / -1; justify-content: stretch; }
-  .fi-entete__actions .cp-btn { flex: 1 1 0; }
+.fi-entete { grid-template-columns: auto 1fr; padding: var(--cp-espace-5); }
+.fi-entete__actions { grid-column: 1 / -1; justify-content: stretch; }
+.fi-entete__actions .cp-btn { flex: 1 1 0; }
 }
 @media (max-width: 599px) {
-  .fi-avatar { width: 84px; height: 84px; }
-  .fi-avatar .ic { width: 40px; height: 40px; }
-  .fi-entete { gap: var(--cp-espace-4); }
+.fi-avatar { width: 84px; height: 84px; }
+.fi-avatar .ic { width: 40px; height: 40px; }
+.fi-entete { gap: var(--cp-espace-4); }
 }
-
 /* Chiffres clés */
 .fi-chiffres { display: grid; gap: var(--cp-espace-4); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .fi-chiffre__sous { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
@@ -180,8 +111,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fi-chiffre--retard { border-left: 4px solid var(--cp-terre); }
 .fi-chiffre--retard .cp-stat__valeur { color: var(--cp-terre); }
 .fi-chiffre--semaine { border-left: 4px solid var(--cp-ambre); }
-@media (max-width: 899px) { .fi-chiffres { grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-3); } .fi-chiffre { padding: var(--cp-espace-4) var(--cp-espace-5); gap: var(--cp-espace-1); } }
-
+@media (max-width: 899px) {
+.fi-chiffres { grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-3); }
+.fi-chiffre { padding: var(--cp-espace-4) var(--cp-espace-5); gap: var(--cp-espace-1); }
+}
 /* Onglets : barre défilante sur mobile, panneaux espacés */
 .fi-onglets { display: grid; gap: 0; }
 .fi-onglets .cp-onglets { margin-bottom: var(--cp-espace-2); }
@@ -189,7 +122,6 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fi-onglets .cp-onglet-panneau[hidden] { display: none; }
 .fi-onglets .cp-onglet-panneau:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; border-radius: var(--cp-rayon-carte); }
 .fi-onglets .cp-onglet-panneau > div > .carte, .fi-onglets .cp-onglet-panneau > .cp-carte { margin-bottom: 0; }
-
 /* Historique */
 .fi-historique h2 { margin-bottom: var(--cp-espace-1); }
 .fi-histo__resume { margin: 0 0 var(--cp-espace-4); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
@@ -204,14 +136,12 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fi-histo__date { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .fi-histo__detail { font-size: var(--cp-taille-s); overflow-wrap: anywhere; }
 .fi-histo__plus { margin-top: var(--cp-espace-5); display: flex; justify-content: center; }
-
 /* Mobile : les 4 onglets se partagent la largeur (icône au-dessus du nom), comme la barre du bas */
 @media (max-width: 599px) {
-  .fi-onglets .cp-onglets { overflow-x: visible; gap: 0; }
-  .fi-onglets .cp-onglet { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 60px; padding: var(--cp-espace-2) 2px; font-size: var(--cp-taille-xs); }
-  .fi-onglets .cp-onglet[aria-selected="true"]::after { left: var(--cp-espace-2); right: var(--cp-espace-2); }
+.fi-onglets .cp-onglets { overflow-x: visible; gap: 0; }
+.fi-onglets .cp-onglet { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 60px; padding: var(--cp-espace-2) 2px; font-size: var(--cp-taille-xs); }
+.fi-onglets .cp-onglet[aria-selected="true"]::after { left: var(--cp-espace-2); right: var(--cp-espace-2); }
 }
-
 /* =========================================================
    Refonte 5e : soins et traitements
    ========================================================= */
@@ -231,12 +161,11 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .sn-carte .sn-carte__notes { margin: var(--cp-espace-1) 0 0; font-size: var(--cp-taille-s); color: var(--cp-texte); overflow-wrap: anywhere; white-space: pre-line; }
 .sn-carte__actions { display: flex; gap: var(--cp-espace-2); align-items: center; }
 @media (max-width: 599px) {
-  .sn-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); }
-  .sn-carte__icone { width: 40px; height: 40px; }
-  .sn-carte__actions { grid-column: 1 / -1; justify-content: flex-end; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
-  .sn-carte__actions .cp-btn:not(.cp-btn--icone) { margin-right: auto; }
+.sn-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); }
+.sn-carte__icone { width: 40px; height: 40px; }
+.sn-carte__actions { grid-column: 1 / -1; justify-content: flex-end; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
+.sn-carte__actions .cp-btn:not(.cp-btn--icone) { margin-right: auto; }
 }
-
 /* Formulaire de soin */
 .sn-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
 .sn-rappel-champ { border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-champ); padding: var(--cp-espace-4); margin: 0; background: var(--cp-fond); }
@@ -248,11 +177,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
   background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%);
 }
 @media (max-width: 599px) {
-  .sn-form__actions, .rf-actions { flex-wrap: nowrap; }
-  .sn-form__actions .cp-btn, .rf-actions .cp-btn { flex: 1 1 0; }
-  .sn-form__actions .cp-btn[type=submit], .rf-actions .cp-btn[type=submit] { flex-grow: 1.6; }
+.sn-form__actions, .rf-actions { flex-wrap: nowrap; }
+.sn-form__actions .cp-btn, .rf-actions .cp-btn { flex: 1 1 0; }
+.sn-form__actions .cp-btn[type=submit], .rf-actions .cp-btn[type=submit] { flex-grow: 1.6; }
 }
-
 /* Fenêtre « Rappel effectué » */
 .rf-form { gap: var(--cp-espace-5); }
 .rf-resume { display: flex; align-items: center; gap: var(--cp-espace-4); flex-wrap: wrap; padding: var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-fond); border: 1px solid var(--cp-bordure); }
@@ -262,13 +190,11 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rf-delais { display: flex; flex-wrap: wrap; }
 .rf-date[hidden] { display: none; }
 .rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret); font-size: var(--cp-taille-s); }
-
 /* =========================================================
    Refonte 5f : page Rappels
    ========================================================= */
 .rp-page h1:focus { outline: none; }
 .rp-page h1:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 4px; }
-
 /* Chiffres clés : quatre cartes, deux par ligne sur mobile */
 .rp-chiffres { display: grid; gap: var(--cp-espace-4); grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .rp-chiffre { padding: var(--cp-espace-4) var(--cp-espace-5); gap: var(--cp-espace-1); }
@@ -280,13 +206,14 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-chiffre--semaine .cp-stat__icone { background: var(--cp-ambre-pale); color: var(--cp-ambre); }
 .rp-chiffre--plus-tard { border-left: 4px solid var(--cp-sauge); }
 .rp-chiffre--faits { border-left: 4px solid var(--cp-succes); }
-@media (max-width: 899px) { .rp-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); } }
-@media (max-width: 599px) {
-  .rp-chiffre { padding: var(--cp-espace-3) var(--cp-espace-4); }
-  .rp-chiffre .cp-stat__icone { width: 32px; height: 32px; }
-  .rp-chiffre .cp-stat__icone .ic { width: 18px; height: 18px; }
+@media (max-width: 899px) {
+.rp-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); }
 }
-
+@media (max-width: 599px) {
+.rp-chiffre { padding: var(--cp-espace-3) var(--cp-espace-4); }
+.rp-chiffre .cp-stat__icone { width: 32px; height: 32px; }
+.rp-chiffre .cp-stat__icone .ic { width: 18px; height: 18px; }
+}
 /* Filtres : statut (pastilles) et animal (liste) */
 .rp-outils { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cp-espace-4); }
 /* le nombre est un <span> DANS l'étiquette : on annule le style de pastille que .cp-choix__option span lui donnerait */
@@ -297,13 +224,12 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-statuts input:checked + span .rp-nombre { background: var(--cp-carte); }
 .rp-animaux { min-width: min(100%, 240px); }
 @media (max-width: 599px) {
-  .rp-outils { display: grid; justify-content: stretch; }
-  .rp-animaux { width: 100%; }
-  .rp-statuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rp-statuts legend { grid-column: 1 / -1; }
-  .rp-statuts .cp-choix__option > span { width: 100%; justify-content: space-between; white-space: nowrap; }
+.rp-outils { display: grid; justify-content: stretch; }
+.rp-animaux { width: 100%; }
+.rp-statuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rp-statuts legend { grid-column: 1 / -1; }
+.rp-statuts .cp-choix__option > span { width: 100%; justify-content: space-between; white-space: nowrap; }
 }
-
 /* Groupes et cartes */
 .rp-groupes { display: grid; gap: var(--cp-espace-6); }
 .rp-groupe { display: grid; gap: var(--cp-espace-3); }
@@ -317,7 +243,6 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-groupe--retard .rp-groupe__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
 .rp-groupe--semaine .rp-groupe__icone { background: var(--cp-ambre-pale); color: var(--cp-ambre); }
 .rp-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
-
 .rp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: start; padding: var(--cp-espace-4) var(--cp-espace-5); }
 .rp-carte--retard { border-left: 4px solid var(--cp-terre); }
 .rp-carte--semaine { border-left: 4px solid var(--cp-ambre); }
@@ -334,17 +259,15 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-ligne .ic { flex: none; }
 .rp-carte__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-2); }
 @media (max-width: 599px) {
-  .rp-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); gap: var(--cp-espace-3); }
-  .rp-carte__icone { width: 40px; height: 40px; }
-  .rp-carte__actions { grid-column: 1 / -1; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
-  .rp-carte__actions .cp-btn { flex: 1 1 0; }
+.rp-carte { grid-template-columns: auto 1fr; padding: var(--cp-espace-4); gap: var(--cp-espace-3); }
+.rp-carte__icone { width: 40px; height: 40px; }
+.rp-carte__actions { grid-column: 1 / -1; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
+.rp-carte__actions .cp-btn { flex: 1 1 0; }
 }
-
 /* Soin ouvert depuis « Voir le soin » (page Rappels) */
 .sn-carte--cible { border-color: var(--cp-foret); box-shadow: 0 0 0 1px var(--cp-foret), var(--cp-ombre-m); }
 .sn-carte--cible:focus { outline: none; }
 .sn-carte--cible:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
-
 /* =========================================================
    Refonte 5g : pesées et graphique
    ========================================================= */
@@ -353,9 +276,12 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-form__titre { margin: 0; font-size: var(--cp-taille-m); }
 .ps-form__champs { display: grid; grid-template-columns: 1fr; gap: var(--cp-espace-4); align-items: start; }
 .ps-form > .cp-btn { justify-self: start; }
-@media (min-width: 600px) { .ps-form__champs { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); } }
-@media (max-width: 599px) { .ps-form > .cp-btn { justify-self: stretch; } }
-
+@media (min-width: 600px) {
+.ps-form__champs { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+}
+@media (max-width: 599px) {
+.ps-form > .cp-btn { justify-self: stretch; }
+}
 .ps-note { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .ps-graph { padding: var(--cp-espace-4) var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
 .ps-graph__tete { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cp-espace-3); }
@@ -368,8 +294,11 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-point { fill: var(--cp-carte); stroke: var(--cp-foret); stroke-width: 3; }
 .ps-point:hover { fill: var(--cp-vert-clair); }
 /* Téléphone : le graphique est réduit ; on grossit texte et points pour qu'ils restent lisibles */
-@media (max-width: 599px) { .ps-texte { font-size: 18px; } .ps-point { r: 7px; } .ps-ligne { stroke-width: 4; } }
-
+@media (max-width: 599px) {
+.ps-texte { font-size: 18px; }
+.ps-point { r: 7px; }
+.ps-ligne { stroke-width: 4; }
+}
 .ps-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: center; padding: var(--cp-espace-4) var(--cp-espace-5); }
 .ps-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
 .ps-carte__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
