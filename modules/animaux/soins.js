@@ -84,9 +84,9 @@ function carteHtml(soin) {
     <li class="cp-carte sn-carte" data-soin="${echapper(soin.id)}">
       <span class="sn-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="sn-carte__corps">
-        <span class="sn-carte__type">${echapper(categorie)}</span>
+        ${nomPrecis ? `<span class="sn-carte__type">${echapper(categorie)}</span>` : ''}
         <div class="sn-carte__tete">
-          ${nomPrecis ? `<strong class="sn-carte__nom">${echapper(nomPrecis)}</strong>` : '<strong class="sn-carte__nom sn-carte__nom--vide">Sans nom précis</strong>'}
+          <strong class="sn-carte__nom">${echapper(nom)}</strong>
           ${badgeSoin(soin)}
         </div>
         <span class="sn-ligne">${icone('calendar', { taille: 16 })}<span>Soin du <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>

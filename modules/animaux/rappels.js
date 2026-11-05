@@ -5,7 +5,7 @@ import { echapper, formatDate } from '../../js/utils.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, avatar, choix, selecteur, vide } from '../../js/composants.js';
-import { infosType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin } from './commun.js';
+import { infosType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
 
 /** Tous les rappels en attente, du plus urgent au plus lointain. */
 export function calculerRappels() {
@@ -28,7 +28,7 @@ export function resumeRappelsHtml() {
   const semaine = rappels.filter((r) => r.statut.classe === 'semaine').length;
   const prochains = rappels.slice(0, 3).map((r) =>
     `<li><span class="pastille ${r.statut.classe}">${r.statut.texte}</span>
-       ${infosType(r.soin.type).nom}${r.soin.titre ? ' ' + echapper(r.soin.titre) : ''} · ${echapper(r.animal.nom)}</li>`
+       ${echapper(nomCourtSoin(r.soin))} · ${echapper(r.animal.nom)}</li>`
   ).join('');
   return `
     <a class="carte resume-rappels" href="#/animaux/rappels">
@@ -87,14 +87,14 @@ function carteHtml({ soin, animal, statut }) {
   const type = infosType(soin.type);
   const { categorie, nom } = libellesSoin(soin);
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
-  const quoi = `${[type.nom, soin.titre].filter(Boolean).join(' — ')} pour ${animal.nom}`;
+  const quoi = `${titreSoin(soin)} pour ${animal.nom}`;
   return `
     <li class="cp-carte rp-carte rp-carte--${statut ? statut.classe : 'fait'}">
       <span class="rp-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="rp-carte__corps">
-        <span class="rp-carte__type">${echapper(categorie)}</span>
+        ${nom ? `<span class="rp-carte__type">${echapper(categorie)}</span>` : ''}
         <div class="rp-carte__tete">
-          ${nom ? `<strong class="rp-carte__nom">${echapper(nom)}</strong>` : '<strong class="rp-carte__nom rp-carte__nom--vide">Sans nom précis</strong>'}
+          <strong class="rp-carte__nom">${echapper(nom || categorie)}</strong>
           ${badgeSoin(soin)}
         </div>
         <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo })}<span>${echapper(animal.nom)}</span></a>

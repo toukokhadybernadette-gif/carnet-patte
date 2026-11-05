@@ -6,7 +6,7 @@ import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, badge, vide, activerOnglets } from '../../js/composants.js';
-import { infosEspece, nomEspece, infosType, statutRappel, badgeEcheance, nomCourtSoin } from './commun.js';
+import { infosEspece, nomEspece, infosType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
 import { formulaireAnimal } from './animaux.js';
 import * as soins from './soins.js';
@@ -101,10 +101,10 @@ function evenements(animal) {
   }
   for (const s of soinsDe(animal)) {
     const type = infosType(s.type);
-    ev.push({ date: s.date, rang: 2, icone: type.icone, titre: [type.nom, s.titre].filter(Boolean).join(' — '), detail: s.notes || '' });
+    ev.push({ date: s.date, rang: 2, icone: type.icone, titre: titreSoin(s), detail: s.notes || '' });
     const statut = statutRappel(s);
     if (statut) {
-      ev.push({ date: s.rappel, rang: 3, icone: 'bell', titre: `Rappel : ${[type.nom, s.titre].filter(Boolean).join(' — ')}`, detail: '',
+      ev.push({ date: s.rappel, rang: 3, icone: 'bell', titre: `Rappel : ${titreSoin(s)}`, detail: '',
         badge: badgeEcheance(statut) });
     }
   }

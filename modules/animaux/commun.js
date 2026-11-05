@@ -134,6 +134,12 @@ export function nomCourtSoin(soin) {
   return nom || categorie;
 }
 
+/** Intitulé complet d'un soin : « Vaccin — Rage », ou simplement « Vermifuge » sans nom propre. */
+export function titreSoin(soin) {
+  const { categorie, nom } = libellesSoin(soin);
+  return nom ? `${categorie} — ${nom}` : categorie;
+}
+
 /**
  * Fenêtre « Marquer le rappel comme fait ».
  * Le soin d'origine n'est pas modifié : seul son rappel passe à « traité ». Si on programme la suite,
@@ -141,7 +147,7 @@ export function nomCourtSoin(soin) {
  */
 export function ouvrirRappelFait(soin, apres) {
   const type = infosType(soin.type);
-  const titre = [type.nom, soin.titre].filter(Boolean).join(' — ');
+  const titre = titreSoin(soin);
   const DELAIS = [
     { valeur: '0', texte: 'Non' }, { valeur: '1', texte: '1 mois' }, { valeur: '3', texte: '3 mois' },
     { valeur: '6', texte: '6 mois' }, { valeur: '12', texte: '1 an' }, { valeur: 'date', texte: 'Autre date' },

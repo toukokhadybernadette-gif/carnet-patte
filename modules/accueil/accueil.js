@@ -7,7 +7,7 @@ import { echapper, aujourdhui, formatDate, formatPoids } from '../../js/utils.js
 import { badge, carteStat, carteAnimal, vide, bouton } from '../../js/composants.js';
 import { NAV } from '../../js/navigation.js';
 import { calculerRappels } from '../animaux/rappels.js';
-import { infosEspece, nomEspece, infosType, badgeEcheance, nomCourtSoin } from '../animaux/commun.js';
+import { infosEspece, nomEspece, infosType, badgeEcheance, nomCourtSoin, titreSoin } from '../animaux/commun.js';
 
 function ligne({ icone: i, titre, meta, fin = '', href }) {
   const corps = `
@@ -57,7 +57,7 @@ export function rendre(zone) {
   const activite = [
     ...storage.lister('soins').filter((s) => s.date && s.date <= auj && parId.has(s.animalId)).map((s) => {
       const type = infosType(s.type);
-      return { date: s.date, icone: type.icone, titre: [type.nom, s.titre].filter(Boolean).join(' — '), animal: parId.get(s.animalId) };
+      return { date: s.date, icone: type.icone, titre: titreSoin(s), animal: parId.get(s.animalId) };
     }),
     ...storage.lister('pesees').filter((p) => p.date && p.date <= auj && parId.has(p.animalId)).map((p) => (
       { date: p.date, icone: 'scale', titre: `Pesée : ${formatPoids(p.poidsKg)}`, animal: parId.get(p.animalId) })),
@@ -74,8 +74,8 @@ export function rendre(zone) {
   const blocRappels = rappels.length
     ? `<ul class="cp-liste">${rappels.slice(0, 3).map((r) => ligne({
         icone: infosType(r.soin.type).icone,
-        titre: [infosType(r.soin.type).nom, r.soin.titre].filter(Boolean).join(' — '),
-        meta: `${r.animal.nom} · ${formatDate(r.soin.rappel)}`,
+        titre: `${nomCourtSoin(r.soin)} · ${r.animal.nom}`,
+        meta: `Prévu le ${formatDate(r.soin.rappel)}`,
         fin: badgeEcheance(r.statut),
         href: '#/animaux/rappels',
       })).join('')}</ul>`
