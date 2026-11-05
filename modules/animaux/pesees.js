@@ -38,13 +38,19 @@ export function verifierDate(date) {
   return '';
 }
 
-/** Étiquettes de l'axe : le moins de décimales possible, mais jamais deux étiquettes identiques (petits poids). */
-function etiquettes(valeurs) {
-  for (let d = 0; d <= 5; d++) {
-    const t = valeurs.map((v) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }));
-    if (new Set(t).size === t.length) return t;
-  }
-  return valeurs.map((v) => v.toLocaleString('fr-FR', { maximumFractionDigits: 6 }));
+/**
+ * Graduations de l'axe vertical : 3 à 7 valeurs rondes (pas de 1, 2, 2,5 ou 5 × une puissance de 10) comprises dans [min, max].
+ * Les étiquettes sont EXACTEMENT les valeurs des lignes : la position de chaque ligne vient de la même fonction y() que celle des points.
+ */
+function graduations(min, max) {
+  const brut = (max - min) / 3;
+  const base = 10 ** Math.floor(Math.log10(brut));
+  const pas = [5, 2.5, 2, 1].map((f) => f * base).find((p) => p <= brut * 1.000001) ?? base;
+  const valeurs = [];
+  for (let k = Math.ceil(min / pas - 1e-9); k * pas <= max + pas * 1e-9; k++) valeurs.push(Number((k * pas).toFixed(10)));
+  let d = 0;
+  while (d < 8 && valeurs.some((v) => Math.abs(v - Number(v.toFixed(d))) > 1e-9)) d++;
+  return valeurs.map((v) => ({ v, texte: v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) }));
 }
 
 /** Construit le graphique SVG. `pesees` doit être triée par date croissante. */
@@ -63,21 +69,21 @@ export function graphiqueSvg(pesees) {
   const marge15 = (max - min) * 0.15;
   min = Math.max(min - marge15, 0); max += marge15;
 
+  // UNE SEULE conversion valeur -> position, utilisée par la grille, la ligne et les points
   const t0 = lireISO(pesees[0].date).getTime();
   const t1 = lireISO(pesees[pesees.length - 1].date).getTime();
-  const x = (date) => marge.g + (t1 === t0 ? largeur / 2 : ((lireISO(date).getTime() - t0) / (t1 - t0)) * largeur);
+  const dedans = 14; // le premier et le dernier point ne touchent ni l'axe ni le bord
+  const x = (date) => marge.g + dedans + (t1 === t0 ? (largeur - 2 * dedans) / 2 : ((lireISO(date).getTime() - t0) / (t1 - t0)) * (largeur - 2 * dedans));
   const y = (kg) => marge.h + (1 - (kg - min) / (max - min)) * hauteur;
 
-  // Lignes horizontales et étiquettes de poids
-  const graduations = [0, 1, 2, 3].map((i) => min + ((max - min) * i) / 3);
-  const textes = etiquettes(graduations);
-  const grille = graduations.map((v, i) => `
-    <line x1="${marge.g}" x2="${L - marge.d}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="ps-grille"/>
-    <text x="${marge.g - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="ps-texte">${textes[i]}</text>`).join('');
+  const grille = graduations(min, max).map((g) => `
+    <line x1="${marge.g}" x2="${L - marge.d}" y1="${y(g.v).toFixed(2)}" y2="${y(g.v).toFixed(2)}" class="ps-grille"/>
+    <text x="${marge.g - 8}" y="${(y(g.v) + 4).toFixed(2)}" text-anchor="end" class="ps-texte">${g.texte}</text>`).join('');
 
-  const points = pesees.map((p) => `${x(p.date).toFixed(1)},${y(p.poidsKg).toFixed(1)}`).join(' ');
-  const ronds = pesees.map((p) =>
-    `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.poidsKg).toFixed(1)}" r="5" class="ps-point"><title>${formatDate(p.date)} : ${formatPoids(p.poidsKg)}</title></circle>`).join('');
+  const points = pesees.map((p) => `${x(p.date).toFixed(2)},${y(p.poidsKg).toFixed(2)}`).join(' ');
+  const rayonCible = pesees.length > 30 ? 8 : 14; // zone de survol et de toucher, plus grande que le point
+  const ronds = pesees.map((p) => `<circle cx="${x(p.date).toFixed(2)}" cy="${y(p.poidsKg).toFixed(2)}" r="5" class="ps-point" data-kg="${p.poidsKg}"/>`).join('');
+  const cibles = pesees.map((p, i) => `<circle cx="${x(p.date).toFixed(2)}" cy="${y(p.poidsKg).toFixed(2)}" r="${rayonCible}" class="ps-cible" data-i="${i}" data-info="${echapper(`${formatDate(p.date)} · ${formatPoids(p.poidsKg)}`)}"/>`).join('');
 
   const debut = pesees[0].date;
   const fin = pesees[pesees.length - 1].date;
@@ -88,9 +94,11 @@ export function graphiqueSvg(pesees) {
       ${grille}
       <polyline points="${points}" class="ps-ligne"/>
       ${ronds}
+      ${cibles}
       <text x="${marge.g}" y="${H - 8}" class="ps-texte">${formatDate(debut)}</text>
       <text x="${L - marge.d}" y="${H - 8}" text-anchor="end" class="ps-texte">${formatDate(fin)}</text>
-    </svg>`;
+    </svg>
+    <div class="ps-infobulle" aria-hidden="true" hidden></div>`;
 }
 
 function carteHtml(pesee, precedente) {
@@ -115,6 +123,15 @@ function carteHtml(pesee, precedente) {
       </div>
     </li>`;
 }
+
+// Un toucher ou un clic n'importe où ailleurs referme l'info-bulle ouverte (un seul écouteur pour toute l'application)
+document.addEventListener('pointerdown', (e) => {
+  if (e.target.closest?.('.ps-cible')) return;
+  document.querySelectorAll('.ps-infobulle:not([hidden])').forEach((b) => {
+    b.hidden = true;
+    b.closest('.ps-graph')?.querySelectorAll('.ps-point--actif').forEach((p) => p.classList.remove('ps-point--actif'));
+  });
+});
 
 /** Affiche la section « Pesées » dans `zone`. */
 export function rendre(zone, animal) {
@@ -153,6 +170,31 @@ export function rendre(zone, animal) {
     </form>
     ${graphique}
     ${pesees.length ? `<ul class="sn-liste" aria-label="Pesées, de la plus récente à la plus ancienne">${liste}</ul>` : ''}`;
+
+  // Info-bulle des points : survol à la souris, toucher sur téléphone (le survol n'existe pas au doigt).
+  // Elle double la liste de cartes ci-dessous, qui reste la version accessible au clavier et aux lecteurs d'écran.
+  const graph = section.querySelector('.ps-graph');
+  const bulle = graph?.querySelector('.ps-infobulle');
+  if (bulle) {
+    const points = [...graph.querySelectorAll('.ps-point')];
+    const cacher = () => { bulle.hidden = true; points.forEach((p) => p.classList.remove('ps-point--actif')); };
+    const montrer = (cible) => {
+      cacher();
+      const point = points[Number(cible.dataset.i)];
+      point.classList.add('ps-point--actif');
+      bulle.textContent = cible.dataset.info;
+      bulle.hidden = false;
+      const g = graph.getBoundingClientRect();
+      const c = point.getBoundingClientRect();
+      const moitie = bulle.offsetWidth / 2;
+      const centre = Math.min(Math.max(c.left + c.width / 2 - g.left, moitie + 4), g.width - moitie - 4); // reste dans la carte
+      bulle.style.left = `${centre}px`;
+      bulle.style.top = `${c.top - g.top - 8}px`;
+    };
+    graph.addEventListener('pointerover', (e) => { const c = e.target.closest('.ps-cible'); if (c) montrer(c); });
+    graph.addEventListener('pointerout', (e) => { if (e.pointerType === 'mouse' && e.target.closest('.ps-cible')) cacher(); });
+    section.addEventListener('pointerdown', (e) => { const c = e.target.closest('.ps-cible'); if (c) montrer(c); else cacher(); });
+  }
 
   const form = section.querySelector('form');
   form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });

@@ -35,7 +35,7 @@ Les captures d'écran sont dans `tests/sortie/shots/`. Le dossier `tests/sortie/
 | `5e` | `test-5e-soins.mjs` | Soins : ajout, modification, suppression, rappel « Fait », formulaires et erreurs |
 | `5f` | `test-5f-rappels.mjs` | Page Rappels : groupes, filtres, « Fait », « Voir le soin », longue liste |
 | `finitions` | `test-finitions.mjs` | Navigation, couleurs d'échéance, noms de soins, Accueil, résumés, barre du bas mobile |
-| `5g` | `test-5g-pesees.mjs` | Pesées (validation, petits poids, graphique, suppression), Sauvegarde, Bientôt, page introuvable |
+| `5g` | `test-5g-pesees.mjs` | Pesées (validation, petits poids, suppression), graphique (alignement des points sur les graduations à 1 px près, info-bulle à la souris et au toucher), Sauvegarde, Bientôt, page introuvable |
 
 Chaque test passe sur trois largeurs : ordinateur (1280 px), tablette (820 px) et mobile (390 px).
 

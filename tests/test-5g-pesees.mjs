@@ -107,6 +107,91 @@ for (const [nom, w, h] of [['ordinateur', 1280, 900], ['tablette', 820, 1100], [
 }
 await taille(390, 844); await clip('pesees-70-mobile', '.ps', 1500); await taille(1280, 900);
 
+// ----- Alignement des points sur l'axe vertical (bug : étiquettes arrondies sur des lignes à des valeurs « quelconques »)
+// Pour chaque point : valeur lue dans son info-bulle (ou data-kg), position attendue calculée UNIQUEMENT depuis les étiquettes de l'axe
+// (droite passant par la première et la dernière graduation affichées), comparée à la position réelle du point. Tolérance : 1 px.
+let echecs5g = 0; // vérifications automatiques en échec (rend le test bloquant : voir la dernière ligne et le code de sortie)
+const alignement = async (nom) => {
+  const r = await ev(`(() => {
+    const svg = document.querySelector('.ps-graphique');
+    const num = (t) => Number(t.replace(/[\\s\\u202f\\u00a0]/g, '').replace(',', '.'));
+    const ticks = [...svg.querySelectorAll('text[text-anchor="end"]')]
+      .filter((t) => /^[\\d\\s\\u202f\\u00a0,.]+$/.test(t.textContent.trim()))
+      .map((t) => ({ v: num(t.textContent), y: Number(t.getAttribute('y')) - 4 }));
+    if (ticks.length < 2) return { erreur: 'moins de 2 graduations lues' };
+    const a = ticks[0], b = ticks[ticks.length - 1];
+    const pente = (b.y - a.y) / (b.v - a.v);
+    let pire = 0, pireInfo = '';
+    const pts = [...svg.querySelectorAll('circle.ps-point')];
+    for (const c of pts) {
+      const brut = c.dataset.kg ?? (c.querySelector('title')?.textContent.match(/: ([\\d\\s\\u202f\\u00a0,]+) kg/) || [])[1];
+      const v = num(String(brut));
+      const attendu = a.y + (v - a.v) * pente;
+      const ecart = Math.abs(attendu - Number(c.getAttribute('cy')));
+      if (ecart > pire) { pire = ecart; pireInfo = v + ' kg : attendu y=' + attendu.toFixed(1) + ', réel y=' + c.getAttribute('cy'); }
+    }
+    // Les graduations sont-elles régulières ? (même pas entre deux étiquettes voisines)
+    const pas = ticks.slice(1).map((t, i) => t.v - ticks[i].v);
+    const reguliere = pas.every((p) => Math.abs(p - pas[0]) < Math.abs(pas[0]) * 1e-6);
+    return { graduations: ticks.map((t) => t.v).join(' | '), points: pts.length, pire: Math.round(pire * 100) / 100, pireInfo, reguliere };
+  })()`);
+  if (!(r.pire <= 1 && r.reguliere)) echecs5g++;
+  log(`  alignement ${nom} : graduations = ${r.graduations} | ${r.points} points | écart maximal = ${r.pire} px (${r.pireInfo}) | graduations régulières = ${r.reguliere} | ALIGNÉ (≤ 1 px) = ${r.pire <= 1 && r.reguliere}`);
+};
+log('=== ALIGNEMENT POINTS / GRADUATIONS');
+await ev(`import('/js/storage.js').then(m=>m.toutEffacer())`);
+await ev(`import('/modules/animaux/exemples.js').then(m=>m.ajouterExemples())`);
+const idMimi5g = (await donnees()).animaux.find((a) => a.nom === 'Mimi').id;
+for (const [nom, w, h] of [['ordinateur', 1280, 900], ['mobile', 390, 844]]) {
+  await taille(w, h); await poidsOnglet(idMimi5g); await sleep(200);
+  log(`  Mimi (${nom}) : pesées = ${await ev(`[...document.querySelectorAll('.ps-carte__poids')].map(e=>e.textContent).reverse().join(', ')`)}`);
+  await alignement(`Mimi ${nom}`);
+  await clip(`graphique-mimi-${nom}`, '.ps-graph');
+}
+await taille(1280, 900);
+await charger([{ id: 'h1', animalId: 'h', date: jourN(-6), poidsKg: 0.034 }, { id: 'h2', animalId: 'h', date: jourN(-4), poidsKg: 0.036 }, { id: 'h3', animalId: 'h', date: jourN(-2), poidsKg: 0.035 }, { id: 'h4', animalId: 'h', date: jourN(0), poidsKg: 0.039 }]);
+await poidsOnglet('h'); await alignement('hamster 0,034 à 0,039');
+await charger(Array.from({ length: 70 }, (_, i) => ({ id: 'g' + i, animalId: 'c', date: jourN(-300 + i * 4), poidsKg: Math.round((20 + Math.sin(i / 6) * 3) * 10) / 10 }))); await poidsOnglet('c'); await alignement('70 pesées');
+await charger([{ id: 'e1', animalId: 'c', date: jourN(-3), poidsKg: 10 }, { id: 'e2', animalId: 'c', date: jourN(-1), poidsKg: 10 }]); await poidsOnglet('c'); await alignement('deux poids identiques');
+await charger([{ id: 'l1', animalId: 'c', date: jourN(-9), poidsKg: 3.9 }, { id: 'l2', animalId: 'c', date: jourN(-5), poidsKg: 1200 }]); await poidsOnglet('c'); await alignement('très grande amplitude 3,9 à 1200 kg');
+
+// ----- Info-bulle des points : souris (survol) et toucher (téléphone), pas seulement le clavier
+const centrePoint = (i) => ev(`(() => { const c = document.querySelectorAll('.ps-cible')[${i}]; c.scrollIntoView({ block: 'center' }); const r = c.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()`);
+const etatBulle = () => ev(`(() => { const b = document.querySelector('.ps-infobulle'); if (!b) return { absente: true }; const r = b.getBoundingClientRect(); const g = document.querySelector('.ps-graph').getBoundingClientRect();
+  return { visible: !b.hidden && r.width > 0, texte: b.textContent, centre: r.left + r.width / 2, dansCarte: r.left >= g.left - 0.5 && r.right <= g.right + 0.5, actifs: document.querySelectorAll('.ps-point--actif').length }; })()`);
+const verifier = (condition, texteLog) => { if (!condition) echecs5g++; log(`  ${texteLog} = ${condition}`); };
+log('=== INFO-BULLE (Mimi : 3,9 / 4,1 / 4,2 / 4,15 kg)');
+await ev(`import('/js/storage.js').then(m=>m.toutEffacer())`);
+await ev(`import('/modules/animaux/exemples.js').then(m=>m.ajouterExemples())`);
+const idMimiBulle = (await donnees()).animaux.find((x) => x.nom === 'Mimi').id;
+for (const [nom, w, h, tactile] of [['ordinateur (souris)', 1280, 900, false], ['mobile (toucher)', 390, 844, true]]) {
+  await taille(w, h);
+  await send('Emulation.setTouchEmulationEnabled', { enabled: tactile, maxTouchPoints: tactile ? 1 : 0 });
+  await poidsOnglet(idMimiBulle); await sleep(200);
+  log(`  -- ${nom}`);
+  verifier((await etatBulle()).visible === false, 'au départ, aucune info-bulle');
+  for (const i of [0, 3]) { // première et dernière pesée : le bord de la carte ne doit pas rogner l'info-bulle
+    const pt = await centrePoint(i);
+    if (tactile) { await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: pt.x, y: pt.y }] }); await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); }
+    else await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pt.x, y: pt.y });
+    await sleep(250);
+    const e = await etatBulle();
+    const attendu = i === 0 ? '3,9 kg' : '4,15 kg';
+    verifier(e.visible && e.texte.includes(attendu) && /\d{4}/.test(e.texte), `pesée n°${i + 1} : info-bulle visible « ${e.texte} » (contient ${attendu} et une date), un seul point actif (${e.actifs})`);
+    verifier(e.dansCarte, `pesée n°${i + 1} : l'info-bulle reste dans la carte du graphique`);
+    if (i === 3) await ecran(`graphique-infobulle-${tactile ? 'mobile' : 'ordinateur'}`);
+  }
+  if (tactile) {
+    await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 5, y: 120 }] }); await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(250);
+    verifier((await etatBulle()).visible === false, 'toucher ailleurs : l\'info-bulle disparaît');
+  } else {
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 }); await sleep(250);
+    verifier((await etatBulle()).visible === false, 'la souris quitte le point : l\'info-bulle disparaît');
+  }
+}
+await send('Emulation.setTouchEmulationEnabled', { enabled: false });
+await taille(1280, 900);
+
 const base = [{ id: 'p1', animalId: 'c', date: jourN(-20), poidsKg: 20.5 }, { id: 'p2', animalId: 'c', date: jourN(-10), poidsKg: 21 }, { id: 'p3', animalId: 'c', date: jourN(-1), poidsKg: 20.8 }, { id: 'ph', animalId: 'h', date: jourN(-1), poidsKg: 0.04 }];
 const soinBase = [{ id: 's1', animalId: 'c', type: 'vaccin', titre: 'Rage', date: jourN(-5), notes: '', rappel: '', rappelFait: false }];
 await charger(base, { soins: soinBase }); await poidsOnglet('c');
@@ -162,4 +247,5 @@ const exp2 = await ev(`import('/js/storage.js').then(m=>m.exporter())`);
 const net = (t) => { const o = JSON.parse(t); delete o.exporteLe; return JSON.stringify(o); };
 log('export -> effacer -> import -> export identique :', net(exp) === net(exp2));
 log('ERREURS CONSOLE :', erreurs.length ? erreurs : 'aucune');
-ws.close(); proc.kill(); process.exit(0);
+log('VÉRIFICATIONS EN ÉCHEC :', echecs5g);
+ws.close(); proc.kill(); process.exit(echecs5g ? 1 : 0);

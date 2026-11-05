@@ -283,7 +283,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-form > .cp-btn { justify-self: stretch; }
 }
 .ps-note { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
-.ps-graph { padding: var(--cp-espace-4) var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
+.ps-graph { position: relative; padding: var(--cp-espace-4) var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
 .ps-graph__tete { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cp-espace-3); }
 .ps-graph__tete h3 { margin: 0; font-size: var(--cp-taille-m); }
 .ps-unite { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
@@ -292,7 +292,13 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-texte { fill: var(--cp-texte-doux); font-size: 12px; font-family: var(--cp-police-texte); }
 .ps-ligne { fill: none; stroke: var(--cp-foret); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
 .ps-point { fill: var(--cp-carte); stroke: var(--cp-foret); stroke-width: 3; }
-.ps-point:hover { fill: var(--cp-vert-clair); }
+.ps-point { pointer-events: none; }
+.ps-point--actif { fill: var(--cp-vert-clair); stroke-width: 4; }
+.ps-cible { fill: transparent; stroke: none; cursor: pointer; }
+.ps-infobulle { position: absolute; z-index: 2; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  padding: var(--cp-espace-2) var(--cp-espace-3); border-radius: var(--cp-rayon-champ); font-size: var(--cp-taille-s); font-weight: 600;
+  background: var(--cp-foret); color: var(--cp-texte-inverse); box-shadow: var(--cp-ombre-m); }
+.ps-infobulle[hidden] { display: none; }
 /* Téléphone : le graphique est réduit ; on grossit texte et points pour qu'ils restent lisibles */
 @media (max-width: 599px) {
 .ps-texte { font-size: 18px; }

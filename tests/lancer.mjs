@@ -59,9 +59,10 @@ for (const nom of aLancer) {
   const axeOk = (t.match(/ 0 violation/g) ?? []).length;
   const consoleOk = /ERREURS CONSOLE : aucune/.test(t);
   const allerRetour = /identique : true/.test(t);
-  const ok = code.c === 0 && violations === 0 && consoleOk && allerRetour;
+  const echecsVerif = Number((t.match(/VÉRIFICATIONS EN ÉCHEC : (\d+)/) ?? [])[1] ?? 0);
+  const ok = code.c === 0 && violations === 0 && consoleOk && allerRetour && echecsVerif === 0;
   if (!ok) echecs++;
-  console.log(`${ok ? 'OK    ' : 'ÉCHEC '} ${nom.padEnd(10)} ${axeOk} contrôles d'accessibilité à 0 violation, ${violations} avec violations · console ${consoleOk ? 'propre' : 'AVEC ERREURS'} · export/import ${allerRetour ? 'identique' : 'DIFFÉRENT'}${code.c === 0 ? '' : ` · le script s'est arrêté (code ${code.c})`}`);
+  console.log(`${ok ? 'OK    ' : 'ÉCHEC '} ${nom.padEnd(10)} ${axeOk} contrôles d'accessibilité à 0 violation, ${violations} avec violations · console ${consoleOk ? 'propre' : 'AVEC ERREURS'} · export/import ${allerRetour ? 'identique' : 'DIFFÉRENT'}${echecsVerif ? ` · ${echecsVerif} vérification(s) en échec` : ''}${code.c === 0 ? '' : ` · le script s'est arrêté (code ${code.c})`}`);
 }
 serveur.close();
 console.log(`\n${echecs ? `${echecs} test(s) en échec : voir tests/sortie/<test>.txt` : 'Tous les tests passent.'} (lisez aussi les lignes « = false » dans les fichiers de sortie : chaque test affiche ses vérifications.)`);
