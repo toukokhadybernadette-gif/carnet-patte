@@ -16,3 +16,4 @@ node_modules/
 .claude/
 captures-5f/
 captures-5g/
+tests/sortie/
