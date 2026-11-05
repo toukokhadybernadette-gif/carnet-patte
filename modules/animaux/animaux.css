@@ -344,3 +344,35 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .sn-carte--cible { border-color: var(--cp-foret); box-shadow: 0 0 0 1px var(--cp-foret), var(--cp-ombre-m); }
 .sn-carte--cible:focus { outline: none; }
 .sn-carte--cible:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+
+/* =========================================================
+   Refonte 5g : pesées et graphique
+   ========================================================= */
+.ps { display: grid; gap: var(--cp-espace-4); }
+.ps-form { display: grid; gap: var(--cp-espace-4); padding: var(--cp-espace-4) var(--cp-espace-5); }
+.ps-form__titre { margin: 0; font-size: var(--cp-taille-m); }
+.ps-form__champs { display: grid; grid-template-columns: 1fr; gap: var(--cp-espace-4); align-items: start; }
+.ps-form > .cp-btn { justify-self: start; }
+@media (min-width: 600px) { .ps-form__champs { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); } }
+@media (max-width: 599px) { .ps-form > .cp-btn { justify-self: stretch; } }
+
+.ps-note { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.ps-graph { padding: var(--cp-espace-4) var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
+.ps-graph__tete { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cp-espace-3); }
+.ps-graph__tete h3 { margin: 0; font-size: var(--cp-taille-m); }
+.ps-unite { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.ps-graphique { width: 100%; height: auto; display: block; }
+.ps-grille { stroke: var(--cp-bordure); stroke-width: 1; }
+.ps-texte { fill: var(--cp-texte-doux); font-size: 12px; font-family: var(--cp-police-texte); }
+.ps-ligne { fill: none; stroke: var(--cp-foret); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ps-point { fill: var(--cp-carte); stroke: var(--cp-foret); stroke-width: 3; }
+.ps-point:hover { fill: var(--cp-vert-clair); }
+/* Téléphone : le graphique est réduit ; on grossit texte et points pour qu'ils restent lisibles */
+@media (max-width: 599px) { .ps-texte { font-size: 18px; } .ps-point { r: 7px; } .ps-ligne { stroke-width: 4; } }
+
+.ps-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-4); align-items: center; padding: var(--cp-espace-4) var(--cp-espace-5); }
+.ps-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.ps-carte__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-l); color: var(--cp-foret); overflow-wrap: anywhere; }
+.ps-ligne-info { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.ps-ligne-info .ic { flex: none; }

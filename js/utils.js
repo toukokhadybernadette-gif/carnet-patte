@@ -74,7 +74,10 @@ export function age(naissance) {
 
 /** Formate un poids : 4,2 kg */
 export function formatPoids(kg) {
-  return Number(kg).toLocaleString('fr-FR', { maximumFractionDigits: 3 }) + ' kg';
+  const n = Number(kg);
+  // Jamais d'arrondi trompeur (0,0345 n'est pas affiché 0,035, ni 0,0004 « 0 kg »)
+  const decimales = Math.round(n * 1000) / 1000 === n ? 3 : 6;
+  return n.toLocaleString('fr-FR', { maximumFractionDigits: decimales }) + ' kg';
 }
 
 /**

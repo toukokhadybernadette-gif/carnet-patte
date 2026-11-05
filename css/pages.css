@@ -59,3 +59,23 @@ a.cp-carte.pg-tuile, .pg-tuile { display: grid; gap: var(--cp-espace-2); align-c
   .pg { gap: var(--cp-espace-6); }
   .cp h1 { font-size: var(--cp-taille-xl); }
 }
+
+/* =========================================================
+   Refonte 5g : pages Sauvegarde et Bientôt
+   ========================================================= */
+.dn-liste { display: grid; gap: var(--cp-espace-4); }
+.dn-bloc { display: grid; grid-template-columns: auto 1fr; gap: var(--cp-espace-4); align-items: start; padding: var(--cp-espace-5); }
+.dn-bloc__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.dn-bloc--danger .dn-bloc__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.dn-bloc__corps { display: grid; gap: var(--cp-espace-2); min-width: 0; }
+.dn-bloc__corps h2 { margin: 0; font-size: var(--cp-taille-l); }
+.dn-bloc__corps p { margin: 0; color: var(--cp-texte-doux); }
+.dn-bloc__actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); margin-top: var(--cp-espace-2); }
+@media (max-width: 599px) { .dn-bloc { grid-template-columns: 1fr; } .dn-bloc__actions .cp-btn { width: 100%; } }
+
+.bt-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.bt-carte { display: grid; gap: var(--cp-espace-2); align-content: start; justify-items: start; padding: var(--cp-espace-5); }
+.bt-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); }
+.bt-carte__titre { margin: 0; font-size: var(--cp-taille-l); }
+.bt-carte p { margin: 0; color: var(--cp-texte-doux); }
+.bt-carte--cible { border-color: var(--cp-foret); box-shadow: 0 0 0 1px var(--cp-foret), var(--cp-ombre-m); }

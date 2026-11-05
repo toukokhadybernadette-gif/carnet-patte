@@ -1,23 +1,67 @@
 // Pesées d'un animal + petit graphique d'évolution (dessiné à la main en SVG).
+// Format des données inchangé : { id, animalId, date, poidsKg }.
 
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, formatDate, formatPoids, lireISO } from '../../js/utils.js';
 import { confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
+import { bouton, champ, vide } from '../../js/composants.js';
+import { erreurChamp } from './commun.js';
+
+const POIDS_MAX = 2000; // kg
+
+/** Nombre en français, sans décimale inutile (jusqu'à 3 : 0,035 reste 0,035). */
+const nombre = (n) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: Math.round(n * 1000) / 1000 === n ? 3 : 6 });
+
+/**
+ * Lit un poids saisi (virgule ou point, 3 décimales au plus). Retourne { kg } ou { erreur }.
+ * Le champ est un texte et non un « number » : un champ number refuse la virgule selon la langue du navigateur.
+ */
+export function lirePoids(saisie) {
+  const t = String(saisie ?? '').trim().replace(/\s/g, '');
+  if (!t) return { erreur: 'Indiquez le poids en kilogrammes.' };
+  if (!/^\d+([.,]\d+)?$/.test(t)) return { erreur: 'Entrez un nombre, par exemple 4,2 ou 0,035.' };
+  if (/[.,]\d{4,}$/.test(t)) return { erreur: 'Trois décimales au maximum (par exemple 0,035 kg, soit 35 g).' };
+  const kg = Number(t.replace(',', '.'));
+  if (!(kg > 0)) return { erreur: 'Le poids doit être supérieur à 0.' };
+  if (kg > POIDS_MAX) return { erreur: `Le poids ne peut pas dépasser ${nombre(POIDS_MAX)} kg.` };
+  return { kg };
+}
+
+/** Une pesée au format attendu (date AAAA-MM-JJ valide, poids positif) : les données abîmées ne sont pas affichées, mais jamais effacées. */
+const lisible = (p) => /^\d{4}-\d{2}-\d{2}$/.test(p.date ?? '') && !Number.isNaN(lireISO(p.date).getTime()) && Number.isFinite(p.poidsKg) && p.poidsKg > 0;
+
+/** Vérifie la date d'une pesée : présente, valide et pas dans le futur (aujourd'hui accepté). */
+export function verifierDate(date) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(lireISO(date).getTime())) return 'Indiquez la date de la pesée.';
+  if (date > aujourdhui()) return 'La date ne peut pas être dans le futur.';
+  return '';
+}
+
+/** Étiquettes de l'axe : le moins de décimales possible, mais jamais deux étiquettes identiques (petits poids). */
+function etiquettes(valeurs) {
+  for (let d = 0; d <= 5; d++) {
+    const t = valeurs.map((v) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }));
+    if (new Set(t).size === t.length) return t;
+  }
+  return valeurs.map((v) => v.toLocaleString('fr-FR', { maximumFractionDigits: 6 }));
+}
 
 /** Construit le graphique SVG. `pesees` doit être triée par date croissante. */
 export function graphiqueSvg(pesees) {
   const L = 620, H = 260;
-  const marge = { g: 48, d: 18, h: 16, b: 34 };
+  const marge = { g: 64, d: 18, h: 16, b: 34 };
   const largeur = L - marge.g - marge.d;
   const hauteur = H - marge.h - marge.b;
 
   const poids = pesees.map((p) => p.poidsKg);
-  let min = Math.min(...poids);
-  let max = Math.max(...poids);
-  if (min === max) { min -= 1; max += 1; }
-  const marge10 = (max - min) * 0.15;
-  min -= marge10; max += marge10;
+  const pMin = Math.min(...poids);
+  const pMax = Math.max(...poids);
+  let min = pMin;
+  let max = pMax;
+  if (min === max) { const e = Math.max(min * 0.1, 0.001); min -= e; max += e; }
+  const marge15 = (max - min) * 0.15;
+  min = Math.max(min - marge15, 0); max += marge15;
 
   const t0 = lireISO(pesees[0].date).getTime();
   const t1 = lireISO(pesees[pesees.length - 1].date).getTime();
@@ -25,51 +69,49 @@ export function graphiqueSvg(pesees) {
   const y = (kg) => marge.h + (1 - (kg - min) / (max - min)) * hauteur;
 
   // Lignes horizontales et étiquettes de poids
-  let grille = '';
-  for (let i = 0; i <= 3; i++) {
-    const v = min + ((max - min) * i) / 3;
-    const py = y(v);
-    grille += `<line x1="${marge.g}" x2="${L - marge.d}" y1="${py}" y2="${py}" class="graph-grille"/>
-               <text x="${marge.g - 8}" y="${py + 4}" text-anchor="end" class="graph-texte">${v.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}</text>`;
-  }
+  const graduations = [0, 1, 2, 3].map((i) => min + ((max - min) * i) / 3);
+  const textes = etiquettes(graduations);
+  const grille = graduations.map((v, i) => `
+    <line x1="${marge.g}" x2="${L - marge.d}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="ps-grille"/>
+    <text x="${marge.g - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" class="ps-texte">${textes[i]}</text>`).join('');
 
   const points = pesees.map((p) => `${x(p.date).toFixed(1)},${y(p.poidsKg).toFixed(1)}`).join(' ');
   const ronds = pesees.map((p) =>
-    `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.poidsKg).toFixed(1)}" r="5" class="graph-point">
-       <title>${formatDate(p.date)} : ${formatPoids(p.poidsKg)}</title></circle>`).join('');
+    `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.poidsKg).toFixed(1)}" r="5" class="ps-point"><title>${formatDate(p.date)} : ${formatPoids(p.poidsKg)}</title></circle>`).join('');
 
-  const dateGauche = formatDate(pesees[0].date);
-  const dateDroite = formatDate(pesees[pesees.length - 1].date);
+  const debut = pesees[0].date;
+  const fin = pesees[pesees.length - 1].date;
+  const resume = `Évolution du poids : ${pesees.length} pesées du ${formatDate(debut)} au ${formatDate(fin)}, de ${formatPoids(pesees[0].poidsKg)} à ${formatPoids(pesees[pesees.length - 1].poidsKg)} (minimum ${formatPoids(pMin)}, maximum ${formatPoids(pMax)}).`;
 
   return `
-    <svg viewBox="0 0 ${L} ${H}" class="graphique" role="img" aria-label="Évolution du poids en kg">
+    <svg viewBox="0 0 ${L} ${H}" class="ps-graphique" role="img" aria-label="${echapper(resume)}">
       ${grille}
-      <polyline points="${points}" class="graph-ligne"/>
+      <polyline points="${points}" class="ps-ligne"/>
       ${ronds}
-      <text x="${marge.g}" y="${H - 8}" class="graph-texte">${dateGauche}</text>
-      <text x="${L - marge.d}" y="${H - 8}" text-anchor="end" class="graph-texte">${dateDroite}</text>
-    </svg>
-    <p class="discret graph-unite">Poids en kg</p>`;
+      <text x="${marge.g}" y="${H - 8}" class="ps-texte">${formatDate(debut)}</text>
+      <text x="${L - marge.d}" y="${H - 8}" text-anchor="end" class="ps-texte">${formatDate(fin)}</text>
+    </svg>`;
 }
 
-function ligneHtml(pesee, precedente) {
+function carteHtml(pesee, precedente) {
   let variation = '';
   if (precedente) {
-    const diff = Math.round((pesee.poidsKg - precedente.poidsKg) * 1000) / 1000;
-    if (diff !== 0) {
-      variation = `<span class="discret avec-icone">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 14 })}${diff > 0 ? '+' : ''}${diff.toLocaleString('fr-FR')} kg</span>`;
-    }
+    const diff = Math.round((pesee.poidsKg - precedente.poidsKg) * 10000) / 10000;
+    variation = diff !== 0
+      ? `<span class="ps-ligne-info">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 16 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg depuis la pesée précédente</span></span>`
+      : `<span class="ps-ligne-info">${icone('minus', { taille: 16 })}<span>Poids inchangé depuis la pesée précédente</span></span>`;
   }
+  const nom = `la pesée de ${formatPoids(pesee.poidsKg)} du ${formatDate(pesee.date)}`;
   return `
-    <li class="ligne">
-      <div class="ligne-icone">${icone('scale', { taille: 22 })}</div>
-      <div class="ligne-corps">
-        <strong>${formatPoids(pesee.poidsKg)}</strong>
-        <span class="discret">${formatDate(pesee.date)}</span>
-      </div>
-      <div class="ligne-actions">
+    <li class="cp-carte ps-carte" data-pesee="${echapper(pesee.id)}">
+      <span class="ps-carte__icone" aria-hidden="true">${icone('scale', { taille: 24 })}</span>
+      <div class="ps-carte__corps">
+        <strong class="ps-carte__poids">${formatPoids(pesee.poidsKg)}</strong>
+        <span class="ps-ligne-info">${icone('calendar', { taille: 16 })}<time datetime="${echapper(pesee.date)}">${formatDate(pesee.date)}</time></span>
         ${variation}
-        <button class="bouton secondaire petit icone" data-supprimer="${pesee.id}" aria-label="Supprimer la pesée">${icone('trash-2', { taille: 16 })}</button>
+      </div>
+      <div class="ps-carte__actions">
+        ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${nom}`, attrs: { 'data-supprimer': pesee.id } })}
       </div>
     </li>`;
 }
@@ -77,49 +119,67 @@ function ligneHtml(pesee, precedente) {
 /** Affiche la section « Pesées » dans `zone`. */
 export function rendre(zone, animal) {
   const section = document.createElement('section');
-  section.className = 'carte';
+  section.className = 'ps';
   zone.replaceChildren(section);
 
   const pesees = storage.lister('pesees')
-    .filter((p) => p.animalId === animal.id)
+    .filter((p) => p.animalId === animal.id && lisible(p))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const rerendre = () => rendre(zone, animal);
 
   let graphique;
-  if (pesees.length >= 2) graphique = graphiqueSvg(pesees);
-  else if (pesees.length === 1) graphique = `<p class="discret">Ajoutez une deuxième pesée pour voir la courbe.</p>`;
-  else graphique = `<div class="vide">Aucune pesée pour l'instant.</div>`;
+  if (pesees.length >= 2) {
+    graphique = `<div class="cp-carte ps-graph"><div class="ps-graph__tete"><h3>Évolution</h3><span class="ps-unite">Poids en kg</span></div>${graphiqueSvg(pesees)}</div>`;
+  } else if (pesees.length === 1) {
+    graphique = `<p class="ps-note">${icone('info', { taille: 16 })}<span>Ajoutez une deuxième pesée pour voir la courbe.</span></p>`;
+  } else {
+    graphique = `<div class="cp-carte">${vide({ niveau: 3, icone: 'scale', titre: "Aucune pesée pour l'instant", texte: `Notez le poids de ${animal.nom} pour suivre son évolution.` })}</div>`;
+  }
 
   // Liste : la plus récente en premier, avec la variation par rapport à la précédente
-  const liste = pesees.map((p, i) => ligneHtml(p, pesees[i - 1])).reverse().join('');
+  const liste = pesees.map((p, i) => carteHtml(p, pesees[i - 1])).reverse().join('');
 
   section.innerHTML = `
-    <h2>Poids</h2>
-    <form class="formulaire form-pesee">
-      <label>Date <input type="date" name="date" required value="${aujourdhui()}" max="${aujourdhui()}"></label>
-      <label>Poids (kg) <input type="number" name="poids" required min="0.001" max="2000" step="0.001" inputmode="decimal" placeholder="Ex. : 4,2"></label>
-      <button type="submit" class="bouton">${icone('plus', { taille: 18 })} Ajouter</button>
+    <div class="sn-entete"><h2 id="ps-titre" tabindex="-1">Poids</h2></div>
+    <form class="cp-carte cp-formulaire ps-form" novalidate aria-labelledby="ps-titre-form">
+      <h3 class="ps-form__titre" id="ps-titre-form">Ajouter une pesée</h3>
+      <div class="ps-form__champs">
+        ${champ({ id: 'pesee-date', label: 'Date', type: 'date', valeur: aujourdhui(), requis: true, attrs: { name: 'date', max: aujourdhui() } })}
+        ${champ({ id: 'pesee-poids', label: 'Poids (kg)', valeur: '', requis: true, placeholder: 'Ex. : 4,2', aide: 'Virgule ou point. Petit animal : 0,035 pour 35 g.',
+          attrs: { name: 'poids', inputmode: 'decimal', autocomplete: 'off' } })}
+      </div>
+      ${bouton({ texte: 'Ajouter la pesée', icone: 'plus', type: 'submit' })}
     </form>
-    <div class="zone-graphique">${graphique}</div>
-    ${pesees.length ? `<ul class="lignes">${liste}</ul>` : ''}`;
+    ${graphique}
+    ${pesees.length ? `<ul class="sn-liste" aria-label="Pesées, de la plus récente à la plus ancienne">${liste}</ul>` : ''}`;
 
-  section.querySelector('form').addEventListener('submit', (e) => {
+  const form = section.querySelector('form');
+  form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const f = new FormData(e.target);
-    const poidsKg = Number(f.get('poids'));
-    if (!(poidsKg > 0)) return;
-    storage.ajouter('pesees', { animalId: animal.id, date: f.get('date'), poidsKg });
+    form.querySelectorAll('[aria-invalid]').forEach((c) => erreurChamp(c, ''));
+    const erreurDate = verifierDate(form.date.value);
+    const lu = lirePoids(form.poids.value);
+    if (erreurDate) erreurChamp(form.date, erreurDate);
+    if (lu.erreur) erreurChamp(form.poids, lu.erreur);
+    if (erreurDate || lu.erreur) { (erreurDate ? form.date : form.poids).focus(); return; }
+    storage.ajouter('pesees', { animalId: animal.id, date: form.date.value, poidsKg: lu.kg });
     toast('Pesée ajoutée');
     rerendre();
+    zone.querySelector('#pesee-poids')?.focus(); // prêt à saisir la suivante
   });
 
   section.addEventListener('click', async (e) => {
-    const bouton = e.target.closest('[data-supprimer]');
-    if (bouton && await confirmer('Supprimer cette pesée ?')) {
-      storage.supprimer('pesees', bouton.dataset.supprimer);
+    const declencheur = e.target.closest('[data-supprimer]');
+    if (!declencheur) return;
+    const pesee = storage.trouver('pesees', declencheur.dataset.supprimer);
+    if (!pesee) return;
+    if (await confirmer(`Supprimer la pesée de ${formatPoids(pesee.poidsKg)} du ${formatDate(pesee.date)} ?`)) {
+      storage.supprimer('pesees', pesee.id);
       toast('Pesée supprimée');
       rerendre();
+      zone.querySelector('#ps-titre')?.focus(); // la carte a disparu : le focus revient au titre de la section
     }
   });
 }

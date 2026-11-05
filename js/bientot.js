@@ -3,6 +3,7 @@
 
 import { echapper } from './utils.js';
 import { icone } from './icons.js';
+import { badge } from './composants.js';
 
 export const MODULES_A_VENIR = [
   { id: 'toxique', icone: 'shield-alert', titre: 'Toxique ?', texte: 'Vérifier si un aliment ou une plante est dangereux selon l\'espèce.' },
@@ -13,16 +14,21 @@ export const MODULES_A_VENIR = [
 
 export function rendre(zone, segments) {
   const cible = segments[0];
+  zone.classList.add('page-large');
   zone.innerHTML = `
-    <div class="page-titre"><h1>Bientôt</h1></div>
-    <p class="discret">Ces modules arrivent dans une prochaine étape.</p>
-    <div class="liste-modules">
-      ${MODULES_A_VENIR.map((m) => `
-        <section class="carte" ${m.id === cible ? 'style="border-color:var(--vert);"' : ''}>
-          <span class="grand-icone">${icone(m.icone, { taille: 32 })}</span>
-          <h2>${echapper(m.titre)}</h2>
-          <p class="discret">${echapper(m.texte)}</p>
-          <span class="pastille semaine">Bientôt</span>
-        </section>`).join('')}
+    <div class="cp pg">
+      <header class="pg-entete">
+        <h1 tabindex="-1">Bientôt</h1>
+        <p>Ces modules arrivent dans une prochaine étape.</p>
+      </header>
+      <ul class="bt-liste">
+        ${MODULES_A_VENIR.map((m) => `
+          <li class="cp-carte bt-carte${m.id === cible ? ' bt-carte--cible' : ''}" aria-disabled="true">
+            <span class="bt-carte__icone" aria-hidden="true">${icone(m.icone, { taille: 26 })}</span>
+            <h2 class="bt-carte__titre">${echapper(m.titre)}</h2>
+            <p>${echapper(m.texte)}</p>
+            ${badge({ texte: 'Bientôt', variante: 'bientot' })}
+          </li>`).join('')}
+      </ul>
     </div>`;
 }
