@@ -5,7 +5,7 @@ import { echapper, aujourdhui, formatDate } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, choix, vide } from '../../js/composants.js';
-import { TYPES_SOIN, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp } from './commun.js';
+import { TYPES_SOIN, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
 
 function formulaireSoin(animal, soin, apres) {
   const s = soin ?? { type: 'vaccin', titre: '', date: aujourdhui(), notes: '', rappel: '' };
@@ -70,7 +70,8 @@ function formulaireSoin(animal, soin, apres) {
 function carteHtml(soin) {
   const type = infosType(soin.type);
   const statut = statutRappel(soin);
-  const nom = soin.titre || type.nom;
+  const { categorie, nom: nomPrecis } = libellesSoin(soin);
+  const nom = nomPrecis || categorie; // pour les noms des boutons
 
   let rappel = '';
   if (statut) {
@@ -83,9 +84,9 @@ function carteHtml(soin) {
     <li class="cp-carte sn-carte" data-soin="${echapper(soin.id)}">
       <span class="sn-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="sn-carte__corps">
-        ${soin.titre ? `<span class="sn-carte__type">${echapper(type.nom)}</span>` : ''}
+        <span class="sn-carte__type">${echapper(categorie)}</span>
         <div class="sn-carte__tete">
-          <strong class="sn-carte__nom">${echapper(nom)}</strong>
+          ${nomPrecis ? `<strong class="sn-carte__nom">${echapper(nomPrecis)}</strong>` : '<strong class="sn-carte__nom sn-carte__nom--vide">Sans nom précis</strong>'}
           ${badgeSoin(soin)}
         </div>
         <span class="sn-ligne">${icone('calendar', { taille: 16 })}<span>Soin du <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>

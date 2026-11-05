@@ -238,6 +238,7 @@ a.cp-carte:hover, .cp-carte--interactive:hover { box-shadow: var(--cp-ombre-m); 
 .cp-stat__valeur { font-family: var(--cp-police-titre); font-weight: 800; font-size: var(--cp-taille-xxl); line-height: 1.1; color: var(--cp-foret); }
 .cp-stat__variation { display: inline-flex; align-items: center; gap: 4px; font-size: var(--cp-taille-xs); font-weight: 500; color: var(--cp-succes-texte); }
 .cp-stat__variation--baisse { color: var(--cp-terre); }
+.cp-stat__detail { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); overflow-wrap: anywhere; }
 
 /* Carte de produit (mise en forme uniquement : aucun produit réel) */
 .cp-produit { padding: 0; overflow: hidden; display: flex; flex-direction: column; }

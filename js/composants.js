@@ -131,8 +131,8 @@ export function carteAnimal({ nom, espece, details = '', icone: nomIcone, photo,
   return href ? `<a class="${classes}" href="${echapper(href)}">${corps}</a>` : `<div class="${classes}">${corps}</div>`;
 }
 
-/** Carte de statistique. variation : { texte, sens: 'hausse' | 'baisse' } (facultatif). */
-export function carteStat({ libelle, valeur, icone: nomIcone = 'paw-print', variation }) {
+/** Carte de statistique. variation : { texte, sens: 'hausse' | 'baisse' } (facultatif). detail : ligne de précision sous la valeur (facultatif). */
+export function carteStat({ libelle, valeur, icone: nomIcone = 'paw-print', variation, detail = '' }) {
   const v = variation
     ? `<span class="cp-stat__variation${variation.sens === 'baisse' ? ' cp-stat__variation--baisse' : ''}">${icone(variation.sens === 'baisse' ? 'trending-down' : 'trending-up', { taille: 16 })}${echapper(variation.texte)}</span>`
     : '';
@@ -140,6 +140,7 @@ export function carteStat({ libelle, valeur, icone: nomIcone = 'paw-print', vari
     <div class="cp-carte cp-stat">
       <div class="cp-stat__tete"><span>${echapper(libelle)}</span><span class="cp-stat__icone">${icone(nomIcone, { taille: 20 })}</span></div>
       <span class="cp-stat__valeur">${echapper(String(valeur))}</span>
+      ${detail ? `<span class="cp-stat__detail">${echapper(detail)}</span>` : ''}
       ${v}
     </div>`;
 }

@@ -97,18 +97,41 @@ export function statutRappel(soin) {
   return { jours, classe, texte };
 }
 
-/** Badge de statut d'un soin : effectué, à venir ou en retard (HTML). `statut` vient de statutRappel(). */
+// ----- Une seule règle de couleur pour les échéances, sur toutes les pages -----
+// rouge : en retard · ambre : cette semaine (7 jours ou moins) · vert : plus tard (au-delà de 7 jours)
+export const VARIANTE_ECHEANCE = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' };
+
+/** Badge d'échéance d'un rappel en attente. `statut` vient de statutRappel() ; `texte` remplace le texte par défaut. */
+export function badgeEcheance(statut, texte = statut.texte) {
+  return badge({ texte, variante: VARIANTE_ECHEANCE[statut.classe], icone: statut.classe === 'retard' ? 'bell-ring' : 'bell' });
+}
+
+/** Badge de statut d'un soin : effectué, à venir ou en retard (HTML). */
 export function badgeSoin(soin) {
   const statut = statutRappel(soin);
-  if (statut) {
-    const retard = statut.classe === 'retard';
-    return retard
-      ? badge({ texte: statut.texte, variante: 'alerte', icone: 'bell-ring' })
-      : badge({ texte: `À venir · ${statut.texte.toLowerCase()}`, variante: 'attention', icone: 'bell' });
-  }
+  if (statut) return badgeEcheance(statut, statut.classe === 'retard' ? statut.texte : `À venir · ${statut.texte.toLowerCase()}`);
   if (soin.rappel) return badge({ texte: 'Effectué', variante: 'succes', icone: 'circle-check' });
   if (soin.date > aujourdhui()) return badge({ texte: 'À venir', variante: 'info', icone: 'calendar' });
   return badge({ texte: 'Effectué', variante: 'succes', icone: 'circle-check' });
+}
+
+// ----- Noms d'un soin -----
+const comparable = (t) => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
+/**
+ * Catégorie (type de soin) et nom précis d'un soin. `nom` vaut '' quand le soin n'a pas de nom à lui
+ * ou que son nom répète la catégorie (ex. un vermifuge nommé « Vermifuge ») : on n'affiche alors pas deux fois le même mot.
+ */
+export function libellesSoin(soin) {
+  const categorie = infosType(soin.type).nom;
+  const titre = String(soin.titre ?? '').trim();
+  return { categorie, nom: titre && comparable(titre) !== comparable(categorie) ? titre : '' };
+}
+
+/** Nom court d'un soin pour une ligne de résumé : son nom précis, sinon sa catégorie (« Pipette », « Vermifuge »). */
+export function nomCourtSoin(soin) {
+  const { categorie, nom } = libellesSoin(soin);
+  return nom || categorie;
 }
 
 /**

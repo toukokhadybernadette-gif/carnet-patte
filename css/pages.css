@@ -29,6 +29,26 @@ a.cp-carte.pg-tuile, .pg-tuile { display: grid; gap: var(--cp-espace-2); align-c
 .pg-tuile__texte { font-size: var(--cp-taille-xs); color: var(--cp-texte-doux); margin: 0; }
 .pg-tuile .cp-badge { justify-self: start; }
 
+/* Accueil : trois raccourcis utiles + une carte qui réunit les modules à venir */
+.pg-raccourcis--utiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pg-raccourcis--utiles .pg-bientot { grid-column: 1 / -1; }
+.pg-bientot { display: grid; gap: var(--cp-espace-3); align-content: start; padding: var(--cp-espace-4); background: transparent; box-shadow: none; border-style: dashed; border-color: var(--cp-sauge); }
+.pg-bientot h3 { margin: 0; }
+.pg-bientot__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
+.pg-bientot__lien {
+  display: inline-flex; align-items: center; gap: var(--cp-espace-2); min-height: 36px; padding: 0 var(--cp-espace-3);
+  border: 1px solid var(--cp-bordure-champ); border-radius: var(--cp-rayon-pastille); background: var(--cp-carte);
+  font-size: var(--cp-taille-s); font-weight: 500; color: var(--cp-foret);
+}
+.cp .pg-bientot__lien { text-decoration: none; }
+.pg-bientot__lien:hover { background: var(--cp-fond-survol); border-color: var(--cp-foret); }
+/* téléphone : un raccourci par ligne, icône à gauche */
+@media (max-width: 599px) {
+  .pg-raccourcis--utiles { grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-2); }
+  .pg-raccourcis--utiles a.pg-tuile { grid-template-columns: auto 1fr; column-gap: var(--cp-espace-3); row-gap: 0; align-items: center; padding: var(--cp-espace-3) var(--cp-espace-4); }
+  .pg-raccourcis--utiles .pg-tuile__icone { grid-row: span 2; width: 40px; height: 40px; }
+}
+
 /* Pages « Bientôt disponible » */
 .pg-fonctions { display: grid; gap: var(--cp-espace-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
 .pg-fonction { display: grid; gap: var(--cp-espace-2); align-content: start; box-shadow: none; background: transparent; border-style: dashed; border-color: var(--cp-sauge); }

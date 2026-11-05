@@ -5,7 +5,7 @@ import { echapper, formatDate } from '../../js/utils.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, avatar, choix, selecteur, vide } from '../../js/composants.js';
-import { infosType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin } from './commun.js';
+import { infosType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin } from './commun.js';
 
 /** Tous les rappels en attente, du plus urgent au plus lointain. */
 export function calculerRappels() {
@@ -85,20 +85,21 @@ const lienSoin = (soin, animal) => `${lienFiche(animal)}/soin/${encodeURICompone
 
 function carteHtml({ soin, animal, statut }) {
   const type = infosType(soin.type);
+  const { categorie, nom } = libellesSoin(soin);
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
   const quoi = `${[type.nom, soin.titre].filter(Boolean).join(' — ')} pour ${animal.nom}`;
   return `
     <li class="cp-carte rp-carte rp-carte--${statut ? statut.classe : 'fait'}">
       <span class="rp-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="rp-carte__corps">
-        ${soin.titre ? `<span class="rp-carte__type">${echapper(type.nom)}</span>` : ''}
+        <span class="rp-carte__type">${echapper(categorie)}</span>
         <div class="rp-carte__tete">
-          <strong class="rp-carte__nom">${echapper(soin.titre || type.nom)}</strong>
+          ${nom ? `<strong class="rp-carte__nom">${echapper(nom)}</strong>` : '<strong class="rp-carte__nom rp-carte__nom--vide">Sans nom précis</strong>'}
           ${badgeSoin(soin)}
         </div>
         <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo })}<span>${echapper(animal.nom)}</span></a>
         <span class="rp-ligne">${icone(statut ? 'bell' : 'check', { taille: 16 })}<span>${statut ? 'Prévu le' : 'Rappel du'} <time datetime="${soin.rappel}">${formatDate(soin.rappel)}</time>${statut ? '' : ' · traité'}</span></span>
-        <span class="rp-ligne">${icone('calendar', { taille: 16 })}<span>Soin du <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
+        <span class="rp-ligne">${icone('calendar', { taille: 16 })}<span>Dernier soin le <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
       </div>
       <div class="rp-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${quoi}` } }) : ''}

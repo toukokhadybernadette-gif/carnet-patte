@@ -5,10 +5,9 @@ import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
 import { echapper, aujourdhui, formatDate, formatPoids } from '../../js/utils.js';
 import { badge, carteStat, carteAnimal, vide, bouton } from '../../js/composants.js';
+import { NAV } from '../../js/navigation.js';
 import { calculerRappels } from '../animaux/rappels.js';
-import { infosEspece, nomEspece, infosType } from '../animaux/commun.js';
-
-const VARIANTE_RAPPEL = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' };
+import { infosEspece, nomEspece, infosType, badgeEcheance, nomCourtSoin } from '../animaux/commun.js';
 
 function ligne({ icone: i, titre, meta, fin = '', href }) {
   const corps = `
@@ -27,16 +26,31 @@ const tuile = ({ icone: i, titre, texte, href, bientot }) => `
     ${bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : `<p class="pg-tuile__texte">${echapper(texte)}</p>`}
   </a>`;
 
+/** Les modules à venir, réunis dans une seule carte (les pages restent accessibles depuis le menu). */
+function blocBientot() {
+  const modules = NAV.filter((n) => n.bientot);
+  return `
+    <section class="cp-carte pg-bientot" aria-labelledby="ac-bientot">
+      <h3 class="pg-tuile__titre" id="ac-bientot">Bientôt sur Carnet Patte</h3>
+      <ul class="pg-bientot__liste">
+        ${modules.map((m) => `<li><a class="pg-bientot__lien" href="${m.href}">${icone(m.icone, { taille: 18 })}<span>${echapper(m.titre)}</span></a></li>`).join('')}
+        <li><a class="pg-bientot__lien" href="#/bientot">${icone('compass', { taille: 18 })}<span>Et d'autres modules</span></a></li>
+      </ul>
+    </section>`;
+}
+
 export function rendre(zone) {
   zone.classList.add('page-large');
 
-  const animaux = storage.lister('animaux');
+  // Même ordre que la page Mes animaux : alphabétique
+  const animaux = storage.lister('animaux').sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   const parId = new Map(animaux.map((a) => [a.id, a]));
   const rappels = calculerRappels();
   const enRetard = rappels.filter((r) => r.statut.classe === 'retard');
   const retardParAnimal = new Map();
   enRetard.forEach((r) => retardParAnimal.set(r.animal.id, (retardParAnimal.get(r.animal.id) ?? 0) + 1));
-  const prochain = rappels[0];
+  const prochain = rappels[0]; // le plus urgent : calculerRappels trie du plus en retard au plus lointain
+  const libelleProchain = prochain?.statut.classe === 'retard' ? 'Rappel le plus urgent' : 'Prochain rappel';
 
   // Activité récente : derniers soins et dernières pesées déjà passés
   const auj = aujourdhui();
@@ -62,7 +76,7 @@ export function rendre(zone) {
         icone: infosType(r.soin.type).icone,
         titre: [infosType(r.soin.type).nom, r.soin.titre].filter(Boolean).join(' — '),
         meta: `${r.animal.nom} · ${formatDate(r.soin.rappel)}`,
-        fin: badge({ texte: r.statut.texte, variante: VARIANTE_RAPPEL[r.statut.classe] }),
+        fin: badgeEcheance(r.statut),
         href: '#/animaux/rappels',
       })).join('')}</ul>`
     : `<div class="cp-carte">${vide({ icone: 'circle-check', titre: 'Aucun rappel en attente', texte: 'Ajoutez une date de rappel quand vous notez un soin.' })}</div>`;
@@ -85,19 +99,18 @@ export function rendre(zone) {
         <div class="pg-stats">
           ${carteStat({ libelle: animaux.length > 1 ? 'Animaux suivis' : 'Animal suivi', valeur: animaux.length, icone: 'paw-print' })}
           ${carteStat({ libelle: 'Rappels en retard', valeur: enRetard.length, icone: 'bell' })}
-          ${carteStat({ libelle: prochain ? `Prochain rappel · ${prochain.animal.nom}` : 'Prochain rappel', valeur: prochain ? prochain.statut.texte : 'Aucun', icone: 'calendar' })}
+          ${carteStat({ libelle: libelleProchain, valeur: prochain ? prochain.statut.texte : 'Aucun', icone: prochain?.statut.classe === 'retard' ? 'bell-ring' : 'calendar',
+            detail: prochain ? `${nomCourtSoin(prochain.soin)} · ${prochain.animal.nom}` : '' })}
         </div>
       </section>
 
       <section class="pg-section" aria-labelledby="ac-raccourcis">
         <div class="pg-section__tete"><h2 id="ac-raccourcis">Raccourcis</h2></div>
-        <div class="pg-raccourcis">
+        <div class="pg-raccourcis pg-raccourcis--utiles">
           ${tuile({ icone: 'paw-print', titre: 'Mes animaux', texte: 'Fiches, soins et pesées', href: '#/animaux' })}
           ${tuile({ icone: 'bell', titre: 'Rappels', texte: enRetard.length ? `${enRetard.length} en retard` : 'Soins à prévoir', href: '#/animaux/rappels' })}
-          ${tuile({ icone: 'users', titre: 'Communauté', href: '#/communaute', bientot: true })}
-          ${tuile({ icone: 'briefcase-business', titre: 'Professionnels', href: '#/pro', bientot: true })}
           ${tuile({ icone: 'save', titre: 'Sauvegarde', texte: 'Exporter mes données', href: '#/donnees' })}
-          ${tuile({ icone: 'compass', titre: 'Autres modules', texte: 'Ce qui arrive bientôt', href: '#/bientot' })}
+          ${blocBientot()}
         </div>
       </section>
 

@@ -6,7 +6,7 @@ import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, badge, vide, activerOnglets } from '../../js/composants.js';
-import { infosEspece, nomEspece, infosType, statutRappel } from './commun.js';
+import { infosEspece, nomEspece, infosType, statutRappel, badgeEcheance, nomCourtSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
 import { formulaireAnimal } from './animaux.js';
 import * as soins from './soins.js';
@@ -77,13 +77,13 @@ function chiffresHtml(animal) {
     videTexte: 'Aucune pesée', aide: "Ajoutez-en une dans l'onglet Poids.",
   });
 
-  // Prochain rappel : le plus urgent (calculerRappels trie du plus en retard au plus lointain)
+  // Rappel le plus urgent (calculerRappels trie du plus en retard au plus lointain) ; « Prochain » seulement s'il n'est pas en retard
   const prochain = calculerRappels().find((r) => r.animal.id === animal.id);
-  const type = prochain && infosType(prochain.soin.type);
+  const enRetard = prochain?.statut.classe === 'retard';
   const cRappel = carteChiffre({
-    libelle: 'Prochain rappel', icone: prochain && prochain.statut.classe === 'retard' ? 'bell-ring' : 'bell',
+    libelle: enRetard ? 'Rappel le plus urgent' : 'Prochain rappel', icone: enRetard ? 'bell-ring' : 'bell',
     valeur: prochain ? prochain.statut.texte : '',
-    sous: prochain ? `${[type.nom, prochain.soin.titre].filter(Boolean).join(' — ')} · ${formatDate(prochain.soin.rappel)}` : '',
+    sous: prochain ? `${nomCourtSoin(prochain.soin)} · ${formatDate(prochain.soin.rappel)}` : '',
     ton: prochain ? (prochain.statut.classe === 'retard' ? 'retard' : prochain.statut.classe === 'semaine' ? 'semaine' : '') : '',
     videTexte: 'Aucun rappel prévu', aide: 'Programmez-en un depuis un soin.',
   });
@@ -104,9 +104,8 @@ function evenements(animal) {
     ev.push({ date: s.date, rang: 2, icone: type.icone, titre: [type.nom, s.titre].filter(Boolean).join(' — '), detail: s.notes || '' });
     const statut = statutRappel(s);
     if (statut) {
-      const variante = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' }[statut.classe];
       ev.push({ date: s.rappel, rang: 3, icone: 'bell', titre: `Rappel : ${[type.nom, s.titre].filter(Boolean).join(' — ')}`, detail: '',
-        badge: badge({ texte: statut.texte, variante }) });
+        badge: badgeEcheance(statut) });
     }
   }
   const liste = peseesDe(animal);

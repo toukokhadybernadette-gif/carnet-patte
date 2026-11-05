@@ -2,7 +2,8 @@
 //
 // UNE SEULE LISTE (NAV) décrit les entrées. Elle sert aux trois dispositions :
 //   - barre latérale (tablette et ordinateur) : toutes les entrées ;
-//   - barre du bas (téléphone) : seulement celles marquées `bas: true` (5 entrées) ;
+//   - barre du bas (téléphone) : seulement celles marquées `bas: true` (5 entrées) ; les Rappels y sont remplacés
+//     par la cloche de la barre du haut (même adresse, même nombre de retards) ;
 //   - Communauté et Professionnels restent accessibles sur téléphone depuis l'Accueil et le Profil.
 //
 // POUR AJOUTER UNE PAGE : créer son module, l'enregistrer avec route() dans js/app.js,
@@ -18,7 +19,9 @@ import { infosEspece, nomEspece } from '../modules/animaux/commun.js';
 // `actif(seg)` dit si l'entrée correspond à la page affichée (seg = morceaux de l'adresse : ['animaux', 'rappels']).
 export const NAV = [
   { id: 'accueil', titre: 'Accueil', court: 'Accueil', icone: 'house', href: '#/accueil', bas: true, actif: (s) => s[0] === 'accueil' },
-  { id: 'animaux', titre: 'Mes animaux', court: 'Animaux', icone: 'paw-print', href: '#/animaux', bas: true, actif: (s) => s[0] === 'animaux' },
+  { id: 'animaux', titre: 'Mes animaux', court: 'Animaux', icone: 'paw-print', href: '#/animaux', bas: true, actif: (s) => s[0] === 'animaux' && s[1] !== 'rappels' },
+  // Rappels : adresse inchangée (#/animaux/rappels) pour ne casser aucun lien. Sur téléphone, la cloche de la barre du haut y mène.
+  { id: 'rappels', titre: 'Rappels', court: 'Rappels', icone: 'bell', href: '#/animaux/rappels', compteurRetards: true, actif: (s) => s[0] === 'animaux' && s[1] === 'rappels' },
   { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', bas: true, bientot: true, actif: (s) => s[0] === 'carte' },
   { id: 'boutique', titre: 'Boutique', court: 'Boutique', icone: 'shopping-bag', href: '#/boutique', bas: true, bientot: true, actif: (s) => s[0] === 'boutique' },
   { id: 'communaute', titre: 'Communauté', court: 'Communauté', icone: 'users', href: '#/communaute', bientot: true, actif: (s) => s[0] === 'communaute' },
@@ -40,7 +43,7 @@ const el = (id) => document.getElementById(id);
 
 const itemLateral = (n) => `
   <li><a class="cp-nav-item" href="${n.href}" data-nav="${n.id}" data-etiquette="${echapper(n.titre)}">
-    ${icone(n.icone, { taille: 22 })}<span class="app-nav__texte">${echapper(n.titre)}</span>${n.bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : ''}
+    ${icone(n.icone, { taille: 22 })}<span class="app-nav__texte">${echapper(n.titre)}</span>${n.bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : ''}${n.compteurRetards ? '<span class="cp-compteur app-nav__compteur" data-retards hidden></span>' : ''}
   </a></li>`;
 
 const itemBas = (n) => `
@@ -92,10 +95,19 @@ export function construireNavigation() {
 
 export function majRappels() {
   const n = compterEnRetard();
+  const libelle = n ? `Rappels : ${n} en retard` : 'Rappels';
   const pastille = el('notif-nombre');
   pastille.textContent = n;
   pastille.hidden = n === 0;
-  el('notif-lien').setAttribute('aria-label', n ? `Rappels : ${n} en retard` : 'Rappels');
+  el('notif-lien').setAttribute('aria-label', libelle);
+  // Entrée « Rappels » de la barre latérale : le nombre est visible, le lien est nommé en entier pour les lecteurs d'écran
+  document.querySelectorAll('[data-nav="rappels"]').forEach((a) => {
+    a.setAttribute('aria-label', libelle);
+    a.dataset.etiquette = libelle; // info-bulle de la barre réduite (tablette)
+    const c = a.querySelector('[data-retards]');
+    c.textContent = n;
+    c.hidden = n === 0;
+  });
 }
 
 // ----- Page courante -----
@@ -110,6 +122,8 @@ export function majNavigation(seg) {
   });
   if (NAV.find((x) => x.id === 'profil').actif(seg)) el('profil-lien').setAttribute('aria-current', 'page');
   else el('profil-lien').removeAttribute('aria-current');
+  if (NAV.find((x) => x.id === 'rappels').actif(seg)) el('notif-lien').setAttribute('aria-current', 'page');
+  else el('notif-lien').removeAttribute('aria-current');
   majRappels();
 
   const cle = seg.join('/');

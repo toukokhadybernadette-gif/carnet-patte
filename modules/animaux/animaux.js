@@ -11,7 +11,7 @@ import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { rafraichir } from '../../js/router.js';
 import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres } from '../../js/composants.js';
-import { ESPECES, infosEspece, nomEspece, erreurChamp } from './commun.js';
+import { ESPECES, infosEspece, nomEspece, erreurChamp, badgeEcheance, nomCourtSoin } from './commun.js';
 import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
 import { ajouterExemples } from './exemples.js';
@@ -151,21 +151,22 @@ function carteHtml(animal, rappels) {
 }
 
 /** Résumé des rappels : un seul bloc, cliquable, vers la page Rappels. */
+const LIGNES_RESUME = 3;
 function resumeHtml(rappels) {
   if (!rappels.length) return '';
   const retard = rappels.filter((r) => r.statut.classe === 'retard').length;
   const semaine = rappels.filter((r) => r.statut.classe === 'semaine').length;
-  const variante = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' };
-  const lignes = rappels.slice(0, 3).map((r) => `
-    <li>${badge({ texte: r.statut.texte, variante: variante[r.statut.classe] })}
-      <span>${echapper([r.soin.titre || '', r.animal.nom].filter(Boolean).join(' · '))}</span></li>`).join('');
+  const reste = rappels.length - LIGNES_RESUME;
+  const lignes = rappels.slice(0, LIGNES_RESUME).map((r) => `
+    <li>${badgeEcheance(r.statut)}
+      <span>${echapper(`${nomCourtSoin(r.soin)} · ${r.animal.nom}`)}</span></li>`).join('');
   return `
     <a class="cp-carte al-rappels${retard ? ' al-rappels--retard' : ''}" href="#/animaux/rappels">
       <span class="al-rappels__icone">${icone(retard ? 'bell-ring' : 'bell', { taille: 22 })}</span>
       <div class="al-rappels__corps">
-        <strong class="al-rappels__titre">${pluriel(rappels.length, 'rappel')} à venir</strong>
+        <strong class="al-rappels__titre">${pluriel(rappels.length, 'rappel')} à faire</strong>
         <span class="al-rappels__sous">${retard ? `${retard} en retard · ` : ''}${semaine} cette semaine</span>
-        <ul>${lignes}</ul>
+        <ul>${lignes}${reste > 0 ? `<li class="al-rappels__autres">+ ${reste} ${reste > 1 ? 'autres rappels' : 'autre rappel'}</li>` : ''}</ul>
       </div>
       <span class="al-rappels__lien">Voir les rappels ${icone('chevron-right', { taille: 18 })}</span>
     </a>`;

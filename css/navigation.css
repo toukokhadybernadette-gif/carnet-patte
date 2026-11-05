@@ -61,6 +61,7 @@
 
 .app-notif { position: relative; }
 .app-notif .cp-compteur { position: absolute; top: 2px; right: 2px; min-width: 20px; height: 20px; font-size: 11px; box-shadow: 0 0 0 2px var(--cp-fond); }
+.app-notif[aria-current="page"] { background: var(--cp-vert-clair); }
 .app-profil {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
   width: 40px; height: 40px; margin-left: var(--cp-espace-1); border-radius: 50%;
@@ -104,6 +105,8 @@
 .app-lateral__nav .cp-nav-liste { gap: var(--cp-espace-1); }
 .app-lateral__pied { border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-3); }
 .app-lateral .cp-nav-item { position: relative; }
+/* Nombre de rappels en retard (entrée « Rappels ») ; [hidden] l'emporte sur le display de .cp-compteur */
+.app-nav__compteur[hidden] { display: none; }
 
 /* ---------- Barre du bas (téléphone) ---------- */
 .app-nav-bas {
@@ -142,6 +145,8 @@
   }
   .app-lateral .cp-nav-item:hover::after, .app-lateral .cp-nav-item:focus-visible::after { opacity: 1; }
   .app-lateral__pied { width: 100%; display: flex; justify-content: center; }
+  /* barre réduite : le nombre se pose sur le coin de l'icône */
+  .app-lateral .app-nav__compteur { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; box-shadow: 0 0 0 2px var(--cp-carte); }
 }
 
 /* ---------- Ordinateur : barre latérale complète ---------- */
@@ -156,6 +161,7 @@
   .app-lateral .cp-nav-item { justify-content: flex-start; width: auto; height: auto; min-height: var(--cp-cible-tactile); padding: 0 var(--cp-espace-3); }
   .app-lateral .app-nav__texte { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .app-lateral .cp-nav-item::after { display: none; }
+  .app-lateral .app-nav__compteur { position: static; min-width: 22px; height: 22px; padding: 0 6px; font-size: var(--cp-taille-xs); box-shadow: none; }
   .app-lateral__pied { display: block; }
   .app-haut { padding-left: var(--cp-espace-7); padding-right: var(--cp-espace-7); }
   .contenu { padding: var(--cp-espace-7) var(--cp-espace-7) var(--cp-espace-8); }
