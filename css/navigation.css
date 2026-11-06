@@ -1,0 +1,194 @@
+/* ===== Coque de l'application et navigation =====
+   Trois dispositions, qui réutilisent les composants de composants.css :
+   - téléphone (moins de 600 px)  : en-tête compact + barre de navigation en bas ;
+   - tablette  (600 à 1023 px)    : barre latérale réduite (icônes) + barre supérieure ;
+   - ordinateur (1024 px et plus) : barre latérale complète + barre supérieure.
+   Refonte 5h : barre latérale en creux (surface-2), entrée active en carte blanche, modules à venir réunis dans une
+   section « Bientôt » repliable, barre du bas plate à repère supérieur. */
+
+/* ---------- Structure générale ---------- */
+.app {
+  min-height: 100dvh;
+  background: var(--cp-fond);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+}
+.app-lateral { display: none; }
+.app-haut { grid-column: 1; grid-row: 1; }
+.contenu { grid-column: 1; grid-row: 2; min-width: 0; }
+
+/* Lien d'évitement : visible seulement au clavier */
+.app-evitement {
+  position: fixed; top: var(--cp-espace-3); left: var(--cp-espace-3); z-index: 200;
+  padding: var(--cp-espace-3) var(--cp-espace-5); border: 0; border-radius: var(--cp-rayon-bouton);
+  background: var(--cp-foret); color: var(--cp-texte-inverse);
+  font: inherit; font-family: var(--cp-police-texte); font-weight: var(--cp-graisse-bouton); cursor: pointer;
+  transform: translateY(-200%); transition: transform var(--cp-duree-rapide) var(--cp-courbe);
+}
+.app-evitement:focus-visible { transform: none; outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+
+/* ---------- Zone de contenu ---------- */
+.contenu {
+  padding: var(--cp-espace-4) var(--cp-marge-page) calc(var(--cp-hauteur-barre-bas) + env(safe-area-inset-bottom) + var(--cp-espace-6));
+  margin: 0 auto; width: 100%; max-width: calc(var(--cp-largeur-page) + 2 * var(--cp-marge-page));
+}
+.contenu:focus { outline: none; }
+/* Les anciennes pages gardent leur largeur de lecture ; les nouvelles pages (classe page-large) occupent toute la zone */
+.contenu > div { max-width: 920px; }
+.contenu > div.page-large { max-width: none; }
+.contenu > div.page-entree { animation: app-page var(--cp-duree) var(--cp-courbe); }
+@keyframes app-page { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Barre supérieure ---------- */
+.app-haut {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: var(--cp-espace-3);
+  min-height: var(--cp-hauteur-barre-haut); padding: env(safe-area-inset-top) var(--cp-marge-page) 0;
+  background: var(--cp-fond);
+  border-bottom: 1px solid var(--cp-bordure);
+}
+.app-marque {
+  display: inline-flex; align-items: center; gap: 10px;
+  color: var(--cp-foret); text-decoration: none;
+  font-family: var(--cp-police-titre); font-weight: 700; font-size: 15px; line-height: 20px; letter-spacing: -.01em;
+}
+.cp .app-marque, .app-marque:hover { text-decoration: none; }
+.app-marque__logo {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 28px; height: 28px; border-radius: 8px; background: var(--cp-foret); color: var(--cp-texte-inverse);
+}
+.app-marque__logo .ic { width: 16px; height: 16px; }
+.app-haut__actions { display: flex; align-items: center; gap: var(--cp-espace-1); margin-left: auto; }
+
+
+/* Recherche : sur téléphone, cachée derrière une icône ; sur tablette et ordinateur, toujours visible */
+.app-recherche { position: relative; flex: 1 1 auto; max-width: 380px; display: none; }
+.app-recherche .cp-input { min-height: 34px; }
+.app-haut--recherche { gap: var(--cp-espace-2); }
+.app-haut--recherche .app-recherche { display: block; max-width: none; }
+.app-haut--recherche .app-marque { display: none; }
+.app-haut--recherche .app-haut__actions { margin-left: 0; }
+.app-recherche__liste {
+  position: absolute; top: calc(100% + var(--cp-espace-2)); left: 0; right: 0; z-index: 60;
+  margin: 0; padding: var(--cp-espace-2); list-style: none; max-height: min(360px, 60dvh); overflow-y: auto;
+  background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-m);
+}
+.app-recherche__option {
+  display: flex; align-items: center; gap: var(--cp-espace-3); min-height: var(--cp-cible-tactile); padding: var(--cp-espace-1) var(--cp-espace-3);
+  border-radius: var(--cp-rayon-champ); cursor: pointer; color: var(--cp-foret);
+}
+.app-recherche__option:hover, .app-recherche__option[aria-selected="true"] { background: var(--cp-surface-2); }
+.app-recherche__option .cp-avatar { width: 32px; height: 32px; font-size: 12px; }
+.app-recherche__texte { display: grid; min-width: 0; line-height: 1.3; }
+.app-recherche__nom { font-weight: 500; }
+.app-recherche__meta { font-size: var(--cp-taille-xs); color: var(--cp-texte-doux); }
+.app-recherche__vide { padding: var(--cp-espace-4); color: var(--cp-texte-doux); font-size: var(--cp-taille-s); text-align: center; }
+
+/* ---------- Barre latérale (tablette et ordinateur) ---------- */
+.app-lateral {
+  flex-direction: column; gap: var(--cp-espace-1);
+  background: var(--cp-surface-2); border-right: 1px solid var(--cp-bordure);
+  padding: var(--cp-espace-3);
+  z-index: 40;
+}
+.app-lateral .app-marque { padding: 6px 8px 14px; }
+.app-lateral__nav { flex: 1; display: flex; flex-direction: column; gap: var(--cp-espace-1); min-height: 0; }
+.app-lateral__nav .cp-nav-liste { gap: 2px; }
+.app-lateral__pied { margin-top: auto; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-2); }
+.app-lateral .cp-nav-item { position: relative; }
+/* Nombre de rappels en retard (entrée « Rappels ») ; [hidden] l'emporte sur le display de .cp-compteur */
+.app-nav__compteur[hidden] { display: none; }
+
+/* Section « Bientôt » : les modules à venir, repliée par défaut sur ordinateur */
+.app-bientot { margin-top: var(--cp-espace-2); }
+.app-bientot__titre {
+  display: flex; align-items: center; gap: var(--cp-espace-2); width: 100%; min-height: 28px; padding: 0 10px;
+  background: transparent; border: 0; border-radius: var(--cp-rayon-bouton); cursor: pointer;
+  font: inherit; font-family: var(--cp-police-texte); font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux);
+}
+.app-bientot__titre:hover { background: rgba(36, 61, 53, .06); }
+.app-bientot__titre:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.app-bientot__nombre { font-weight: 500; text-transform: none; letter-spacing: 0; background: var(--cp-vert-clair); border-radius: 9px; padding: 0 7px; line-height: 18px; color: var(--cp-texte-doux); }
+.app-bientot__titre .ic { margin-left: auto; transition: transform var(--cp-duree-rapide) var(--cp-courbe); }
+.app-bientot--ouvert .app-bientot__titre .ic { transform: rotate(180deg); }
+.app-bientot__liste { display: none; }
+.app-bientot--ouvert .app-bientot__liste { display: grid; }
+.app-bientot .cp-nav-item { color: var(--cp-texte-doux); font-weight: 400; }
+
+/* ---------- Barre du bas (téléphone) ---------- */
+.app-nav-bas {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  padding: 0 0 env(safe-area-inset-bottom);
+  background: var(--cp-carte);
+  border-top: 1px solid var(--cp-bordure);
+}
+.app-nav-bas .cp-nav-bas { border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: 0; }
+
+/* ---------- Tablette : barre latérale réduite (icônes seules) ---------- */
+@media (min-width: 600px) {
+  .app { grid-template-columns: var(--cp-largeur-barre-reduite) minmax(0, 1fr); }
+  .app-lateral { display: flex; grid-column: 1; grid-row: 1 / span 2; position: sticky; top: 0; height: 100dvh; align-self: start; align-items: center; }
+  .app-haut, .contenu { grid-column: 2; }
+  .app-nav-bas { display: none; }
+
+  .app-haut .app-marque, .app-bouton-recherche { display: none; }
+  .app-recherche { display: block; }
+  .contenu { padding-top: var(--cp-espace-6); padding-bottom: var(--cp-espace-8); }
+
+  .app-lateral .app-marque__nom { display: none; }
+  .app-lateral .app-marque { padding: 6px 0 12px; }
+  .app-lateral__nav { width: 100%; align-items: center; }
+  .app-lateral .cp-nav-liste { justify-items: center; }
+  .app-lateral .cp-nav-item { justify-content: center; width: 44px; height: 44px; min-height: 44px; padding: 0; }
+  .app-lateral .app-nav__texte { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Les modules à venir restent visibles sous les autres entrées, séparés par un filet */
+  .app-bientot { width: 100%; border-top: 1px solid var(--cp-bordure); padding-top: var(--cp-espace-2); }
+  .app-bientot__titre { display: none; }
+  .app-bientot__liste { display: grid; }
+  /* Infobulle au survol et au clavier */
+  .app-lateral .cp-nav-item::after {
+    content: attr(data-etiquette); position: absolute; left: calc(100% + var(--cp-espace-3)); top: 50%; transform: translateY(-50%);
+    padding: 6px 12px; border-radius: var(--cp-rayon-bouton); background: var(--cp-foret); color: var(--cp-texte-inverse);
+    font-size: var(--cp-taille-xs); font-weight: 500; white-space: nowrap; pointer-events: none; z-index: 5;
+    opacity: 0; transition: opacity var(--cp-duree-rapide) var(--cp-courbe);
+  }
+  .app-lateral .cp-nav-item:hover::after, .app-lateral .cp-nav-item:focus-visible::after { opacity: 1; }
+  .app-lateral__pied { width: 100%; display: flex; justify-content: center; }
+  /* barre réduite : le nombre se pose sur le coin de l'icône */
+  .app-lateral .app-nav__compteur { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; box-shadow: 0 0 0 2px var(--cp-surface-2); }
+}
+
+/* ---------- Ordinateur : barre latérale complète ---------- */
+@media (min-width: 1024px) {
+  .app { grid-template-columns: var(--cp-largeur-barre) minmax(0, 1fr); }
+  .app-lateral { align-items: stretch; overflow-x: hidden; overflow-y: auto; }
+  .app-lateral .app-marque { padding: 6px 8px 14px; }
+  .app-lateral .app-marque__nom { display: inline; }
+  .app-lateral__nav { align-items: stretch; }
+  .app-lateral .cp-nav-liste { justify-items: stretch; }
+  .app-lateral .cp-nav-item { justify-content: flex-start; width: auto; height: auto; min-height: 34px; padding: 0 10px; }
+  .app-lateral .app-nav__texte { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .app-lateral .cp-nav-item::after { display: none; }
+  .app-lateral .app-nav__compteur { position: static; margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; box-shadow: none; }
+  .app-lateral__pied { display: block; }
+  .app-bientot { border-top: 0; padding-top: 0; }
+  .app-bientot__titre { display: flex; }
+  .app-bientot__liste { display: none; }
+  .app-bientot--ouvert .app-bientot__liste { display: grid; }
+}
+
+/* ---------- Notifications éphémères : au-dessus de la barre du bas, ou dans le coin ---------- */
+#toasts { bottom: calc(var(--cp-hauteur-barre-bas) + env(safe-area-inset-bottom) + var(--cp-espace-4)); }
+.cp-notifs { bottom: calc(var(--cp-hauteur-barre-bas) + env(safe-area-inset-bottom) + var(--cp-espace-4)); }
+@media (min-width: 600px) {
+  #toasts { bottom: var(--cp-espace-5); left: var(--cp-largeur-barre-reduite); }
+  .cp-notifs { bottom: var(--cp-espace-5); }
+}
+@media (min-width: 1024px) { #toasts { left: var(--cp-largeur-barre); } }
+
+/* ---------- Réduire les animations ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .contenu > div.page-entree, .app-evitement, .app-lateral .cp-nav-item::after, .app-bientot__titre .ic { animation: none; transition: none; }
+}

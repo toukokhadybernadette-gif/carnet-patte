@@ -1,81 +1,310 @@
 /* Styles propres au module « animaux » */
-
-/* --- Avatar (photo ou emoji) --- */
+/* --- Avatar (photo ou icône de l'espèce) --- */
 .avatar {
   width: 64px; height: 64px; flex: none;
   border-radius: 50%;
   object-fit: cover;
   background: var(--vert-pale);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2rem;
+  color: var(--vert-fonce);
 }
-.avatar.grand { width: 96px; height: 96px; font-size: 3rem; }
-
+.avatar.grand { width: 96px; height: 96px; }
 /* --- Liste des animaux --- */
-.grille-animaux {
-  display: grid; gap: var(--espace);
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-.carte-animal {
-  display: flex; gap: 14px; align-items: center;
-  margin-bottom: 0;
-  color: inherit; text-decoration: none;
-  transition: transform .12s, box-shadow .12s;
-}
-.carte-animal:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(60, 50, 30, .14); }
-.carte-animal-texte { display: grid; gap: 1px; min-width: 0; }
-.carte-animal-texte strong { font-size: 1.15rem; }
-
 /* --- Résumé des rappels --- */
-.resume-rappels { display: block; color: inherit; text-decoration: none; border-left: 5px solid var(--corail); }
-.resume-rappels:hover { background: #fffdf9; }
-.resume-rappels h2 { margin-bottom: 6px; }
-.resume-rappels ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .95rem; }
 .texte-rouge { color: var(--rouge); }
-
-.bandeau-exemples {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
-  background: var(--orange-pale); border-radius: var(--rayon);
-  padding: 10px 14px; margin-bottom: var(--espace);
-  font-size: .95rem;
-}
-
 /* --- Fiche d'un animal --- */
-.fiche-entete { display: flex; gap: 18px; align-items: center; }
-.fiche-infos p { margin-bottom: .25em; }
-.fiche-infos .actions { margin-top: 10px; }
-@media (max-width: 480px) {
-  .fiche-entete { flex-direction: column; text-align: center; }
-  .fiche-infos .actions { justify-content: center !important; }
-}
-
 /* --- Formulaire : photo --- */
-.photo-champ { display: flex; align-items: center; gap: 16px; }
-.photo-boutons { display: grid; gap: 4px; justify-items: start; }
-.photo-boutons label.bouton { font-weight: 600; }
-
 /* --- Pesées et graphique --- */
-.form-pesee {
-  grid-template-columns: 1fr 1fr; align-items: end;
-  margin-bottom: 16px;
-}
-.form-pesee .bouton { grid-column: 1 / -1; }
-@media (min-width: 600px) {
-  .form-pesee { grid-template-columns: 1fr 1fr auto; }
-  .form-pesee .bouton { grid-column: auto; }
-}
-
-.graphique { width: 100%; height: auto; display: block; }
-.graph-grille { stroke: var(--bordure); stroke-width: 1; }
-.graph-texte { fill: var(--gris); font-size: 12px; }
-.graph-ligne { fill: none; stroke: var(--vert); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-.graph-point { fill: #fff; stroke: var(--vert-fonce); stroke-width: 3; }
-.graph-point:hover { fill: var(--corail); }
-.graph-unite { margin: 0 0 8px; text-align: right; }
-.zone-graphique { margin-bottom: 8px; }
-
 /* --- Pages « Sauvegarde » et « Bientôt » --- */
-.liste-modules { display: grid; gap: var(--espace); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-.liste-modules .carte { margin-bottom: 0; }
-.liste-modules .grand-emoji { font-size: 2rem; }
-.zone-boutons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+/* =========================================================
+   Refonte 5c : liste des animaux et formulaire (Premium naturel)
+   ========================================================= */
+/* En-tête de la liste */
+.al-entete { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--cp-espace-5); row-gap: var(--cp-espace-2); }
+.al-entete .cp-btn { align-self: end; }
+@media (max-width: 599px) {
+.al-entete { grid-template-columns: 1fr; }
+.al-entete .cp-btn { width: 100%; }
+}
+/* Résumé des rappels : une ligne discrète */
+.al-rappels { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.al-rappels strong { font-weight: 500; color: var(--cp-texte); }
+.al-rappels--retard > .ic { color: var(--cp-terre); }
+.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; min-height: var(--cp-cible-tactile); font-weight: 500; color: var(--cp-foret); white-space: nowrap; }
+@media (min-width: 600px) { .al-rappels__lien { min-height: 28px; } }
+/* Bandeau des exemples */
+.al-exemples { align-items: center; flex-wrap: wrap; }
+.al-exemples .cp-alerte__texte { flex: 1 1 220px; }
+/* Barre d'outils : recherche et filtres */
+.al-outils { display: grid; gap: var(--cp-espace-3); }
+.al-recherche { max-width: 460px; }
+.al-resultat { margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.al-resultat[hidden], .al-grille[hidden], .al-aucun[hidden], .al-grille [hidden], .al-photo [hidden] { display: none !important; }
+.cp-filtres { max-width: 100%; }
+@media (max-width: 599px) {
+ /* sur mobile, une seule ligne défilante plutôt que 8 lignes de pastilles */
+.al-outils .cp-filtres { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) var(--cp-espace-2); scrollbar-width: none; }
+}
+/* Cartes d'animaux : avatar un peu plus grand dans la liste, cartes assez larges pour les badges */
+.pg-animaux.al-grille { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.al-grille .cp-badge { white-space: normal; }
+/* Formulaire */
+.al-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
+.al-photo { display: flex; align-items: center; gap: var(--cp-espace-5); }
+.al-photo__actions { display: grid; gap: var(--cp-espace-1, 4px); justify-items: start; }
+label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.al-form [hidden] { display: none !important; }
+.al-form__actions {
+  position: sticky; bottom: calc(var(--cp-espace-5) * -1); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3);
+  margin: 0 calc(var(--cp-espace-5) * -1) calc(var(--cp-espace-5) * -1); padding: var(--cp-espace-4) var(--cp-espace-5) var(--cp-espace-5);
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%); border-top: 0;
+}
+@media (max-width: 599px) {
+.al-form__actions { flex-wrap: nowrap; }
+.al-form__actions .cp-btn { flex: 1 1 0; }
+.al-form__actions .cp-btn[type=submit] { flex-grow: 1.6; }
+}
+/* =========================================================
+   Refonte 5d : fiche d'un animal
+   ========================================================= */
+.fi-retour { justify-self: start; }
+/* En-tête */
+.fi-entete { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--cp-espace-4); padding: var(--cp-espace-4); box-shadow: inset 0 3px 0 var(--an-trait, transparent), var(--cp-ombre-s); } /* filet de la couleur de l'animal en haut de sa fiche */
+.fi-avatar-bouton { position: relative; display: inline-flex; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.fi-avatar-bouton:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+.fi-avatar-bouton__crayon { position: absolute; right: -2px; bottom: -2px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--cp-carte); color: var(--an-texte, var(--cp-foret)); box-shadow: 0 0 0 1px var(--cp-bordure), var(--cp-ombre-s); transition: transform var(--cp-duree-rapide) var(--cp-courbe); }
+.fi-avatar-bouton:hover .fi-avatar-bouton__crayon { transform: scale(1.12); }
+.fi-avatar { width: 64px; height: 64px; }
+.fi-avatar .ic { width: 28px; height: 28px; }
+.fi-entete__texte { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.fi-entete h1 { margin: 0; overflow-wrap: anywhere; }
+.fi-entete p { margin: 0; }
+.fi-entete__espece { color: var(--cp-texte-doux); font-weight: 400; }
+.fi-entete__naissance { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.fi-entete__actions { display: flex; gap: var(--cp-espace-2); flex-wrap: wrap; justify-content: flex-end; }
+.cp-btn.fi-danger { color: var(--cp-terre); border-color: transparent; background: transparent; }
+.cp-btn.fi-danger:hover:not(:disabled) { background: var(--cp-terre-pale); color: var(--cp-terre); }
+@media (max-width: 899px) {
+.fi-entete { grid-template-columns: auto 1fr; padding: var(--cp-espace-5); }
+.fi-entete__actions { grid-column: 1 / -1; justify-content: stretch; }
+.fi-entete__actions .cp-btn { flex: 1 1 0; }
+}
+@media (max-width: 599px) {
+.fi-entete { gap: var(--cp-espace-3); }
+}
+/* Chiffres clés */
+.fi-chiffres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
+.fi-chiffres > .fi-chiffre, .rp-chiffres > .rp-chiffre { border: 0; border-radius: 0; box-shadow: none; padding: 14px 16px; gap: 2px; }
+.fi-chiffres > .fi-chiffre + .fi-chiffre, .rp-chiffres > .rp-chiffre + .rp-chiffre { border-left: 1px solid var(--cp-bordure); }
+.fi-chiffre__sous { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.fi-chiffre__vide { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-texte-doux); line-height: var(--cp-interligne-m); }
+.fi-chiffre .cp-stat__valeur { overflow-wrap: anywhere; }
+.fi-chiffre--retard .cp-stat__valeur { color: var(--cp-terre); }
+@media (max-width: 599px) {
+.fi-chiffres { grid-template-columns: 1fr 1fr; }
+.fi-chiffres > .fi-chiffre { padding: 10px 12px; }
+.fi-chiffres > .fi-chiffre:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--cp-bordure); }
+}
+/* Onglets : barre défilante sur mobile, panneaux espacés */
+.fi-onglets { display: grid; gap: 0; }
+.fi-onglets .cp-onglets { margin-bottom: var(--cp-espace-2); }
+.fi-onglets .cp-onglet-panneau { padding-top: var(--cp-espace-4); }
+.fi-onglets .cp-onglet-panneau[hidden] { display: none; }
+.fi-onglets .cp-onglet-panneau:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; border-radius: var(--cp-rayon-carte); }
+.fi-onglets .cp-onglet-panneau > div > .carte, .fi-onglets .cp-onglet-panneau > .cp-carte { margin-bottom: 0; }
+/* Historique */
+.fi-historique h2 { margin-bottom: var(--cp-espace-1); }
+.fi-histo__resume { margin: 0 0 var(--cp-espace-4); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.fi-annee__titre { font-size: var(--cp-taille-m); color: var(--cp-texte-doux); margin: var(--cp-espace-5) 0 var(--cp-espace-3); }
+.fi-annee:first-of-type .fi-annee__titre { margin-top: 0; }
+.fi-histo { list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: var(--cp-espace-4); }
+.fi-histo::before { content: ""; position: absolute; left: 19px; top: 8px; bottom: 8px; width: 2px; background: var(--cp-bordure); }
+.fi-histo__ligne { position: relative; display: grid; grid-template-columns: 40px 1fr; gap: var(--cp-espace-4); align-items: start; }
+.fi-histo__icone { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-foret)); border: 3px solid var(--cp-carte); box-sizing: border-box; }
+.fi-histo__corps { display: grid; gap: 2px; min-width: 0; padding-top: 2px; }
+.fi-histo__titre { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
+.fi-histo__date { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.fi-histo__detail { font-size: var(--cp-taille-s); overflow-wrap: anywhere; }
+.fi-histo__plus { margin-top: var(--cp-espace-5); display: flex; justify-content: center; }
+/* Mobile : les 4 onglets se partagent la largeur (icône au-dessus du nom), comme la barre du bas */
+@media (max-width: 599px) {
+.fi-onglets .cp-onglets { overflow-x: visible; gap: 0; }
+.fi-onglets .cp-onglet { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; padding: var(--cp-espace-2) 2px; font-size: var(--cp-taille-xs); }
+.fi-onglets .cp-onglet[aria-selected="true"]::after { left: var(--cp-espace-2); right: var(--cp-espace-2); }
+}
+/* =========================================================
+   Refonte 5e : soins et traitements
+   ========================================================= */
+.sn { display: grid; gap: var(--cp-espace-4); }
+.sn-entete { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-4); flex-wrap: wrap; }
+.sn-entete h2 { margin: 0; font-size: var(--cp-taille-l); }
+.sn-liste { list-style: none; margin: 0; padding: 0; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
+.sn-liste > li + li { border-top: 1px solid var(--cp-bordure); }
+.sn-carte, .sn-liste > .cp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.sn-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
+.sn-carte__corps { display: grid; gap: 0; min-width: 0; }
+.sn-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
+.sn-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.sn-ligne { display: flex; align-items: center; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.sn-ligne .ic { display: none; }
+.sn-carte__nom.sn-carte__nom--vide, .rp-carte__nom.rp-carte__nom--vide { color: var(--cp-texte-doux); font-weight: 500; }
+.sn-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t-texte, var(--cp-texte-doux)); }
+.sn-carte .sn-carte__notes { margin: var(--cp-espace-1) 0 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte); overflow-wrap: anywhere; white-space: pre-line; }
+.sn-carte__actions { display: flex; gap: var(--cp-espace-1); align-items: center; }
+.sn-carte__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
+.sn-carte__actions .cp-btn--secondaire.cp-btn--icone:hover { background: var(--cp-surface-2); color: var(--cp-texte); }
+@media (max-width: 599px) {
+.sn-carte { grid-template-columns: auto 1fr; align-items: start; padding: 10px 12px; }
+.sn-carte__actions { grid-column: 2; justify-content: space-between; padding-top: var(--cp-espace-1); }
+.sn-carte__actions .cp-btn:not(.cp-btn--icone) { margin-right: auto; }
+}
+/* Formulaire de soin */
+.sn-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
+.sn-rappel-champ { border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-champ); padding: var(--cp-espace-4); margin: 0; background: var(--cp-fond); }
+.sn-rappel-champ legend { padding: 0 var(--cp-espace-2); font-weight: 600; font-size: var(--cp-taille-s); color: var(--cp-foret); }
+.sn-form .cp-choix--tuiles { grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr)); }
+.sn-form__actions, .rf-actions {
+  position: sticky; bottom: calc(var(--cp-espace-5) * -1); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3);
+  margin: 0 calc(var(--cp-espace-5) * -1) calc(var(--cp-espace-5) * -1); padding: var(--cp-espace-4) var(--cp-espace-5) var(--cp-espace-5);
+  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cp-carte) 28%);
+}
+@media (max-width: 599px) {
+.sn-form__actions, .rf-actions { flex-wrap: nowrap; }
+.sn-form__actions .cp-btn, .rf-actions .cp-btn { flex: 1 1 0; }
+.sn-form__actions .cp-btn[type=submit], .rf-actions .cp-btn[type=submit] { flex-grow: 1.6; }
+}
+/* Fenêtre « Rappel effectué » */
+.rf-form { gap: var(--cp-espace-5); }
+.rf-resume { display: flex; align-items: center; gap: var(--cp-espace-4); flex-wrap: wrap; padding: var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-fond); border: 1px solid var(--cp-bordure); }
+.rf-resume__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-foret)); flex: none; }
+.rf-resume__texte { display: grid; gap: 2px; flex: 1 1 160px; min-width: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.rf-resume__texte strong { font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rf-delais { display: flex; flex-wrap: wrap; }
+.rf-date[hidden] { display: none; }
+.rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret); font-size: var(--cp-taille-s); }
+/* =========================================================
+   Refonte 5f : page Rappels
+   ========================================================= */
+.rp-page h1:focus { outline: none; }
+.rp-page h1:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 4px; }
+/* Chiffres clés : quatre cartes, deux par ligne sur mobile */
+.rp-chiffres { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
+.rp-chiffre__sous { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.rp-chiffre--retard .cp-stat__valeur { color: var(--cp-terre); }
+@media (max-width: 899px) {
+.rp-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rp-chiffres > .rp-chiffre:nth-child(odd) { border-left: 0; }
+.rp-chiffres > .rp-chiffre:nth-child(n+3) { border-top: 1px solid var(--cp-bordure); }
+}
+@media (max-width: 599px) {
+.rp-chiffres > .rp-chiffre { padding: 10px 12px; }
+}
+/* Filtres : statut (pastilles) et animal (liste) */
+.rp-outils { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cp-espace-4); }
+/* le nombre est un <span> DANS l'étiquette : on annule le style de pastille que .cp-choix__option span lui donnerait */
+.rp-statuts .cp-choix__option span.rp-nombre {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 22px; min-height: 0; height: 22px; padding: 0 6px;
+  border: 0; box-shadow: none; border-radius: var(--cp-rayon-pastille); background: var(--cp-fond); font-size: var(--cp-taille-xs); font-weight: 600;
+}
+.rp-statuts input:checked + span .rp-nombre { background: var(--cp-carte); }
+.rp-animaux { min-width: min(100%, 240px); }
+@media (max-width: 599px) {
+.rp-outils { display: grid; justify-content: stretch; }
+.rp-animaux { width: 100%; }
+.rp-statuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rp-statuts legend { grid-column: 1 / -1; }
+.rp-statuts .cp-choix__option > span { width: 100%; justify-content: space-between; white-space: nowrap; }
+}
+/* Groupes et cartes */
+.rp-groupes { display: grid; gap: var(--cp-espace-5); }
+.rp-groupe { display: grid; gap: var(--cp-espace-2); }
+.rp-groupe > .cp-btn { justify-self: center; }
+.rp-groupe__titre { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-family: var(--cp-police-texte); font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); padding: 0 2px; }
+.rp-groupe--retard .rp-groupe__titre { color: var(--cp-terre); }
+.rp-groupe--semaine .rp-groupe__titre { color: var(--cp-ambre); }
+.rp-groupe__titre .cp-compteur { margin-left: 0; background: var(--cp-surface-2); color: var(--cp-texte-doux); min-width: 18px; height: 18px; font-weight: 500; }
+.rp-groupe--retard .rp-groupe__titre .cp-compteur { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.rp-groupe__icone { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: inherit; }
+.rp-groupe__icone .ic { width: 14px; height: 14px; }
+.rp-liste { list-style: none; margin: 0; padding: 0; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
+.rp-liste > li + li { border-top: 1px solid var(--cp-bordure); }
+.rp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.rp-carte--retard { box-shadow: inset 3px 0 0 var(--cp-terre); }
+.rp-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
+.rp-carte__corps { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--cp-espace-2); min-width: 0; }
+.rp-carte__corps > .rp-carte__type, .rp-carte__corps > .rp-carte__tete { flex-basis: 100%; }
+.rp-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t-texte, var(--cp-texte-doux)); }
+.rp-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
+.rp-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rp-animal { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; font-weight: 400; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); white-space: nowrap; }
+.rp-animal .cp-avatar { width: 22px; height: 22px; font-size: 9px; flex: none; }
+.rp-animal .cp-avatar .ic { width: 12px; height: 12px; }
+.rp-ligne { display: flex; align-items: center; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); white-space: nowrap; }  /* « Prévu le … » ne passe jamais à la ligne */
+.rp-ligne .ic { display: none; }
+.rp-ligne::before { content: "·"; }
+.rp-carte__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-2); }
+@media (max-width: 599px) {
+.rp-carte { grid-template-columns: auto 1fr; align-items: start; padding: 10px 12px; }
+.rp-carte__corps { flex-direction: column; align-items: flex-start; row-gap: 2px; }
+.rp-carte__corps > .rp-animal { margin-top: 2px; }
+.rp-ligne::before { content: none; }
+.rp-carte__actions { grid-column: 2; justify-content: flex-start; padding-top: var(--cp-espace-1); }
+.rp-carte__actions .cp-btn { flex: 1 1 0; }
+}
+/* Soin ouvert depuis « Voir le soin » (page Rappels) */
+.sn-carte--cible { background: var(--cp-vert-clair); box-shadow: inset 3px 0 0 var(--cp-foret); }
+.sn-carte--cible:focus { outline: none; }
+.sn-carte--cible:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -2px; }
+/* =========================================================
+   Refonte 5g : pesées et graphique
+   ========================================================= */
+.ps { display: grid; gap: var(--cp-espace-4); }
+.ps-form { display: grid; gap: var(--cp-espace-3); padding: var(--cp-espace-4); }
+.ps-form__titre { margin: 0; font-size: var(--cp-taille-m); }
+.ps-form__champs { display: grid; grid-template-columns: 1fr; gap: var(--cp-espace-4); align-items: start; }
+.ps-form > .cp-btn { justify-self: start; }
+@media (min-width: 600px) {
+.ps-form__champs { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+}
+@media (max-width: 599px) {
+.ps-form > .cp-btn { justify-self: stretch; }
+}
+.ps-note { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.ps-graph { position: relative; padding: var(--cp-espace-4); display: grid; gap: var(--cp-espace-2); }
+.ps-graph__tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cp-espace-2) var(--cp-espace-4); }
+.ps-graph__tete h3 { margin: 0; font-size: var(--cp-taille-m); }
+.ps-unite { font-family: var(--cp-police-texte); font-weight: 400; font-size: var(--cp-taille-xs); color: var(--cp-texte-doux); }
+.ps-periodes { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-periodes .cp-filtre { min-height: var(--cp-h-bouton-s); padding: 0 12px; font-size: var(--cp-taille-s); }
+.ps-graph__zone { min-height: 150px; }
+.ps-note--periode { padding: var(--cp-espace-5) 0; justify-content: center; }
+.ps-graphique { display: block; width: 100%; height: auto; overflow: visible; }
+/* Axes : petits chiffres discrets, grille en pointillés très légers */
+.ps-grille { stroke: rgba(36, 61, 53, .13); stroke-width: 1; stroke-dasharray: 2 4; }
+.ps-texte { fill: var(--cp-texte-doux); font-size: 10px; font-family: var(--cp-police-texte); font-variant-numeric: tabular-nums; }
+/* Courbe dans la couleur de l'animal, avec un dégradé transparent dessous */
+.ps-degrade-haut { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: .34; }
+.ps-degrade-bas { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: 0; }
+.ps-ligne { fill: none; stroke: var(--an-trait, var(--cp-foret)); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: ps-trace 1.2s var(--cp-courbe) both; }
+.ps-aire { animation: ps-fondu .9s .35s var(--cp-courbe) both; }
+.ps-point { fill: var(--cp-carte); stroke: var(--an-trait, var(--cp-foret)); stroke-width: 2; pointer-events: none; animation: ps-fondu .4s 1s var(--cp-courbe) both; }
+.ps-point--actif { fill: var(--an-fond, var(--cp-vert-clair)); stroke-width: 3; r: 5px; }
+.ps-repere { stroke: var(--an-trait, var(--cp-foret)); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; transition: opacity .15s var(--cp-courbe); pointer-events: none; }
+.ps-repere.est-visible { opacity: .55; }
+.ps-cible { fill: transparent; stroke: none; cursor: pointer; }
+@keyframes ps-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ps-fondu { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+.ps-ligne, .ps-aire, .ps-point { animation: none; }
+.ps-repere { transition: none; }
+}
+.ps-infobulle { position: absolute; z-index: 2; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  padding: var(--cp-espace-2) var(--cp-espace-3); border-radius: var(--cp-rayon-champ); font-size: var(--cp-taille-s); font-weight: 600;
+  background: var(--cp-foret); color: var(--cp-texte-inverse); box-shadow: var(--cp-ombre-m); }
+.ps-infobulle[hidden] { display: none; }
+.ps-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.ps-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); }
+.ps-carte__corps { display: grid; gap: 0; min-width: 0; }
+.ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.ps-ligne-info { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.ps-ligne-info .ic { flex: none; width: 14px; height: 14px; }

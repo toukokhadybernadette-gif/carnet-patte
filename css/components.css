@@ -1,52 +1,9 @@
-/* ===== Composants réutilisables : boutons, cartes, formulaires, fenêtres ===== */
+/* ===== Reste de l'ancien socle : réglages de base des champs, focus, messages et icônes (les composants sont dans css/composants.css) ===== */
 
-/* --- Boutons --- */
-.bouton {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 44px; padding: 0 18px;
-  border: 1px solid var(--vert); border-radius: 12px;
-  background: var(--vert); color: #fff;
-  font: inherit; font-weight: 600; text-decoration: none;
-  cursor: pointer;
-}
-.bouton:hover { background: var(--vert-fonce); }
-.bouton.secondaire { background: var(--carte); color: var(--vert-fonce); }
-.bouton.secondaire:hover { background: var(--vert-pale); }
-.bouton.danger { background: var(--rouge); border-color: var(--rouge); }
-.bouton.danger:hover { background: #a63222; }
-.bouton.petit { min-height: 36px; padding: 0 12px; font-size: .9rem; }
-.bouton.lien { background: none; border: none; color: var(--gris); text-decoration: underline; min-height: 36px; padding: 0 8px; font-weight: 400; }
-.bouton.icone { min-width: 36px; padding: 0 8px; }
-.bouton:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 3px solid #9fd0b7; outline-offset: 2px;
 }
-
-/* --- Cartes --- */
-.carte {
-  background: var(--carte);
-  border: 1px solid var(--bordure);
-  border-radius: var(--rayon);
-  box-shadow: var(--ombre);
-  padding: var(--espace);
-  margin-bottom: var(--espace);
-}
-.carte > h2 { margin-bottom: 12px; }
-
-.page-titre {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 12px;
-  margin-bottom: var(--espace);
-}
-
-.vide {
-  text-align: center; color: var(--gris);
-  padding: 28px 12px;
-}
-.vide .grand-emoji { font-size: 2.6rem; display: block; margin-bottom: 6px; }
-
 /* --- Formulaires --- */
-.formulaire { display: grid; gap: 14px; }
-.formulaire label { display: grid; gap: 4px; font-weight: 600; font-size: .95rem; }
 input, select, textarea {
   width: 100%; min-height: 44px;
   padding: 8px 12px;
@@ -55,53 +12,6 @@ input, select, textarea {
   font: inherit; font-weight: 400;
 }
 textarea { min-height: 80px; resize: vertical; }
-.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
-
-/* --- Pastilles d'état --- */
-.pastille {
-  display: inline-block;
-  padding: 2px 10px; border-radius: 999px;
-  font-size: .8rem; font-weight: 600;
-  background: var(--vert-pale); color: var(--vert-fonce);
-}
-.pastille.retard { background: var(--rouge-pale); color: var(--rouge); }
-.pastille.semaine { background: var(--orange-pale); color: var(--orange); }
-.pastille.plus-tard { background: var(--vert-pale); color: var(--vert-fonce); }
-.pastille.fait { background: #eee; color: var(--gris); }
-
-/* --- Listes en lignes (soins, pesées, rappels) --- */
-.lignes { list-style: none; margin: 0; padding: 0; }
-.ligne {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 12px 0;
-  border-top: 1px solid var(--bordure);
-}
-.ligne:first-child { border-top: none; }
-.ligne-icone { font-size: 1.5rem; line-height: 1.2; }
-.ligne-corps { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.ligne-corps .notes { overflow-wrap: anywhere; }
-.ligne-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-
-/* --- Fenêtre modale --- */
-dialog.modale {
-  width: min(520px, calc(100vw - 24px));
-  max-height: calc(100dvh - 24px);
-  padding: 0; border: none; border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0,0,0,.25);
-  color: var(--texte);
-}
-dialog.modale::backdrop { background: rgba(30, 25, 15, .45); }
-.modale-tete {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--bordure);
-}
-.modale-tete .fermer {
-  border: none; background: none; font-size: 1.2rem; cursor: pointer;
-  width: 40px; height: 40px; border-radius: 50%; color: var(--gris);
-}
-.modale-tete .fermer:hover { background: var(--creme); }
-.modale-corps { padding: 20px; overflow-y: auto; max-height: calc(100dvh - 110px); }
-
 /* --- Messages éphémères --- */
 #toasts {
   position: fixed; left: 0; right: 0; z-index: 100;
@@ -109,9 +19,6 @@ dialog.modale::backdrop { background: rgba(30, 25, 15, .45); }
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   pointer-events: none;
 }
-.toast {
-  background: var(--texte); color: #fff;
-  padding: 10px 18px; border-radius: 999px;
-  font-size: .95rem; box-shadow: var(--ombre);
-}
-@media (min-width: 800px) { #toasts { bottom: 24px; left: 250px; } }
+/* La position des messages selon la taille d'écran est réglée dans css/navigation.css */
+/* --- Icônes SVG (jeu Lucide, voir js/icons.js) --- */
+.ic { display: inline-block; flex: none; vertical-align: middle; }

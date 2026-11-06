@@ -1,6 +1,9 @@
-// Navigation entre les pages grâce à l'adresse (#/animaux, #/animaux/rappels, #/donnees...).
+// Navigation entre les pages grâce à l'adresse (#/accueil, #/animaux, #/animaux/rappels, #/donnees...).
+// Sans adresse, on arrive sur l'Accueil.
 // Chaque module déclare sa route avec route('nom', fonction).
 // La fonction reçoit : la zone où afficher la page, et le reste de l'adresse (ex. l'id d'un animal).
+
+import { vide, bouton } from './composants.js';
 
 const routes = {};
 let zoneContenu = null;
@@ -18,7 +21,7 @@ export function segments() {
 export function rafraichir() {
   const seg = segments();
   if (!seg.length) {
-    location.replace('#/animaux');
+    location.replace('#/accueil');
     return;
   }
   // Chaque affichage reçoit un conteneur neuf : les écouteurs de clic de l'ancienne page disparaissent avec lui
@@ -28,7 +31,7 @@ export function rafraichir() {
   if (affichage) {
     affichage(page, seg.slice(1));
   } else {
-    page.innerHTML = '<div class="vide"><span class="grand-emoji">🤔</span>Page introuvable.</div>';
+    page.innerHTML = `<div class="cp pg"><div class="cp-carte">${vide({ niveau: 1, icone: 'circle-help', titre: 'Page introuvable', texte: "Cette page n'existe pas.", action: bouton({ texte: "Retour à l'accueil", icone: 'house', href: '#/accueil' }) })}</div></div>`;
   }
   if (apresAffichage) apresAffichage(seg);
 }
