@@ -1,0 +1,78 @@
+/* ===== Jetons de design — PROPOSITION étape 5h (non appliquée à l'appli) =====
+   Mêmes noms --cp-* que css/tokens.css quand le rôle est le même : si la proposition est validée,
+   l'adoption consistera à remplacer ces valeurs dans css/tokens.css (+ quelques jetons nouveaux). */
+@font-face { font-family: "Manrope"; src: url("../assets/fonts/manrope-latin-wght.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("../assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+:root {
+  /* ----- Palette (identité verte conservée ; 1 surface de plus) ----- */
+  --cp-foret: #243D35;          /* texte, bouton principal */
+  --cp-sauge: #A8BFA5;          /* illustrations uniquement (plus de bordures sauge) */
+  --cp-fond: #F6F5F0;           /* fond de l'appli (inchangé) */
+  --cp-surface: #FFFFFF;        /* cartes (anciennement --cp-carte) */
+  --cp-surface-2: #EFF1EA;      /* NOUVEAU : surface en creux (barre latérale, survol de ligne, zones secondaires) */
+  --cp-vert-clair: #E4EEE0;     /* sélection */
+  --cp-bordure: #E3E8DE;        /* filet fin 1 px entre cartes et lignes */
+  --cp-bordure-forte: #C9D3C4;  /* contour des boutons secondaires */
+  --cp-bordure-champ: #7C9187;  /* contour des champs (3,4:1, inchangé) */
+
+  --cp-texte: #243D35;          /* 10,7:1 sur le fond */
+  --cp-texte-doux: #5B6B63;     /* 5,2:1 sur le fond, 5,6:1 sur blanc : le gris le plus clair autorisé pour du texte */
+  --cp-texte-inverse: #FFFFFF;
+
+  /* ----- États : réservés aux informations importantes ----- */
+  --cp-terre: #9A4330;  --cp-terre-pale: #F6E3DC;   /* en retard : 6,5:1 sur blanc, 5,3:1 sur son fond */
+  --cp-ambre: #7A4F0F;  --cp-ambre-pale: #F6E8C9;   /* cette semaine : 7,1:1 / 5,9:1 */
+  --cp-succes-texte: #1F5A3F; --cp-succes-pale: #E4EEE0; /* effectué : 6,8:1 */
+  --cp-focus: #243D35;          /* anneau de focus 2 px décalé de 2 px (inchangé) */
+
+  /* ----- Couleurs d'avatar (une par animal, choisie d'après son identifiant) : fond / texte, contraste ≥ 6,5:1 ----- */
+  --av-1-fond: #DCE8D8; --av-1-texte: #2A4A3A;  /* sauge */
+  --av-2-fond: #DAE8EE; --av-2-texte: #24505E;  /* ciel */
+  --av-3-fond: #F1E3CC; --av-3-texte: #6B4310;  /* sable */
+  --av-4-fond: #F2DDD3; --av-4-texte: #7A3A26;  /* argile */
+  --av-5-fond: #E9DEEA; --av-5-texte: #5A2F5E;  /* prune */
+  --av-6-fond: #E1E3F1; --av-6-texte: #3A3F7A;  /* lavande */
+  --av-7-fond: #F5DCE2; --av-7-texte: #7B2D45;  /* rose */
+  --av-8-fond: #E6E8C9; --av-8-texte: #4F5314;  /* olive */
+
+  /* ----- Typographie : Manrope pour les titres, Inter pour le texte (inchangées) ----- */
+  --cp-taille-xs: 12px;   --cp-interligne-xs: 16px;    /* étiquettes, badges, légendes (13 px sur mobile) */
+  --cp-taille-s: 13px;    --cp-interligne-s: 18px;     /* texte secondaire, méta (14 px sur mobile) */
+  --cp-taille-m: 15px;    --cp-interligne-m: 22px;     /* TEXTE COURANT (était 16 px) — 16/24 sur mobile */
+  --cp-taille-l: 17px;    --cp-interligne-l: 24px;     /* titre de section (h2) — 18/26 sur mobile */
+  --cp-taille-xl: 19px;   --cp-interligne-xl: 26px;    /* titre de fenêtre modale */
+  --cp-taille-xxl: 26px;  --cp-interligne-xxl: 32px;   /* titre de page (h1) — 22/28 sur mobile */
+  --cp-taille-chiffre: 24px; --cp-interligne-chiffre: 30px; /* chiffres clés (étaient 34 px) — 20/26 sur mobile */
+  --cp-graisse-texte: 400; --cp-graisse-bouton: 500; --cp-graisse-titre: 650; --cp-graisse-h1: 700;
+  --cp-lettrage-titre: -0.015em;  /* titres Manrope légèrement resserrés */
+
+  /* ----- Formes ----- */
+  --cp-rayon-carte: 12px;     /* était 20 */
+  --cp-rayon-bouton: 8px;     /* était 14 */
+  --cp-rayon-champ: 8px;      /* était 12 */
+  --cp-rayon-avatar: 999px;
+  --cp-rayon-pastille: 999px;
+
+  /* ----- Élévations : surtout des filets ; l'ombre distingue les niveaux ----- */
+  --cp-ombre-0: none;                                  /* lignes de liste */
+  --cp-ombre-1: 0 1px 2px rgba(36, 61, 53, .05);       /* cartes au repos */
+  --cp-ombre-2: 0 2px 8px rgba(36, 61, 53, .08);       /* survol de carte cliquable, menus déroulants */
+  --cp-ombre-3: 0 12px 32px rgba(36, 61, 53, .14);     /* fenêtres modales */
+
+  /* ----- Espacements (grille de 4 px) ----- */
+  --cp-espace-1: 4px;  --cp-espace-2: 8px;  --cp-espace-3: 12px; --cp-espace-4: 16px;
+  --cp-espace-5: 20px; --cp-espace-6: 24px; --cp-espace-7: 32px; --cp-espace-8: 48px;
+  --cp-marge-page: 24px;          /* 16 px sur mobile */
+  --cp-largeur-page: 1040px;      /* largeur maximale du contenu */
+  --cp-padding-carte: 16px;       /* 12 px sur mobile */
+
+  /* ----- Hauteurs de contrôles ----- */
+  --cp-h-bouton: 36px;  --cp-h-bouton-s: 30px;  --cp-h-champ: 36px;  --cp-h-ligne-menu: 34px;
+  --cp-cible-tactile: 44px;       /* mobile : tous les boutons montent à 44 px */
+
+  /* ----- Mise en page ----- */
+  --cp-largeur-barre: 232px;      /* était 280 */
+  --cp-hauteur-barre-haut: 52px;  /* était 64 */
+  --cp-hauteur-barre-bas: 60px;   /* était 68 */
+}

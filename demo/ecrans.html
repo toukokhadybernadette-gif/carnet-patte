@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Démo design 5h — écrans</title>
+<link rel="stylesheet" href="jetons-5h.css">
+<link rel="stylesheet" href="style-5h.css">
+</head>
+<body>
+<div id="racine"></div>
+<script type="module">
+// Page de démonstration : données FICTIVES en dur, aucune lecture ni écriture du stockage de l'appli.
+import { icone } from '../js/icons.js';
+
+const I = (n, t = 18) => icone(n, { taille: t });
+const ecran = (location.hash || '#accueil').slice(1);
+
+// Une couleur d'avatar par animal, déduite de son identifiant (stable d'une visite à l'autre)
+const couleur = (id) => 1 + [...id].reduce((s, c) => (s * 31 + c.charCodeAt(0)) % 8, 0);
+const initiales = (nom) => { const m = nom.trim().split(/\s+/); return (m.length > 1 ? m[0][0] + m[1][0] : nom.trim().slice(0, 2)).toUpperCase(); };
+// Photo d'illustration (la vraie photo est celle déjà enregistrée dans l'animal)
+const PHOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E7C9A5"/><stop offset="1" stop-color="#B98B5E"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/><ellipse cx="32" cy="38" rx="16" ry="14" fill="#F5E6D2"/><path d="M18 30 22 14 32 24ZM46 30 42 14 32 24Z" fill="#F5E6D2"/><circle cx="26" cy="36" r="2" fill="#4A3426"/><circle cx="38" cy="36" r="2" fill="#4A3426"/><path d="M30 42h4l-2 2Z" fill="#C97B6B"/></svg>');
+const avatar = (a, classe = '') => a.photo
+  ? `<span class="d-avatar ${classe}"><img src="${a.photo}" alt=""></span>`
+  : `<span class="d-avatar d-av-${couleur(a.id)} ${classe}" aria-hidden="true">${initiales(a.nom)}</span>`;
+
+const ANIMAUX = [
+  { id: 'a-mimi', nom: 'Mimi', detail: 'Chat · Européen', photo: PHOTO },
+  { id: 'a-moka', nom: 'Moka', detail: 'Chien · Labrador', retards: 1 },
+  { id: 'a-noisette', nom: 'Noisette', detail: 'Hamster · Doré' },
+];
+const [mimi, moka] = ANIMAUX;
+const PRENOM = 'Léa'; // facultatif dans le Profil ; sans prénom : « Bonjour »
+
+const badge = (t, v = '', ic = '') => `<span class="d-badge ${v ? 'd-badge--' + v : ''}">${ic ? I(ic, 12) : ''}${t}</span>`;
+const bouton = (t, v = 'contour', ic = '', extra = '') => `<button type="button" class="d-btn d-btn--${v} ${extra}">${ic ? I(ic, 16) : ''}${t}</button>`;
+const boutonIcone = (nom, libelle, v = 'discret', extra = '') => `<button type="button" class="d-btn d-btn--${v} d-btn--icone ${extra}" aria-label="${libelle}" title="${libelle}">${I(nom, 16)}</button>`;
+
+// ----- Coque -----
+const NAVS = [['accueil', 'Accueil', 'house', '#accueil'], ['animaux', 'Mes animaux', 'paw-print', '#fiche'], ['rappels', 'Rappels', 'bell', '#rappels']];
+const actif = { accueil: 'accueil', rappels: 'rappels', fiche: 'animaux' }[ecran];
+const lien = ([id, t, ic, href]) => `<a href="${href}" ${id === actif ? 'aria-current="page"' : ''}>${I(ic, 18)}${t}${id === 'rappels' ? '<span class="d-menu__n" aria-label="1 en retard">1</span>' : ''}</a>`;
+const lienBas = ([id, t, ic, href]) => `<a href="${href}" ${id === actif ? 'aria-current="page"' : ''}>${I(ic, 22)}${t}${id === 'rappels' ? '<span class="d-menu__n" aria-label="1 en retard">1</span>' : ''}</a>`;
+const BIENTOT = [['Carte Patte', 'map-pin'], ['Boutique', 'shopping-bag'], ['Communauté', 'users'], ['Professionnels', 'briefcase-business']];
+const marque = `<a class="d-marque" href="#accueil"><span class="d-marque__logo">${I('paw-print', 16)}</span>Carnet Patte</a>`;
+const moi = PRENOM ? `<span class="d-avatar d-avatar--moi d-av-6" aria-hidden="true">${initiales(PRENOM)}</span>` : I('user', 20);
+
+const coque = (contenu) => `
+<div class="d-app">
+  <aside class="d-lateral" aria-label="Menu latéral">
+    ${marque}
+    <nav class="d-menu" aria-label="Navigation principale">
+      ${NAVS.map(lien).join('')}
+      <details class="d-bientot">
+        <summary>Bientôt <span class="d-compte">4</span>${I('chevron-down', 14)}</summary>
+        <div class="d-menu">${BIENTOT.map(([t, ic]) => `<a href="#accueil">${I(ic, 18)}${t}</a>`).join('')}</div>
+      </details>
+    </nav>
+    <div class="d-menu d-lateral__pied"><a href="#accueil"><span class="d-avatar d-avatar--s d-av-6" aria-hidden="true">${initiales(PRENOM)}</span>${PRENOM}</a></div>
+  </aside>
+  <header class="d-haut">
+    ${marque}
+    <div class="d-recherche" role="search">${I('search', 16)}Rechercher un animal…</div>
+    <div class="d-haut__actions">
+      <a class="d-icone-btn" href="#rappels" aria-label="Rappels : 1 en retard">${I('bell', 20)}<span class="d-menu__n">1</span></a>
+      <a class="d-icone-btn" href="#accueil" aria-label="Profil">${moi}</a>
+    </div>
+  </header>
+  <main class="d-contenu" id="contenu"><div class="d-page">${contenu}</div></main>
+  <nav class="d-bas" aria-label="Navigation principale">${NAVS.map(lienBas).join('')}<a href="#accueil">${I('shopping-bag', 22)}Boutique</a><a href="#accueil">${I('user', 22)}Profil</a></nav>
+</div>`;
+
+// ----- Lignes de rappel -----
+const rappel = ({ soin, icone: ic, animal, prevu, dernier, etat, v, retard }) => `
+  <li><div class="d-rappel ${retard ? 'd-rappel--retard' : ''}">
+    <span class="d-puce">${I(ic, 18)}</span>
+    <div class="d-ligne__corps">
+      <span class="d-ligne__titre">${soin}</span>
+      <span class="d-ligne__meta d-ligne__meta--ligne"><span class="d-rappel__qui d-seg">${avatar(animal, 'd-avatar--s')}${animal.nom}</span><span class="d-seg">Prévu le ${prevu}</span>${dernier ? `<span class="d-seg">dernier soin le ${dernier}</span>` : ''}</span>
+    </div>
+    <div class="d-ligne__fin">${badge(etat, v)}${bouton('Fait', 'contour', 'check', 'd-btn--s')}${boutonIcone('chevron-right', `Voir le soin ${soin} de ${animal.nom}`)}</div>
+  </div></li>`;
+const R = {
+  verm: { soin: 'Vermifuge', icone: 'pill', animal: moka, prevu: '26 oct. 2026', dernier: '28 juil.', etat: 'En retard de 10 j', v: 'retard', retard: true },
+  pip: { soin: 'Pipette', icone: 'bug', animal: mimi, prevu: '10 nov. 2026', dernier: '13 oct.', etat: 'Dans 5 j', v: 'semaine' },
+  chp: { soin: 'CHPPiL + rage', icone: 'syringe', animal: moka, prevu: '5 déc. 2026', dernier: '5 déc. 2025', etat: 'Dans 30 j', v: '' },
+  typ: { soin: 'Typhus + coryza', icone: 'syringe', animal: mimi, prevu: '9 janv. 2027', dernier: '9 janv. 2026', etat: 'Dans 65 j', v: '' },
+};
+
+// ----- Écrans -----
+const ECRANS = {
+  accueil: () => `
+    <header class="d-entete"><div><h1>Bonjour${PRENOM ? ' ' + PRENOM : ''}</h1><p>Voici un aperçu de vos animaux et de ce qui vous attend.</p></div>
+      ${bouton('Ajouter un animal', 'principal', 'plus')}</header>
+    <section aria-label="Résumé" class="d-carte"><div class="d-chiffres d-chiffres--accueil">
+      <div class="d-chiffre"><span class="d-chiffre__lib">Animaux suivis</span><span class="d-chiffre__val">3</span></div>
+      <div class="d-chiffre"><span class="d-chiffre__lib">Rappels en retard</span><span class="d-chiffre__val d-chiffre__val--retard">1</span></div>
+      <div class="d-chiffre"><span class="d-chiffre__lib">Rappel le plus urgent</span><span class="d-chiffre__val d-chiffre__val--retard">En retard de 10 j</span><span class="d-chiffre__det">Vermifuge · Moka</span></div>
+    </div></section>
+    <section class="d-section" aria-labelledby="h-an"><div class="d-section__tete"><h2 id="h-an">Mes animaux</h2><a class="d-lien" href="#fiche">Tout voir ${I('chevron-right', 14)}</a></div>
+      <div class="d-animaux">${ANIMAUX.map((a) => `<a class="d-carte d-animal" href="#fiche">${avatar(a)}<div class="d-ligne__corps"><span class="d-ligne__titre">${a.nom}</span><span class="d-ligne__meta">${a.detail}</span></div>${a.retards ? badge('1 en retard', 'retard') : ''}</a>`).join('')}</div></section>
+    <div class="d-deux">
+      <section class="d-section" aria-labelledby="h-rp"><div class="d-section__tete"><h2 id="h-rp">Rappels</h2><a class="d-lien" href="#rappels">Tout voir ${I('chevron-right', 14)}</a></div>
+        <ul class="d-carte d-liste">${[R.verm, R.pip, R.chp].map((r) => `<li><a class="d-ligne" href="#rappels"><span class="d-puce">${I(r.icone, 18)}</span><div class="d-ligne__corps"><span class="d-ligne__titre">${r.soin} · ${r.animal.nom}</span><span class="d-ligne__meta d-seg">Prévu le ${r.prevu}</span></div>${badge(r.etat, r.v)}</a></li>`).join('')}</ul></section>
+      <section class="d-section" aria-labelledby="h-ac"><div class="d-section__tete"><h2 id="h-ac">Activité récente</h2></div>
+        <ul class="d-carte d-liste">${[['scale', 'Pesée : 29,2 kg', 'Moka · 22 oct. 2026'], ['scale', 'Pesée : 4,15 kg', 'Mimi · 16 oct. 2026'], ['bug', 'Antiparasitaire — Pipette', 'Mimi · 13 oct. 2026']].map(([ic, t, m]) => `<li><div class="d-ligne"><span class="d-puce">${I(ic, 18)}</span><div class="d-ligne__corps"><span class="d-ligne__titre">${t}</span><span class="d-ligne__meta">${m}</span></div></div></li>`).join('')}</ul></section>
+    </div>
+    <section class="d-section" aria-labelledby="h-rc"><h2 id="h-rc" class="d-sr">Raccourcis</h2>
+      <div class="d-raccourcis"><a class="d-raccourci" href="#fiche">${I('paw-print', 16)}Mes animaux</a><a class="d-raccourci" href="#rappels">${I('bell', 16)}Rappels</a><a class="d-raccourci" href="#accueil">${I('save', 16)}Sauvegarde</a></div>
+      <p class="d-bientot-ligne"><span>Bientôt :</span>${BIENTOT.map(([t]) => `<a href="#accueil">${t}</a>`).join('')}</p></section>`,
+
+  rappels: () => `
+    <header class="d-entete"><div><h1>Rappels</h1><p>4 rappels à faire, dont 1 en retard.</p></div></header>
+    <div class="d-barre">
+      <div class="d-onglets" role="tablist" aria-label="Afficher">
+        <a class="d-onglet" role="tab" aria-selected="true" href="#rappels">À faire <span class="d-compte">4</span></a>
+        <a class="d-onglet" role="tab" aria-selected="false" href="#rappels">En retard <span class="d-compte">1</span></a>
+        <a class="d-onglet" role="tab" aria-selected="false" href="#rappels">À venir <span class="d-compte">3</span></a>
+        <a class="d-onglet" role="tab" aria-selected="false" href="#rappels">Effectués <span class="d-compte">0</span></a>
+        </div>
+      <span class="d-filtre">${I('list-filter', 14)}Tous les animaux ${I('chevron-down', 14)}</span>
+    </div>
+    <section class="d-groupe" aria-labelledby="g1"><h2 class="d-groupe__titre d-groupe__titre--retard" id="g1">${I('bell-ring', 14)}En retard <span class="d-compte">1</span></h2><ul class="d-carte d-liste">${rappel(R.verm)}</ul></section>
+    <section class="d-groupe" aria-labelledby="g2"><h2 class="d-groupe__titre d-groupe__titre--semaine" id="g2">${I('clock', 14)}Cette semaine <span class="d-compte">1</span></h2><ul class="d-carte d-liste">${rappel(R.pip)}</ul></section>
+    <section class="d-groupe" aria-labelledby="g3"><h2 class="d-groupe__titre" id="g3">${I('calendar', 14)}Plus tard <span class="d-compte">2</span></h2><ul class="d-carte d-liste">${rappel(R.chp)}${rappel(R.typ)}</ul></section>`,
+
+  fiche: () => `
+    <a class="d-retour" href="#accueil">${I('arrow-left', 14)}Mes animaux</a>
+    <section class="d-carte d-fiche" aria-label="Moka">${avatar(moka, 'd-avatar--xl')}
+      <div class="d-fiche__corps"><h1>Moka</h1><p class="d-fiche__sous">Chien · Labrador</p><p class="d-ligne__meta">Né(e) le 5 sept. 2023 · 3 ans 2 mois</p></div>
+      <div class="d-fiche__actions">${bouton('Modifier', 'contour', 'pencil')}${bouton('Supprimer', 'discret', 'x', 'd-btn--danger')}</div></section>
+    <section class="d-carte" aria-label="Résumé"><div class="d-chiffres d-chiffres--fiche">
+      <div class="d-chiffre"><span class="d-chiffre__lib">Âge</span><span class="d-chiffre__val">3 ans 2 mois</span></div>
+      <div class="d-chiffre"><span class="d-chiffre__lib">Dernier poids</span><span class="d-chiffre__val">29,2 kg</span><span class="d-chiffre__det">22 oct. 2026 · +0,2 kg</span></div>
+      <div class="d-chiffre"><span class="d-chiffre__lib">Prochain rappel</span><span class="d-chiffre__val d-chiffre__val--retard">En retard de 10 j</span><span class="d-chiffre__det">Vermifuge · 26 oct. 2026</span></div>
+    </div></section>
+    <div>
+      <div class="d-onglets" role="tablist"><a class="d-onglet" role="tab" aria-selected="true" href="#fiche">${I('stethoscope', 16)}Santé</a><a class="d-onglet" role="tab" aria-selected="false" href="#fiche">${I('scale', 16)}Poids</a><a class="d-onglet" role="tab" aria-selected="false" href="#fiche">${I('calendar', 16)}Historique</a><a class="d-onglet" role="tab" aria-selected="false" href="#fiche">${I('image', 16)}Documents</a></div>
+    </div>
+    <section class="d-section" aria-labelledby="h-so"><div class="d-section__tete"><h2 id="h-so">Soins et traitements</h2>${bouton('Ajouter un soin', 'principal', 'plus')}</div>
+      <ul class="d-carte d-liste">
+        <li><div class="d-rappel d-rappel--retard"><span class="d-puce">${I('pill', 18)}</span><div class="d-ligne__corps"><span class="d-ligne__titre">Vermifuge</span><span class="d-ligne__meta d-ligne__meta--ligne"><span class="d-seg">Soin du 28 juil. 2026</span><span class="d-seg">prochain rappel le 26 oct. 2026</span></span></div><div class="d-ligne__fin">${badge('En retard de 10 j', 'retard')}${bouton('Fait', 'contour', 'check', 'd-btn--s')}<span class="d-actions-ligne">${boutonIcone('pencil', 'Modifier le soin Vermifuge')}${boutonIcone('x', 'Supprimer le soin Vermifuge')}</span></div></div></li>
+        <li><div class="d-rappel"><span class="d-puce">${I('stethoscope', 18)}</span><div class="d-ligne__corps"><span class="d-ligne__titre">Contrôle dents <span class="d-ligne__meta">· Visite véto</span></span><span class="d-ligne__meta">Soin du 19 avr. 2026 · Léger tartre, RAS pour le reste.</span></div><div class="d-ligne__fin">${badge('Effectué', 'ok', 'circle-check')}<span class="d-actions-ligne">${boutonIcone('pencil', 'Modifier le soin Contrôle dents')}${boutonIcone('x', 'Supprimer le soin Contrôle dents')}</span></div></div></li>
+        <li><div class="d-rappel"><span class="d-puce">${I('syringe', 18)}</span><div class="d-ligne__corps"><span class="d-ligne__titre">CHPPiL + rage <span class="d-ligne__meta">· Vaccin</span></span><span class="d-ligne__meta d-ligne__meta--ligne"><span class="d-seg">Soin du 5 déc. 2025</span><span class="d-seg">prochain rappel le 5 déc. 2026</span></span></div><div class="d-ligne__fin">${badge('Dans 30 j')}${bouton('Fait', 'contour', 'check', 'd-btn--s')}<span class="d-actions-ligne">${boutonIcone('pencil', 'Modifier le soin CHPPiL + rage')}${boutonIcone('x', 'Supprimer le soin CHPPiL + rage')}</span></div></div></li>
+      </ul></section>`,
+};
+document.getElementById('racine').innerHTML = coque((ECRANS[ecran] ?? ECRANS.accueil)());
+document.title = `Démo design 5h — ${ecran}`;
+window.addEventListener('hashchange', () => location.reload());
+</script>
+</body>
+</html>
