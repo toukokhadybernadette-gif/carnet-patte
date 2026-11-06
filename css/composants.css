@@ -397,28 +397,31 @@ body:has(dialog[open]) { overflow: hidden; }
    ========================================================= */
 .cp-nav-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-1); }
 .cp-nav-item {
-  display: flex; align-items: center; gap: var(--cp-espace-3); min-height: var(--cp-cible-tactile); padding: 0 var(--cp-espace-4);
-  border-radius: var(--cp-rayon-champ); color: var(--cp-foret); text-decoration: none; font-weight: 500; font-size: var(--cp-taille-m);
+  display: flex; align-items: center; gap: 10px; min-height: var(--cp-h-bouton); padding: 0 10px;
+  border-radius: var(--cp-rayon-bouton); color: var(--cp-foret); text-decoration: none; font-weight: 500; font-size: var(--cp-taille-m);
   transition: background-color var(--cp-duree-rapide) var(--cp-courbe);
 }
 .cp .cp-nav-item { text-decoration: none; }
-.cp-nav-item:hover { background: var(--cp-fond-survol); }
-.cp-nav-item[aria-current="page"] { background: var(--cp-vert-clair); font-weight: 700; }
+.cp-nav-item .ic { color: var(--cp-texte-doux); }
+.cp-nav-item:hover { background: rgba(36, 61, 53, .06); }
+.cp-nav-item[aria-current="page"] { background: var(--cp-carte); box-shadow: inset 0 0 0 1px var(--cp-bordure), var(--cp-ombre-s); font-weight: 600; }
+.cp-nav-item[aria-current="page"] .ic { color: var(--cp-foret); }
 .cp-nav-item[aria-disabled="true"] { color: var(--cp-desactive-texte); pointer-events: none; }
 .cp-nav-item .cp-compteur, .cp-nav-item .cp-badge { margin-left: auto; }
 
-.cp-nav-bas { display: flex; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); padding: var(--cp-espace-1) var(--cp-espace-2); box-shadow: var(--cp-ombre-s); }
+.cp-nav-bas { display: flex; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); }
 .cp-nav-bas__item {
   position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  min-height: 56px; padding: var(--cp-espace-1); border-radius: var(--cp-rayon-champ); color: var(--cp-texte-doux);
-  font-size: var(--cp-taille-xs); font-weight: 500; text-decoration: none; transition: color var(--cp-duree-rapide) var(--cp-courbe), background-color var(--cp-duree-rapide) var(--cp-courbe);
+  min-height: var(--cp-hauteur-barre-bas); padding: var(--cp-espace-1); color: var(--cp-texte-doux);
+  font-size: 12px; line-height: 16px; font-weight: 500; text-decoration: none; transition: color var(--cp-duree-rapide) var(--cp-courbe);
 }
 .cp .cp-nav-bas__item { text-decoration: none; color: var(--cp-texte-doux); }
-.cp-nav-bas__item:hover { color: var(--cp-foret); background: var(--cp-fond-survol); }
-.cp .cp-nav-bas__item[aria-current="page"] { color: var(--cp-foret); font-weight: 700; }
-.cp-nav-bas__item[aria-current="page"] .cp-nav-bas__icone { background: var(--cp-vert-clair); }
-.cp-nav-bas__icone { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 100%; max-width: 52px; height: 30px; border-radius: 15px; transition: background-color var(--cp-duree) var(--cp-courbe); }
-.cp-nav-bas__compteur { position: absolute; top: -4px; left: calc(50% + 6px); min-width: 18px; height: 18px; font-size: 11px; }
+.cp-nav-bas__item:hover { color: var(--cp-foret); }
+.cp .cp-nav-bas__item[aria-current="page"] { color: var(--cp-foret); font-weight: 600; }
+/* repère de la page active : un petit trait en haut de l'entrée */
+.cp-nav-bas__item[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 50%; width: 24px; height: 2px; margin-left: -12px; border-radius: 0 0 2px 2px; background: var(--cp-foret); }
+.cp-nav-bas__icone { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 100%; max-width: 52px; height: 26px; }
+.cp-nav-bas__compteur { position: absolute; top: -4px; left: calc(50% + 4px); min-width: 18px; height: 18px; font-size: 12px; }
 
 .cp-fil { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); list-style: none; margin: 0; padding: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .cp-fil li { display: inline-flex; align-items: center; gap: var(--cp-espace-2); }

@@ -12,7 +12,7 @@
 import * as storage from './storage.js';
 import { icone } from './icons.js';
 import { echapper } from './utils.js';
-import { badge, compteur, bouton } from './composants.js';
+import { bouton } from './composants.js';
 import { compterEnRetard } from '../modules/animaux/rappels.js';
 import { infosEspece, nomEspece } from '../modules/animaux/commun.js';
 
@@ -41,10 +41,23 @@ const el = (id) => document.getElementById(id);
 
 // ----- Construction -----
 
+// Les modules « bientôt » sont réunis dans une section repliable : pas de pastille sur chaque entrée.
+// La barre réduite (tablette) n'affiche que des icônes : l'info-bulle précise alors « (bientôt) ».
 const itemLateral = (n) => `
-  <li><a class="cp-nav-item" href="${n.href}" data-nav="${n.id}" data-etiquette="${echapper(n.titre)}">
-    ${icone(n.icone, { taille: 22 })}<span class="app-nav__texte">${echapper(n.titre)}</span>${n.bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : ''}${n.compteurRetards ? '<span class="cp-compteur app-nav__compteur" data-retards hidden></span>' : ''}
+  <li><a class="cp-nav-item" href="${n.href}" data-nav="${n.id}" data-etiquette="${echapper(n.bientot ? `${n.titre} (bientôt)` : n.titre)}">
+    ${icone(n.icone, { taille: 18 })}<span class="app-nav__texte">${echapper(n.titre)}</span>${n.compteurRetards ? '<span class="cp-compteur app-nav__compteur" data-retards hidden></span>' : ''}
   </a></li>`;
+
+const sectionBientot = () => {
+  const modules = NAV.filter((n) => n.bientot);
+  return `
+    <div class="app-bientot" data-bientot>
+      <button type="button" class="app-bientot__titre" aria-expanded="false" aria-controls="bientot-liste">
+        <span>Bientôt</span><span class="app-bientot__nombre">${modules.length}</span>${icone('chevron-down', { taille: 14 })}
+      </button>
+      <ul class="cp-nav-liste app-bientot__liste" id="bientot-liste">${modules.map(itemLateral).join('')}</ul>
+    </div>`;
+};
 
 const itemBas = (n) => `
   <a class="cp-nav-bas__item" href="${n.href}" data-nav="${n.id}">
@@ -60,7 +73,8 @@ export function construireNavigation() {
   el('barre-laterale').innerHTML = `
     ${logo()}
     <nav class="app-lateral__nav" aria-label="Navigation principale">
-      <ul class="cp-nav-liste">${NAV.filter((n) => !n.pied).map(itemLateral).join('')}</ul>
+      <ul class="cp-nav-liste">${NAV.filter((n) => !n.pied && !n.bientot).map(itemLateral).join('')}</ul>
+      ${sectionBientot()}
       <ul class="cp-nav-liste app-lateral__pied">${NAV.filter((n) => n.pied).map(itemLateral).join('')}</ul>
     </nav>`;
 
@@ -86,9 +100,19 @@ export function construireNavigation() {
     </div>`;
 
   el('evitement').addEventListener('click', () => el('contenu').focus());
+  document.querySelector('[data-bientot] .app-bientot__titre').addEventListener('click', () => ouvrirBientot(!bientotOuvert()));
   initialiserRecherche();
   majRappels();
   window.addEventListener('donnees-modifiees', majRappels);
+}
+
+// ----- Section « Bientôt » de la barre latérale -----
+
+const bientotOuvert = () => document.querySelector('[data-bientot]').classList.contains('app-bientot--ouvert');
+function ouvrirBientot(ouvert) {
+  const bloc = document.querySelector('[data-bientot]');
+  bloc.classList.toggle('app-bientot--ouvert', ouvert);
+  bloc.querySelector('.app-bientot__titre').setAttribute('aria-expanded', String(ouvert));
 }
 
 // ----- Rappels en retard (cloche) -----
@@ -125,6 +149,8 @@ export function majNavigation(seg) {
   if (NAV.find((x) => x.id === 'rappels').actif(seg)) el('notif-lien').setAttribute('aria-current', 'page');
   else el('notif-lien').removeAttribute('aria-current');
   majRappels();
+  // Sur la page d'un module à venir, sa section est dépliée pour qu'on voie où l'on est
+  if (NAV.some((n) => n.bientot && n.actif(seg))) ouvrirBientot(true);
 
   const cle = seg.join('/');
   if (cle === routePrecedente) return; // simple rafraîchissement après une modification : on ne touche à rien
