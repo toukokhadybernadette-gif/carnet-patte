@@ -7,6 +7,10 @@
 // Forme des données :
 //   { version, exemplesAjoutes, profil: { prenom }, animaux: [], soins: [], pesees: [] }
 // `profil` est FACULTATIF : un export plus ancien, sans ce champ, s'importe normalement (le prénom reste vide).
+//
+// RÈGLE DE SÉCURITÉ : des données déjà enregistrées mais illisibles (JSON abîmé, mauvaise forme, version plus récente)
+// ne sont JAMAIS remplacées. Le chargement garde alors le texte brut, en fait une copie de secours (autre clé),
+// et bloque toute écriture tant que l'utilisateur n'a pas choisi (voir js/secours.js).
 
 import { uid } from './utils.js';
 
@@ -14,6 +18,10 @@ const CLE = 'carnetpatte.v1';
 const VERSION = 1;
 const PRENOM_MAX = 40; // doit être déclaré AVANT charger() : elle s'exécute dès le chargement du fichier
 const COLLECTIONS = ['animaux', 'soins', 'pesees'];
+const CLE_SECOURS = `${CLE}.secours`;
+
+// Non nul quand les données enregistrées n'ont pas pu être lues : { raison, brut, cleSecours }
+let probleme = null;
 
 let donnees = charger();
 
@@ -35,16 +43,49 @@ function normaliser(obj) {
   return base;
 }
 
-function charger() {
+/** null si le texte est un jeu de données lisible ; sinon la raison : 'illisible' | 'invalide' | 'recente'. */
+function diagnostiquer(brut) {
+  let obj;
+  try { obj = JSON.parse(brut); } catch { return 'illisible'; }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return 'invalide';
+  if (COLLECTIONS.some((c) => c in obj && !Array.isArray(obj[c]))) return 'invalide';
+  if (typeof obj.version === 'number' && obj.version > VERSION) return 'recente'; // une version plus récente de l'appli l'a écrit
+  return null;
+}
+
+/** Copie le texte brut dans une autre clé (une seule copie par contenu). Retourne la clé, ou null si l'espace manque. */
+function copierSecours(brut) {
   try {
-    const brut = localStorage.getItem(CLE);
-    return brut ? normaliser(JSON.parse(brut)) : vide();
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.startsWith(CLE_SECOURS) && localStorage.getItem(k) === brut) return k;
+    }
+    const cle = `${CLE_SECOURS}.${new Date().toISOString()}`;
+    localStorage.setItem(cle, brut);
+    return cle;
   } catch {
-    return vide();
+    return null;
   }
 }
 
+function charger() {
+  let brut;
+  try {
+    brut = localStorage.getItem(CLE);
+  } catch {
+    return vide(); // stockage du navigateur inaccessible : rien à protéger, rien à lire
+  }
+  if (!brut) return vide(); // première visite
+  const raison = diagnostiquer(brut);
+  if (raison) {
+    probleme = { raison, brut, cleSecours: copierSecours(brut) };
+    return vide(); // en mémoire seulement : sauver() n'écrit rien tant que `probleme` est actif
+  }
+  return normaliser(JSON.parse(brut));
+}
+
 function sauver() {
+  if (probleme) return; // données illisibles : on n'écrit RIEN par-dessus
   try {
     localStorage.setItem(CLE, JSON.stringify(donnees));
   } catch {
@@ -105,10 +146,30 @@ export function modifierProfil(changements) {
 // ----- Drapeau "les animaux d'exemple ont déjà été ajoutés" -----
 
 export function exemplesDejaAjoutes() {
-  return donnees.exemplesAjoutes;
+  return probleme ? true : donnees.exemplesAjoutes; // jamais d'exemples par-dessus des données qu'on n'a pas pu lire
 }
 
 export function marquerExemplesAjoutes() {
+  donnees.exemplesAjoutes = true;
+  sauver();
+}
+
+// ----- Données illisibles (voir js/secours.js) -----
+
+/** null si tout va bien ; sinon { raison, cleSecours } (cleSecours est null si la copie de secours a échoué). */
+export function etatDonnees() {
+  return probleme ? { raison: probleme.raison, cleSecours: probleme.cleSecours } : null;
+}
+
+/** Le texte exact enregistré dans le navigateur, tel qu'il a été trouvé (pour le télécharger). */
+export function donneesBrutes() {
+  return probleme?.brut ?? '';
+}
+
+/** Choix de l'utilisateur : repartir de zéro. La copie de secours reste dans le navigateur. */
+export function repartirDeZero() {
+  probleme = null;
+  donnees = vide();
   donnees.exemplesAjoutes = true;
   sauver();
 }
@@ -129,12 +190,14 @@ export function importer(texte) {
   }
   const valide = obj && typeof obj === 'object' && COLLECTIONS.every((c) => Array.isArray(obj[c]));
   if (!valide) throw new Error("Ce fichier ne ressemble pas à un export de Carnet Patte.");
+  probleme = null; // l'utilisateur a choisi un fichier valide : il remplace les données illisibles (une copie de secours existe déjà)
   donnees = normaliser(obj);
   donnees.exemplesAjoutes = true; // pas de ré-ajout d'exemples après une importation
   sauver();
 }
 
 export function toutEffacer() {
+  probleme = null;
   donnees = vide();
   donnees.exemplesAjoutes = true;
   sauver();

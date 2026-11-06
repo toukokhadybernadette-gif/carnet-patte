@@ -18,6 +18,7 @@ import { rendre as rendreProfil } from '../modules/profil/profil.js';
 import { ajouterExemples } from '../modules/animaux/exemples.js';
 import { rendre as rendreDonnees } from './donnees.js';
 import { rendre as rendreBientot } from './bientot.js';
+import { afficherSecours } from './secours.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
 
 // ----- Routes -----
@@ -32,11 +33,17 @@ route('donnees', rendreDonnees);
 route('bientot', rendreBientot);
 route('composants', rendreComposants); // page de référence du design, pas dans le menu
 
-// ----- Premier lancement : quelques animaux d'exemple -----
-if (!storage.exemplesDejaAjoutes()) ajouterExemples();
+// ----- Données enregistrées illisibles : on n'écrase RIEN, on explique et on propose de les exporter (js/secours.js) -----
+const etatDonnees = storage.etatDonnees();
+if (etatDonnees) {
+  afficherSecours(etatDonnees);
+} else {
+  // ----- Premier lancement : quelques animaux d'exemple -----
+  if (!storage.exemplesDejaAjoutes()) ajouterExemples();
 
-// ----- Navigation (barre latérale, barre du haut, barre du bas) -----
-construireNavigation();
+  // ----- Navigation (barre latérale, barre du haut, barre du bas) -----
+  construireNavigation();
 
-// ----- Démarrage -----
-demarrer(document.getElementById('contenu'), majNavigation);
+  // ----- Démarrage -----
+  demarrer(document.getElementById('contenu'), majNavigation);
+}

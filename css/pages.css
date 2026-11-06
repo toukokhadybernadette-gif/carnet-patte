@@ -83,3 +83,12 @@ a.cp-carte.pg-tuile:hover { background: var(--cp-surface-2); box-shadow: none; }
 .bt-carte__titre { margin: 0; font-size: var(--cp-taille-l); }
 .bt-carte p { margin: 0; color: var(--cp-texte-doux); }
 .bt-carte--cible { border-color: var(--cp-foret); box-shadow: 0 0 0 1px var(--cp-foret), var(--cp-ombre-m); }
+
+/* =========================================================
+   Écran « données illisibles » (js/secours.js)
+   ========================================================= */
+.secours { min-height: 100dvh; background: var(--cp-fond); padding: var(--cp-espace-6) var(--cp-marge-page); }
+.secours__contenu { display: grid; gap: var(--cp-espace-4); max-width: 640px; margin: 0 auto; }
+.secours__etapes { margin: 0; padding-left: var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
+.secours__actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); }
+@media (max-width: 599px) { .secours__actions .cp-btn { width: 100%; } }
