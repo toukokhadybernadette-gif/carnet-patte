@@ -2,30 +2,38 @@
    Cartes, menus, barres et fenêtres en verre dépoli : fond semi-transparent, flou (backdrop-filter), fine bordure claire,
    ombre douce, coins arrondis. Derrière : quelques grandes bulles de couleur très floues qui dérivent lentement (.app-fond).
    Ce fichier est chargé en dernier : pour revenir à l'ancien aspect, il suffit de retirer son <link> dans index.html.
-   LISIBILITÉ : le fond du verre est blanc à 78 % ; les bulles ne dépassent jamais 55 % d opacité. Le texte courant garde au
+   LISIBILITÉ : le fond du verre est blanc à 44 % seulement (très transparent : on voit les couleurs du décor), compensé par un flou fort et une bordure claire ; les bulles ne dépassent jamais 55 % d opacité. Le texte courant garde au
    moins 4,5:1 même dans le pire cas (mesuré : tests/test-verre.mjs).
    PERFORMANCE : le flou n'est appliqué qu'aux grandes surfaces (jamais à chaque ligne d'une liste), il est réduit sur
    téléphone, et les bulles sont figées si « réduire les animations » est activé. */
 
 :root {
-  --cp-verre-fond: rgba(255, 255, 255, .78);
-  --cp-verre-fond-fort: rgba(255, 255, 255, .88);
-  --cp-verre-bordure: rgba(255, 255, 255, .75);
-  --cp-verre-flou: 18px;
-  --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .7), 0 0 0 1px rgba(36, 61, 53, .05), 0 8px 28px rgba(36, 61, 53, .08);
-  --cp-verre-barre-haut: rgba(246, 245, 240, .66);
-  --cp-verre-barre-laterale: rgba(255, 255, 255, .56);
-  --cp-verre-barre-bas: rgba(255, 255, 255, .76);
-  --cp-verre-fenetre: rgba(255, 255, 255, .88);
-  --cp-verre-menu: rgba(255, 255, 255, .94);
+  --cp-verre-fond: rgba(255, 255, 255, .44);
+  --cp-verre-fond-fort: rgba(255, 255, 255, .6);
+  --cp-verre-bordure: rgba(255, 255, 255, .85);
+  --cp-verre-flou: 28px;
+  --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(36, 61, 53, .06), 0 10px 32px rgba(36, 61, 53, .10);
+  --cp-verre-barre-haut: rgba(246, 245, 240, .5);
+  --cp-verre-barre-laterale: rgba(255, 255, 255, .4);
+  --cp-verre-barre-bas: rgba(255, 255, 255, .6);
+  --cp-verre-fenetre: rgba(255, 255, 255, .72);
+  --cp-verre-menu: rgba(255, 255, 255, .92);
+  /* Pastilles en verre teinté vert sauge léger (boutons de filtre, compteurs, puces) : l'urgence garde ses propres couleurs */
+  --cp-sauge-verre: rgba(168, 191, 165, .34);
+  --cp-sauge-verre-fort: rgba(168, 191, 165, .56);
+  --cp-sauge-verre-bord: rgba(255, 255, 255, .8);
+  --cp-sauge-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .6), 0 0 0 1px rgba(86, 120, 82, .2);
 }
 @media (max-width: 599px) {
-  :root { --cp-verre-flou: 12px; }
+  :root { --cp-verre-flou: 16px; }
 }
 /* Sans backdrop-filter : fonds presque pleins, pour que le texte reste lisible partout */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root {
     --cp-verre-fond: rgba(255, 255, 255, .96);
+    --cp-verre-fond-fort: #FFFFFF;
+    --cp-sauge-verre: #E4EEE0;
+    --cp-sauge-verre-fort: #D3E2CF;
     --cp-verre-barre-haut: #F6F5F0;
     --cp-verre-barre-laterale: #EFF1EA;
     --cp-verre-barre-bas: #FFFFFF;
@@ -45,10 +53,9 @@ body { background: transparent; }
   background: radial-gradient(circle at 50% 50%, var(--bulle) 0%, transparent 68%);
   will-change: transform; animation: app-bulle var(--duree) ease-in-out infinite alternate;
 }
-.app-fond span:nth-child(1) { --bulle: rgba(168, 191, 165, .55); --duree: 86s; --dx: 16vw;  --dy: 12vh;  top: -24vmax; left: -20vmax; }
-.app-fond span:nth-child(2) { --bulle: rgba(156, 192, 224, .52); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
-.app-fond span:nth-child(3) { --bulle: rgba(242, 201, 160, .50); --duree: 94s; --dx: 18vw;  --dy: -14vh; bottom: -26vmax; left: -14vmax; }
-.app-fond span:nth-child(4) { --bulle: rgba(199, 180, 230, .48); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
+.app-fond span:nth-child(1) { --bulle: rgba(156, 192, 224, .52); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
+.app-fond span:nth-child(2) { --bulle: rgba(242, 201, 160, .50); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
+.app-fond span:nth-child(3) { --bulle: rgba(199, 180, 230, .48); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
 .bulles-figees .app-fond span { animation: none; } /* ajouté par js/fond.js si l'appareil peine à animer le décor */
 @keyframes app-bulle { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(var(--dx), var(--dy), 0) scale(1.14); } }
 
@@ -57,34 +64,34 @@ body { background: transparent; }
 .cp-carte:where(:not(.cp-stat, .sn-carte, .rp-carte, .ps-carte, .pg-bientot)),
 .cp-liste, .sn-liste, .rp-liste, .pg-stats, .fi-chiffres, .rp-chiffres, .cp-tableau-enveloppe {
   background: var(--cp-verre-fond);
-  -webkit-backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.4);
-  backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.6);
+  backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.6);
   border: 1px solid var(--cp-verre-bordure);
   box-shadow: var(--cp-verre-ombre);
 }
 .fi-entete { box-shadow: inset 0 3px 0 var(--an-trait, transparent), var(--cp-verre-ombre); } /* le filet de la couleur de l'animal est gardé */
 /* Cartes d'animaux : plusieurs à l'écran, donc un flou plus léger ; aucun flou sur téléphone */
-.cp-carte.cp-carte-animal { -webkit-backdrop-filter: blur(10px) saturate(1.3); backdrop-filter: blur(10px) saturate(1.3); }
+.cp-carte.cp-carte-animal { -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); }
 @media (max-width: 599px) {
-  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .88); }
+  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .7); }
 }
 a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88)); }
 
 /* Barres */
 .app-haut {
   background: var(--cp-verre-barre-haut);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
   border-bottom: 1px solid var(--cp-verre-bordure);
   box-shadow: 0 1px 0 rgba(36, 61, 53, .05);
 }
 .app-lateral {
   background: var(--cp-verre-barre-laterale);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6); backdrop-filter: blur(30px) saturate(1.6);
   border-right: 1px solid var(--cp-verre-bordure);
 }
 .app-nav-bas {
   background: var(--cp-verre-barre-bas);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
   border-top: 1px solid var(--cp-verre-bordure);
   box-shadow: 0 -1px 0 rgba(36, 61, 53, .05);
 }
@@ -97,11 +104,30 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
 /* Fenêtres */
 .cp-modale {
   background: var(--cp-verre-fenetre);
-  -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5);
+  -webkit-backdrop-filter: blur(34px) saturate(1.6); backdrop-filter: blur(34px) saturate(1.6);
   border: 1px solid var(--cp-verre-bordure); border-radius: 22px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(36, 61, 53, .22);
 }
 .cp-modale::backdrop { background: rgba(36, 61, 53, .30); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+/* Pastilles en verre teinté vert sauge : boutons de filtre, compteurs et puces neutres.
+   Le rouge / ambre / vert de l'URGENCE (badges d'échéance, pastille rouge des retards) n'est pas touché. */
+.cp-filtre:not([aria-pressed="true"]):not(:disabled),
+.rp-statuts .cp-choix__option span,
+.cp-badge:not([class*="cp-badge--"]), .cp-badge--neutre,
+.rp-groupe:not(.rp-groupe--retard) .rp-groupe__titre .cp-compteur,
+.app-bientot__nombre {
+  background: var(--cp-sauge-verre); color: var(--cp-foret);
+  border-color: var(--cp-sauge-verre-bord); box-shadow: var(--cp-sauge-verre-ombre);
+}
+/* les boutons de filtre posés directement sur la page (pas dans une carte) sont aussi floutés */
+.cp-filtre:not([aria-pressed="true"]):not(:disabled), .rp-statuts .cp-choix__option span {
+  -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5);
+}
+.cp-filtre:not([aria-pressed="true"]):not(:disabled):hover, .rp-statuts .cp-choix__option:hover span { background: var(--cp-sauge-verre-fort); border-color: var(--cp-foret); }
+.rp-statuts .cp-choix__option input:checked + span { background: var(--cp-sauge-verre-fort); border-color: var(--cp-foret); box-shadow: inset 0 0 0 1px var(--cp-foret); }
+.rp-statuts .cp-choix__option span.rp-nombre, .rp-statuts input:checked + span .rp-nombre { background: var(--cp-sauge-verre-fort); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cp-badge:not([class*="cp-badge--"]), .cp-badge--neutre { border: 1px solid var(--cp-sauge-verre-bord); }
 
 /* Les champs restent bien blancs : c'est là qu'on lit ce qu'on tape */
 .cp-input, .cp-select, .cp-textarea { background-color: rgba(255, 255, 255, .94); }

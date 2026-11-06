@@ -56,29 +56,54 @@ await importer(jeu);
 await aller2('#/accueil'); await sleep(800);
 
 log('=== STRUCTURE DU VERRE ===');
-verifier(await ev(`(()=>{const f=document.querySelector('.app-fond');return !!f && f.getAttribute('aria-hidden')==='true' && f.querySelectorAll('span').length===4 && getComputedStyle(f).pointerEvents==='none' && getComputedStyle(f).position==='fixed'})()`), 'décor : 4 bulles, caché aux lecteurs d\'écran, sans effet sur les clics');
+verifier(await ev(`(()=>{const f=document.querySelector('.app-fond');return !!f && f.getAttribute('aria-hidden')==='true' && f.querySelectorAll('span').length===3 && getComputedStyle(f).pointerEvents==='none' && getComputedStyle(f).position==='fixed'})()`), 'décor : 3 bulles (pêche, bleu, lilas), caché aux lecteurs d\'écran, sans effet sur les clics');
 verifier(flou(await style('.app-haut', 'backdropFilter')) && flou(await style('.app-lateral', 'backdropFilter')), 'barre du haut et menu latéral : flou');
 verifier(flou(await style('.pg-stats', 'backdropFilter')) && flou(await style('.cp-liste', 'backdropFilter')), 'cartes et listes : flou');
+const alpha = (c) => parseFloat((c ?? '').match(/rgba\([^)]*,\s*([\d.]+)\)/)?.[1] ?? '1');
 const fond = await style('.pg-stats', 'backgroundColor');
-verifier(/rgba\(255, 255, 255, 0\.7/.test(fond), `fond semi-transparent (${fond})`);
-verifier((await style('.pg-stats', 'borderTopColor')).startsWith('rgba(255, 255, 255') && parseFloat(await style('.pg-stats', 'borderTopLeftRadius')) >= 16, 'bordure claire fine et coins arrondis (16 px ou plus)');
+verifier(alpha(fond) >= 0.3 && alpha(fond) <= 0.55, `cartes nettement transparentes : blanc à ${Math.round(alpha(fond) * 100)} % (${fond})`);
+const px = (v) => parseFloat((v ?? '').match(/blur\((\d+(?:\.\d+)?)px/)?.[1] ?? '0');
+verifier(px(await style('.pg-stats', 'backdropFilter')) >= 24 && px(await style('.app-lateral', 'backdropFilter')) >= 24, `flou fort sur les cartes (${px(await style('.pg-stats', 'backdropFilter'))} px) et le menu (${px(await style('.app-lateral', 'backdropFilter'))} px)`);
+verifier(alpha(await style('.pg-stats', 'borderTopColor')) >= 0.8 && (await style('.pg-stats', 'borderTopColor')).startsWith('rgba(255, 255, 255') && parseFloat(await style('.pg-stats', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
 verifier(!/inset 0px 0px 0px 0px/.test(await style('.pg-stats', 'boxShadow')) && (await style('.pg-stats', 'boxShadow')) !== 'none', 'ombre douce');
 await aller2('#/animaux/rappels'); await sleep(800);
 verifier(['.rp-carte', '.rp-chiffre'].every(async (s) => true) && !flou(await style('.rp-carte', 'backdropFilter')) && !flou(await style('.rp-chiffre', 'backdropFilter')), 'pas de flou imbriqué : les lignes de liste et les chiffres d\'une carte à colonnes n\'ont pas de flou propre');
 await aller2('#/animaux/a'); await sleep(800);
 verifier(flou(await style('.fi-entete', 'backdropFilter')) && (await style('.fi-entete', 'boxShadow')).includes('inset'), 'fiche : en-tête en verre, avec son filet de couleur d\'animal conservé');
 await ev(`document.querySelector('[data-act=modifier]').click()`); await sleep(600);
-verifier(flou(await style('dialog', 'backdropFilter')) && /rgba\(255, 255, 255, 0\.8/.test(await style('dialog', 'backgroundColor')), 'fenêtre : verre dépoli semi-transparent');
+verifier(flou(await style('dialog', 'backdropFilter')) && alpha(await style('dialog', 'backgroundColor')) >= 0.6 && alpha(await style('dialog', 'backgroundColor')) <= 0.85, 'fenêtre : verre dépoli semi-transparent (un peu plus opaque que les cartes : on y tape du texte)');
 verifier(flou(await ev(`getComputedStyle(document.querySelector('dialog'), '::backdrop').backdropFilter`)), 'arrière-plan de la fenêtre flouté');
 await axe('dialog', 'fenêtre en verre');
 await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(300);
 await taille(390, 844); await aller2('#/accueil'); await sleep(800);
 verifier(flou(await style('.app-nav-bas', 'backdropFilter')) && flou(await style('.app-haut', 'backdropFilter')), 'téléphone : barre du bas et barre du haut en verre');
 verifier(!flou(await style('.cp-carte-animal', 'backdropFilter')), 'téléphone : pas de flou sur chaque carte d\'animal (économie)');
-verifier((await style('.pg-stats', 'backdropFilter')).includes('12px'), 'téléphone : flou réduit (12 px)');
+verifier(px(await style('.pg-stats', 'backdropFilter')) === 16, 'téléphone : flou réduit mais fort (16 px)');
 await taille(1280, 900);
 const regles = await ev(`(() => { let trouve = false; for (const f of document.styleSheets) { try { for (const r of f.cssRules) if (r instanceof CSSSupportsRule && r.conditionText.includes('backdrop-filter')) trouve = true; } catch {} } return trouve; })()`);
 verifier(regles, 'repli prévu pour un navigateur sans backdrop-filter (fonds presque pleins)');
+
+log('=== PASTILLES EN VERT SAUGE (urgence inchangée) ===');
+const vert = (c) => { const m = (c ?? '').match(/[\d.]+/g)?.map(Number); return !!m && m[1] > m[0] && m[1] > m[2] && (m[3] ?? 1) < 0.7; }; // dominante verte, translucide
+await aller2('#/animaux/rappels'); await sleep(900);
+verifier(await ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option input:not(:checked) + span')].length === 3`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:not(:checked) + span')).backgroundColor`)), 'boutons de filtre (En retard, À venir, Effectués) : verre teinté vert sauge translucide');
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).backgroundColor`)) && await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).borderTopColor`) === 'rgb(36, 61, 53)', 'bouton de filtre choisi (À faire) : vert sauge plus soutenu, contour foncé (le choix ne dépend pas que de la couleur)');
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .rp-nombre')).backgroundColor`)), 'compteurs dans les boutons de filtre : vert sauge');
+verifier(await ev(`!!document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')).backgroundColor`)), 'compteur d\'un groupe « Cette semaine » : vert sauge');
+// l'urgence garde ses couleurs d'avant
+const rgb = (sel) => ev(`getComputedStyle(document.querySelector(${JSON.stringify(sel)})).backgroundColor`);
+verifier(await rgb('.rp-groupe--retard .rp-groupe__titre .cp-compteur') === 'rgb(246, 227, 220)', 'compteur du groupe « En retard » : toujours rouge pâle');
+verifier(await rgb('.cp-badge--alerte') === 'rgb(246, 227, 220)' && await rgb('.cp-badge--attention') === 'rgb(246, 232, 201)' && await rgb('.cp-badge--succes') === 'rgb(228, 238, 224)', 'badges d\'échéance : rouge pâle, ambre pâle et vert pâle inchangés');
+verifier(await rgb('.app-nav__compteur') === 'rgb(142, 61, 43)', 'pastille rouge des retards dans le menu : inchangée');
+await aller2('#/animaux'); await sleep(900);
+verifier(await ev(`document.querySelectorAll('.cp-filtre').length >= 2`) && vert(await ev(`getComputedStyle(document.querySelector('.cp-filtre')).backgroundColor`)), 'filtres par espèce (Mes animaux) : vert sauge translucide');
+await ev(`document.querySelector('.cp-filtre').click()`); await sleep(200);
+verifier(await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`) === 'rgb(36, 61, 53)', 'filtre activé : reste bien foncé (état très lisible)');
+await ev(`document.querySelector('.cp-filtre[aria-pressed="true"]').click()`); await sleep(100);
+await aller2('#/accueil'); await sleep(500);
+await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(150);
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.app-bientot__nombre')).backgroundColor`)), 'compteur de la section « Bientôt » du menu : vert sauge');
+await ev(`document.querySelector('.app-bientot__titre').click()`);
 
 log('=== LISIBILITÉ MESURÉE SUR CAPTURE (texte rendu transparent pour lire le vrai fond, bulles à 3 positions) ===');
 const mesurer = async (nom) => {
