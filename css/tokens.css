@@ -45,7 +45,7 @@
   /* ----- États fonctionnels (alertes) : terre cuite et ambre, harmonisés avec la palette ----- */
   --cp-terre: #8E3D2B;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
   --cp-terre-pale: #F6E3DC;   /* fond du badge : texte --cp-terre dessus = 5,3:1 */
-  --cp-ambre: #7A4F0F;        /* texte « bientôt », attention : 6,5:1 sur --cp-fond */
+  --cp-ambre: #623D06;        /* texte « bientôt », attention : assombri pour rester >= 4,5:1 sur les bulles de couleur du fond */
   --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
   --cp-succes: #2F6B4F;       /* confirmations (vert plus soutenu que la sauge) */
   --cp-succes-pale: #E4EEE0;
@@ -103,7 +103,7 @@
   --cp-interligne-titre: 1.2;
 
   /* ----- Formes ----- */
-  --cp-rayon-carte: 16px;     /* cartes */
+  --cp-rayon-carte: 28px;     /* cartes et groupes : carrés très arrondis */
   --cp-rayon-bouton: 10px;    /* boutons */
   --cp-rayon-champ: 10px;     /* champs de formulaire */
   --cp-rayon-pastille: 999px;

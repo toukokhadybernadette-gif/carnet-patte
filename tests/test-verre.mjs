@@ -89,8 +89,8 @@ log('=== PASTILLES EN VERT SAUGE (urgence inchangée) ===');
 const vert = (c) => { const m = (c ?? '').match(/[\d.]+/g)?.map(Number); return !!m && m[1] > m[0] && m[1] > m[2] && (m[3] ?? 1) < 0.7; }; // dominante verte, translucide
 await aller2('#/animaux/rappels'); await sleep(900);
 verifier(await ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option input:not(:checked) + span')].length === 3`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:not(:checked) + span')).backgroundColor`)), 'boutons de filtre (En retard, À venir, Effectués) : verre teinté vert sauge translucide');
-verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).backgroundColor`)) && await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).borderTopColor`) === 'rgb(36, 61, 53)', 'bouton de filtre choisi (À faire) : vert sauge plus soutenu, contour foncé (le choix ne dépend pas que de la couleur)');
-verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .rp-nombre')).backgroundColor`)), 'compteurs dans les boutons de filtre : vert sauge');
+verifier(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).backgroundColor`) === 'rgb(42, 100, 221)' && await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).color`) === 'rgb(255, 255, 255)', 'bouton de filtre choisi (À faire) : rempli de bleu vif, texte blanc (il ressort nettement du verre vert sauge)');
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts input:not(:checked) + span .rp-nombre')).backgroundColor`)), 'compteurs dans les boutons de filtre non choisis : vert sauge');
 verifier(await ev(`!!document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')).backgroundColor`)), 'compteur d\'un groupe « Cette semaine » : vert sauge');
 // l'urgence garde ses couleurs d'avant
 const rgb = (sel) => ev(`getComputedStyle(document.querySelector(${JSON.stringify(sel)})).backgroundColor`);
@@ -100,7 +100,7 @@ verifier(await rgb('.app-nav__compteur') === 'rgb(142, 61, 43)', 'pastille rouge
 await aller2('#/animaux'); await sleep(900);
 verifier(await ev(`document.querySelectorAll('.cp-filtre').length >= 2`) && vert(await ev(`getComputedStyle(document.querySelector('.cp-filtre')).backgroundColor`)), 'filtres par espèce (Mes animaux) : vert sauge translucide');
 await ev(`document.querySelector('.cp-filtre').click()`); await sleep(200);
-verifier(await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`) === 'rgb(36, 61, 53)', 'filtre activé : reste bien foncé (état très lisible)');
+verifier(await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`) === 'rgb(42, 100, 221)', 'filtre activé : rempli de bleu vif (état très lisible)');
 await ev(`document.querySelector('.cp-filtre[aria-pressed="true"]').click()`); await sleep(100);
 await aller2('#/accueil'); await sleep(500);
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(150);
@@ -121,9 +121,10 @@ const mesurer = async (nom) => {
         if (cs.visibility === 'hidden' || cs.display === 'none' || el.closest('[hidden], .cp-sr, dialog:not([open]), #toasts, .app-evitement')) continue;
         const range = document.createRange(); range.selectNodeContents(t); const b = range.getBoundingClientRect();
         if (b.width < 4 || b.height < 4 || b.top < 0 || b.left < 0 || b.bottom > innerHeight || b.right > innerWidth) continue;
-        const dessus = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); // texte masqué par une barre ou une fenêtre : pas mesuré ici
-        if (!dessus || !(el.contains(dessus) || dessus.contains(el))) continue;
-        r.push({ texte: t.nodeValue.trim().slice(0, 24), couleur: el instanceof SVGElement ? cs.fill : cs.color, x: b.left, y: b.top, w: b.width, h: b.height });
+        // seuls les points où CE texte est visible comptent : un texte qui passe sous la capsule flottante ou sous une fenêtre n'est pas lu à cet endroit
+        const pts = [[0.5, 0.5], [0.15, 0.5], [0.85, 0.5], [0.5, 0.2], [0.5, 0.8]].filter(([fx, fy]) => { const d = document.elementFromPoint(b.left + b.width * fx, b.top + b.height * fy); return d && (el.contains(d) || d.contains(el)); });
+        if (!pts.length) continue;
+        r.push({ texte: t.nodeValue.trim().slice(0, 24), couleur: el instanceof SVGElement ? cs.fill : cs.color, x: b.left, y: b.top, w: b.width, h: b.height, pts });
       } return r; })()`);
     await ev(`(() => { const s = document.createElement('style'); s.id = 'sans-texte'; s.textContent = '*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } svg { visibility: hidden !important; }'; document.head.append(s); })()`); await sleep(150);
     const cap = await send('Page.captureScreenshot', { format: 'png' });
@@ -136,7 +137,7 @@ const mesurer = async (nom) => {
       const cibles = ${JSON.stringify(cibles)}; let pire = { ratio: 99 };
       for (const t of cibles) {
         const txt = t.couleur.match(/[\\d.]+/g).map(Number).slice(0, 3);
-        for (const [fx, fy] of [[0.5, 0.5], [0.15, 0.5], [0.85, 0.5], [0.5, 0.2], [0.5, 0.8]]) {
+        for (const [fx, fy] of t.pts) {
           const px = g.getImageData(Math.min(img.width - 1, Math.floor(t.x + t.w * fx)), Math.min(img.height - 1, Math.floor(t.y + t.h * fy)), 1, 1).data;
           const q = rat(txt, [px[0], px[1], px[2]]);
           if (q < pire.ratio) pire = { ratio: q, texte: t.texte, fond: [px[0], px[1], px[2]], couleur: t.couleur };
@@ -152,6 +153,57 @@ for (const [h, nom, l, hh] of [['#/accueil', 'Accueil (ordinateur)', 1280, 900],
   if (h.endsWith('/poids')) { await aller2(h.replace('/poids', '')); await ev(`document.querySelector('[data-onglet="poids"]').click()`); await sleep(2300); } else { await aller2(h); await sleep(900); }
   await mesurer(nom);
 }
+await taille(1280, 900);
+
+log('=== STYLE « CENTRE DE CONTRÔLE » (boutons ronds, capsules, barre flottante, groupes arrondis) ===');
+const rgbaDe = (c) => (c ?? '').match(/[\d.]+/g)?.map(Number) ?? [];
+await taille(390, 844); await aller2('#/accueil'); await sleep(900);
+// actions rapides : grands cercles de verre gris-mauve translucide, reflet clair en haut, icônes blanches
+const cercle = await ev(`(() => { const r = document.querySelector('.ac-action__rond'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, rayon: s.borderRadius, fond: s.backgroundColor, flou: s.backdropFilter, bord: s.borderTopColor, ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color }; })()`);
+const fondCercle = rgbaDe(cercle.fond);
+verifier(cercle.w === cercle.h && cercle.w >= 56 && cercle.rayon === '50%', `actions rapides : cercles de ${cercle.w} px`);
+verifier(fondCercle[3] > 0.4 && fondCercle[3] < 0.85 && fondCercle[2] > fondCercle[1] && fondCercle[0] < 140, `verre gris-mauve translucide, pas blanc (${cercle.fond})`);
+verifier(/blur\((\d+)px\)/.test(cercle.flou) && Number(cercle.flou.match(/blur\((\d+)px\)/)[1]) >= 24 && /saturate\((\d(\.\d+)?)\)/.test(cercle.flou) && Number(cercle.flou.match(/saturate\(([\d.]+)\)/)[1]) >= 1.5, `très flou et saturé (${cercle.flou})`);
+verifier(rgbaDe(cercle.bord)[3] >= 0.4 && /inset/.test(cercle.ombre) && /rgba\(255, 255, 255, 0\.8\) 0px 1\.5px 0px 0px inset|inset 0px 1\.5px 0px 0px rgba\(255, 255, 255, 0\.8\)/.test(cercle.ombre), 'liseré clair et reflet plus brillant en haut du cercle');
+verifier(cercle.icone === 'rgb(255, 255, 255)', 'icônes blanches');
+// contraste de l'icône blanche sur le verre : on masque les icônes, on capture, on lit le pixel au centre de chaque cercle
+await ev(`(() => { const s = document.createElement('style'); s.id = 'sans-icones'; s.textContent = 'svg { visibility: hidden !important; }'; document.head.append(s); })()`); await sleep(200);
+const capCercles = await send('Page.captureScreenshot', { format: 'png' });
+await ev(`document.getElementById('sans-icones').remove()`);
+const contrasteIcones = await ev(`(async () => { const img = new Image(); img.src = 'data:image/png;base64,${capCercles.result.data}'; await img.decode(); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  const lum = ([r, gg, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b); };
+  return [...document.querySelectorAll('.ac-action__rond')].map((r) => { const b = r.getBoundingClientRect(); const px = g.getImageData(Math.floor(b.left + b.width / 2), Math.floor(b.top + b.height / 2), 1, 1).data; return (1.05) / (lum([px[0], px[1], px[2]]) + 0.05); }); })()`);
+verifier(contrasteIcones.length === 4 && contrasteIcones.every((c) => c >= 3), `icône blanche sur le verre : contraste >= 3:1 (minimum ${Math.min(...contrasteIcones).toFixed(2)}:1, seuil WCAG des pictogrammes)`);
+// barre du bas : capsule flottante détachée des bords
+const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return { gauche: b.left, droite: innerWidth - b.right, bas: innerHeight - b.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: s.position, actif: (() => { const a = e.querySelector('[aria-current="page"]'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
+verifier(barre.position === 'fixed' && barre.gauche >= 12 && barre.droite >= 12 && barre.bas >= 8, `barre du bas flottante, détachée des bords (${Math.round(barre.gauche)} px à gauche, ${Math.round(barre.droite)} à droite, ${Math.round(barre.bas)} du bas)`);
+verifier(barre.rayon >= barre.h / 2 - 1 && /blur/.test(barre.flou) && rgbaDe(barre.fond)[3] < 0.9, `capsule de verre : coins en demi-cercle (${barre.rayon} px pour ${Math.round(barre.h)} px de haut), flou, fond translucide`);
+verifier(barre.actif.fond.startsWith('rgba(255, 255, 255') && rgbaDe(barre.actif.fond)[3] >= 0.95 && barre.actif.texte === 'rgb(36, 61, 53)', 'onglet actif : capsule blanche opaque, texte foncé');
+await ev(`window.scrollTo(0, document.documentElement.scrollHeight)`); await sleep(300);
+const sousBarre = await ev(`(() => { const barre = document.querySelector('.app-nav-bas').getBoundingClientRect(); const dernier = [...document.querySelectorAll('#contenu .pg > *')].pop().getBoundingClientRect(); return { fin: dernier.bottom, hautBarre: barre.top }; })()`);
+verifier(sousBarre.fin <= sousBarre.hautBarre - 4, `en bas de page, le dernier élément reste au-dessus de la barre (${Math.round(sousBarre.fin)} px < ${Math.round(sousBarre.hautBarre)} px)`);
+await ev(`window.scrollTo(0, 0)`);
+// boutons et pastilles : capsules
+await aller2('#/animaux/rappels'); await sleep(900);
+const capsules = await ev(`[...document.querySelectorAll('.cp-btn, .cp-filtre, .rp-statuts .cp-choix__option span.rp-nombre, .cp-badge')].filter(e => e.getBoundingClientRect().width > 0 && !e.classList.contains('cp-btn--icone')).map(e => { const b = e.getBoundingClientRect(); return { r: parseFloat(getComputedStyle(e).borderTopLeftRadius), h: b.height }; })`);
+verifier(capsules.length > 10 && capsules.every((c) => c.r >= c.h / 2 - 1), `boutons, pastilles et badges : capsules (${capsules.length} éléments, coins en demi-cercle)`);
+const secondaire = await ev(`(() => { const s = getComputedStyle(document.querySelector('.cp-btn--secondaire')); return { fond: s.backgroundColor, flou: s.backdropFilter, ombre: s.boxShadow }; })()`);
+verifier(rgbaDe(secondaire.fond)[3] < 0.4 && !/rgba\(255, 255, 255/.test(secondaire.fond) && /blur/.test(secondaire.flou) && /inset/.test(secondaire.ombre), `bouton secondaire : verre teinté translucide (pas blanc), flou, reflet (${secondaire.fond})`);
+const principal = await ev(`(() => { const s = getComputedStyle(document.querySelector('.cp-btn--principal, [data-fait]')); return { fond: s.backgroundColor, flou: s.backdropFilter, texte: s.color }; })()`);
+verifier(rgbaDe(principal.fond)[3] < 0.95 && /blur/.test(principal.flou) && principal.texte === 'rgb(255, 255, 255)', `bouton principal : verre gris-mauve, flou, texte blanc (${principal.fond})`);
+const inactifs = await ev(`[...document.querySelectorAll('.rp-statuts input:not(:checked) + span')].map(e => { const s = getComputedStyle(e); return { flou: s.backdropFilter, fond: s.backgroundColor }; })`);
+verifier(inactifs.length === 3 && inactifs.every((x) => /blur\((\d+)px\)/.test(x.flou) && Number(x.flou.match(/blur\((\d+)px\)/)[1]) >= 16 && rgbaDe(x.fond)[3] < 0.6), 'filtres inactifs : capsules de verre très floues, teinte translucide');
+// groupes : carrés très arrondis
+const rayons = await ev(`({ liste: parseFloat(getComputedStyle(document.querySelector('.rp-liste')).borderTopLeftRadius) })`);
+verifier(rayons.liste >= 28, `groupes (listes, cartes) : coins très arrondis (${rayons.liste} px)`);
+await aller2('#/animaux/a'); await sleep(500);
+await ev(`document.querySelector('[data-act=modifier]').click()`); await sleep(600);
+verifier(parseFloat(await style('dialog', 'borderTopLeftRadius')) >= 30, 'fenêtres : coins arrondis de 30 px');
+await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(300);
+// fond plus coloré
+const bulles = await ev(`[...document.querySelectorAll('.app-fond span')].map(s => getComputedStyle(s).backgroundImage)`);
+const alphas = bulles.map((b) => Number((b.match(/rgba\([^)]*,\s*([\d.]+)\)/) ?? [0, 0])[1]));
+verifier(alphas.length === 3 && alphas.every((a) => a >= 0.58), `fond plus coloré : trois bulles (pêche, bleu, lilas) à ${alphas.map((a) => Math.round(a * 100)).join(' %, ')} % d'opacité`);
 await taille(1280, 900);
 
 log('=== MOUVEMENT ===');
