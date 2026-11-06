@@ -121,7 +121,7 @@ const mesurer = async (nom) => {
         if (b.width < 4 || b.height < 4 || b.top < 0 || b.left < 0 || b.bottom > innerHeight || b.right > innerWidth) continue;
         const dessus = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); // texte masqué par une barre ou une fenêtre : pas mesuré ici
         if (!dessus || !(el.contains(dessus) || dessus.contains(el))) continue;
-        r.push({ texte: t.nodeValue.trim().slice(0, 24), couleur: cs.color, x: b.left, y: b.top, w: b.width, h: b.height });
+        r.push({ texte: t.nodeValue.trim().slice(0, 24), couleur: el instanceof SVGElement ? cs.fill : cs.color, x: b.left, y: b.top, w: b.width, h: b.height });
       } return r; })()`);
     await ev(`(() => { const s = document.createElement('style'); s.id = 'sans-texte'; s.textContent = '*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important; } svg { visibility: hidden !important; }'; document.head.append(s); })()`); await sleep(150);
     const cap = await send('Page.captureScreenshot', { format: 'png' });
@@ -145,8 +145,10 @@ const mesurer = async (nom) => {
   await ev(`document.querySelectorAll('.app-fond span').forEach((s) => { s.style.animationPlayState = ''; s.style.animationDelay = ''; })`);
   verifier(pire.ratio >= 4.5, `${nom} : ${n} mesures de texte, plus faible contraste ${pire.ratio.toFixed(2)}:1 (« ${pire.texte} », texte ${pire.couleur} sur fond rgb(${pire.fond})) — minimum exigé 4,5:1`);
 };
-for (const [h, nom, l, hh] of [['#/accueil', 'Accueil (ordinateur)', 1280, 900], ['#/animaux/rappels', 'Rappels (ordinateur)', 1280, 900], ['#/animaux/a', 'Fiche (ordinateur)', 1280, 900], ['#/animaux', 'Mes animaux (ordinateur)', 1280, 900], ['#/accueil', 'Accueil (téléphone)', 390, 844], ['#/animaux/rappels', 'Rappels (téléphone)', 390, 844], ['#/animaux/a', 'Fiche (téléphone)', 390, 844]]) {
-  await taille(l, hh); await aller2(h); await sleep(900); await mesurer(nom);
+for (const [h, nom, l, hh] of [['#/accueil', 'Accueil (ordinateur)', 1280, 900], ['#/animaux/rappels', 'Rappels (ordinateur)', 1280, 900], ['#/animaux/a', 'Fiche (ordinateur)', 1280, 900], ['#/animaux', 'Mes animaux (ordinateur)', 1280, 900], ['#/accueil', 'Accueil (téléphone)', 390, 844], ['#/animaux/rappels', 'Rappels (téléphone)', 390, 844], ['#/animaux/a', 'Fiche (téléphone)', 390, 844], ['#/animaux/a/poids', 'Poids avec le graphique (ordinateur)', 1280, 900], ['#/animaux/a/poids', 'Poids avec le graphique (téléphone)', 390, 844]]) {
+  await taille(l, hh);
+  if (h.endsWith('/poids')) { await aller2(h.replace('/poids', '')); await ev(`document.querySelector('[data-onglet="poids"]').click()`); await sleep(2300); } else { await aller2(h); await sleep(900); }
+  await mesurer(nom);
 }
 await taille(1280, 900);
 

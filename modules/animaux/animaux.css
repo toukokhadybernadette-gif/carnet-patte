@@ -271,27 +271,37 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 }
 .ps-note { display: flex; align-items: center; gap: var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .ps-graph { position: relative; padding: var(--cp-espace-4); display: grid; gap: var(--cp-espace-2); }
-.ps-graph__tete { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cp-espace-3); }
+.ps-graph__tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cp-espace-2) var(--cp-espace-4); }
 .ps-graph__tete h3 { margin: 0; font-size: var(--cp-taille-m); }
-.ps-unite { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
-.ps-graphique { width: 100%; height: auto; display: block; }
-.ps-grille { stroke: var(--cp-bordure); stroke-width: 1; }
-.ps-texte { fill: var(--cp-texte-doux); font-size: 12px; font-family: var(--cp-police-texte); }
-.ps-ligne { fill: none; stroke: var(--an-trait, var(--cp-foret)); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-.ps-point { fill: var(--cp-carte); stroke: var(--an-trait, var(--cp-foret)); stroke-width: 3; }
-.ps-point { pointer-events: none; }
-.ps-point--actif { fill: var(--an-fond, var(--cp-vert-clair)); stroke-width: 4; }
+.ps-unite { font-family: var(--cp-police-texte); font-weight: 400; font-size: var(--cp-taille-xs); color: var(--cp-texte-doux); }
+.ps-periodes { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-periodes .cp-filtre { min-height: var(--cp-h-bouton-s); padding: 0 12px; font-size: var(--cp-taille-s); }
+.ps-graph__zone { min-height: 150px; }
+.ps-note--periode { padding: var(--cp-espace-5) 0; justify-content: center; }
+.ps-graphique { display: block; width: 100%; height: auto; overflow: visible; }
+/* Axes : petits chiffres discrets, grille en pointillés très légers */
+.ps-grille { stroke: rgba(36, 61, 53, .13); stroke-width: 1; stroke-dasharray: 2 4; }
+.ps-texte { fill: var(--cp-texte-doux); font-size: 10px; font-family: var(--cp-police-texte); font-variant-numeric: tabular-nums; }
+/* Courbe dans la couleur de l'animal, avec un dégradé transparent dessous */
+.ps-degrade-haut { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: .34; }
+.ps-degrade-bas { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: 0; }
+.ps-ligne { fill: none; stroke: var(--an-trait, var(--cp-foret)); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: ps-trace 1.2s var(--cp-courbe) both; }
+.ps-aire { animation: ps-fondu .9s .35s var(--cp-courbe) both; }
+.ps-point { fill: var(--cp-carte); stroke: var(--an-trait, var(--cp-foret)); stroke-width: 2; pointer-events: none; animation: ps-fondu .4s 1s var(--cp-courbe) both; }
+.ps-point--actif { fill: var(--an-fond, var(--cp-vert-clair)); stroke-width: 3; r: 5px; }
+.ps-repere { stroke: var(--an-trait, var(--cp-foret)); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; transition: opacity .15s var(--cp-courbe); pointer-events: none; }
+.ps-repere.est-visible { opacity: .55; }
 .ps-cible { fill: transparent; stroke: none; cursor: pointer; }
+@keyframes ps-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ps-fondu { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+.ps-ligne, .ps-aire, .ps-point { animation: none; }
+.ps-repere { transition: none; }
+}
 .ps-infobulle { position: absolute; z-index: 2; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
   padding: var(--cp-espace-2) var(--cp-espace-3); border-radius: var(--cp-rayon-champ); font-size: var(--cp-taille-s); font-weight: 600;
   background: var(--cp-foret); color: var(--cp-texte-inverse); box-shadow: var(--cp-ombre-m); }
 .ps-infobulle[hidden] { display: none; }
-/* Téléphone : le graphique est réduit ; on grossit texte et points pour qu'ils restent lisibles */
-@media (max-width: 599px) {
-.ps-texte { font-size: 18px; }
-.ps-point { r: 7px; }
-.ps-ligne { stroke-width: 4; }
-}
 .ps-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .ps-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); }
 .ps-carte__corps { display: grid; gap: 0; min-width: 0; }

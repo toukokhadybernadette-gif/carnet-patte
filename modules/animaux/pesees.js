@@ -2,7 +2,7 @@
 // Format des données inchangé : { id, animalId, date, poidsKg }.
 
 import * as storage from '../../js/storage.js';
-import { echapper, aujourdhui, formatDate, formatPoids, lireISO } from '../../js/utils.js';
+import { echapper, aujourdhui, ajouterMois, formatDate, formatPoids, lireISO } from '../../js/utils.js';
 import { confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, vide } from '../../js/composants.js';
@@ -53,13 +53,56 @@ function graduations(min, max) {
   return valeurs.map((v) => ({ v, texte: v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) }));
 }
 
-/** Construit le graphique SVG. `pesees` doit être triée par date croissante. */
-export function graphiqueSvg(pesees) {
-  const L = 620, H = 260;
-  const marge = { g: 64, d: 18, h: 16, b: 34 };
-  const largeur = L - marge.g - marge.d;
-  const hauteur = H - marge.h - marge.b;
+/**
+ * Courbe lissée passant par tous les points, qui NE DÉPASSE JAMAIS les valeurs mesurées : interpolation monotone
+ * (Fritsch-Carlson). Une courbe « naïve » (Catmull-Rom…) pourrait dessiner un poids plus haut ou plus bas qu'aucune pesée.
+ * `pts` : [{ x, y }] triés par x ; deux pesées le même jour (même x) sont reliées par un trait droit.
+ */
+export function courbe(pts) {
+  const n = pts.length;
+  const dx = [];
+  const pente = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx[i] = pts[i + 1].x - pts[i].x;
+    pente[i] = dx[i] > 1e-9 ? (pts[i + 1].y - pts[i].y) / dx[i] : 0;
+  }
+  const t = new Array(n).fill(0); // pente de la courbe en chaque point
+  if (n === 2) {
+    t[0] = pente[0]; t[1] = pente[0];
+  } else if (n > 2) {
+    t[0] = pente[0]; t[n - 1] = pente[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+      t[i] = dx[i - 1] <= 1e-9 || dx[i] <= 1e-9 || pente[i - 1] * pente[i] <= 0 ? 0 : (pente[i - 1] + pente[i]) / 2; // un sommet ou un creux reste plat
+    }
+  }
+  for (let i = 0; i < n - 1; i++) { // limitation de Fritsch-Carlson : pas de dépassement entre deux points
+    if (dx[i] <= 1e-9) continue;
+    if (pente[i] === 0) { t[i] = 0; t[i + 1] = 0; continue; }
+    const a = t[i] / pente[i];
+    const b = t[i + 1] / pente[i];
+    const somme = a * a + b * b;
+    if (somme > 9) { const k = 3 / Math.sqrt(somme); t[i] = k * a * pente[i]; t[i + 1] = k * b * pente[i]; }
+  }
+  const f = (v) => v.toFixed(2);
+  let d = `M${f(pts[0].x)},${f(pts[0].y)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const { x: x0, y: y0 } = pts[i];
+    const { x: x1, y: y1 } = pts[i + 1];
+    if (dx[i] <= 1e-9) { d += `L${f(x1)},${f(y1)}`; continue; }
+    const c = dx[i] / 3;
+    d += `C${f(x0 + c)},${f(y0 + t[i] * c)} ${f(x1 - c)},${f(y1 - t[i + 1] * c)} ${f(x1)},${f(y1)}`;
+  }
+  return d;
+}
 
+/**
+ * Construit le graphique SVG. `pesees` doit être triée par date croissante.
+ * `largeur` : largeur réelle disponible en pixels. Le dessin est fait à CETTE taille (1 unité = 1 pixel), donc les chiffres
+ * des axes restent petits et nets sur ordinateur comme sur téléphone. `periode` : texte de la période choisie (facultatif).
+ */
+export function graphiqueSvg(pesees, { largeur = 600, periode = '' } = {}) {
+  const L = Math.max(260, Math.round(largeur));
+  const H = L < 460 ? 150 : 172; // peu haut : la courbe se lit d'un coup d'œil
   const poids = pesees.map((p) => p.poidsKg);
   const pMin = Math.min(...poids);
   const pMax = Math.max(...poids);
@@ -69,36 +112,67 @@ export function graphiqueSvg(pesees) {
   const marge15 = (max - min) * 0.15;
   min = Math.max(min - marge15, 0); max += marge15;
 
-  // UNE SEULE conversion valeur -> position, utilisée par la grille, la ligne et les points
+  const graduationsAxe = graduations(min, max);
+  const marge = { g: Math.round(14 + 6 * Math.max(...graduationsAxe.map((g) => g.texte.length))), d: 14, h: 12, b: 26 }; // la marge gauche suit la longueur des chiffres
+  const largeurUtile = L - marge.g - marge.d;
+  const hauteur = H - marge.h - marge.b;
+
+  // UNE SEULE conversion valeur -> position, utilisée par la grille, la courbe et les points
   const t0 = lireISO(pesees[0].date).getTime();
   const t1 = lireISO(pesees[pesees.length - 1].date).getTime();
-  const dedans = 14; // le premier et le dernier point ne touchent ni l'axe ni le bord
-  const x = (date) => marge.g + dedans + (t1 === t0 ? (largeur - 2 * dedans) / 2 : ((lireISO(date).getTime() - t0) / (t1 - t0)) * (largeur - 2 * dedans));
+  const dedans = 12; // le premier et le dernier point ne touchent ni l'axe ni le bord
+  const x = (date) => marge.g + dedans + (t1 === t0 ? (largeurUtile - 2 * dedans) / 2 : ((lireISO(date).getTime() - t0) / (t1 - t0)) * (largeurUtile - 2 * dedans));
   const y = (kg) => marge.h + (1 - (kg - min) / (max - min)) * hauteur;
 
-  const grille = graduations(min, max).map((g) => `
+  // Les étiquettes sont écrites sur la ligne de leur valeur (y + 4 : le milieu du chiffre tombe sur la ligne)
+  const grille = graduationsAxe.map((g) => `
     <line x1="${marge.g}" x2="${L - marge.d}" y1="${y(g.v).toFixed(2)}" y2="${y(g.v).toFixed(2)}" class="ps-grille"/>
     <text x="${marge.g - 8}" y="${(y(g.v) + 4).toFixed(2)}" text-anchor="end" class="ps-texte">${g.texte}</text>`).join('');
 
-  const points = pesees.map((p) => `${x(p.date).toFixed(2)},${y(p.poidsKg).toFixed(2)}`).join(' ');
-  const rayonCible = pesees.length > 30 ? 8 : 14; // zone de survol et de toucher, plus grande que le point
-  const ronds = pesees.map((p) => `<circle cx="${x(p.date).toFixed(2)}" cy="${y(p.poidsKg).toFixed(2)}" r="5" class="ps-point" data-kg="${p.poidsKg}"/>`).join('');
-  const cibles = pesees.map((p, i) => `<circle cx="${x(p.date).toFixed(2)}" cy="${y(p.poidsKg).toFixed(2)}" r="${rayonCible}" class="ps-cible" data-i="${i}" data-info="${echapper(`${formatDate(p.date)} · ${formatPoids(p.poidsKg)}`)}"/>`).join('');
+  const pts = pesees.map((p) => ({ x: x(p.date), y: y(p.poidsKg) }));
+  const trace = courbe(pts);
+  const bas = marge.h + hauteur;
+  const aire = `${trace}L${pts[pts.length - 1].x.toFixed(2)},${bas}L${pts[0].x.toFixed(2)},${bas}Z`;
+  const rayonCible = pesees.length > 30 ? 8 : 16; // zone de survol et de toucher, bien plus grande que le point
+  const ronds = pesees.map((p, i) => `<circle cx="${pts[i].x.toFixed(2)}" cy="${pts[i].y.toFixed(2)}" r="3.5" class="ps-point" data-kg="${p.poidsKg}"/>`).join('');
+  const cibles = pesees.map((p, i) => `<circle cx="${pts[i].x.toFixed(2)}" cy="${pts[i].y.toFixed(2)}" r="${rayonCible}" class="ps-cible" data-i="${i}" data-info="${echapper(`${formatDate(p.date)} · ${formatPoids(p.poidsKg)}`)}"/>`).join('');
 
   const debut = pesees[0].date;
   const fin = pesees[pesees.length - 1].date;
-  const resume = `Évolution du poids : ${pesees.length} pesées du ${formatDate(debut)} au ${formatDate(fin)}, de ${formatPoids(pesees[0].poidsKg)} à ${formatPoids(pesees[pesees.length - 1].poidsKg)} (minimum ${formatPoids(pMin)}, maximum ${formatPoids(pMax)}).`;
+  const resume = `Évolution du poids${periode ? ` (${periode})` : ''} : ${pesees.length} pesées du ${formatDate(debut)} au ${formatDate(fin)}, de ${formatPoids(pesees[0].poidsKg)} à ${formatPoids(pesees[pesees.length - 1].poidsKg)} (minimum ${formatPoids(pMin)}, maximum ${formatPoids(pMax)}).`;
 
   return `
-    <svg viewBox="0 0 ${L} ${H}" class="ps-graphique" role="img" aria-label="${echapper(resume)}">
+    <svg viewBox="0 0 ${L} ${H}" width="100%" height="${H}" class="ps-graphique" role="img" aria-label="${echapper(resume)}">
+      <defs>
+        <linearGradient id="ps-degrade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="ps-degrade-haut"/><stop offset="1" class="ps-degrade-bas"/></linearGradient>
+      </defs>
       ${grille}
-      <polyline points="${points}" class="ps-ligne"/>
+      <path d="${aire}" class="ps-aire" fill="url(#ps-degrade)"/>
+      <path d="${trace}" class="ps-ligne" pathLength="1"/>
+      <line x1="0" x2="0" y1="${marge.h}" y2="${bas}" class="ps-repere"/>
       ${ronds}
       ${cibles}
-      <text x="${marge.g}" y="${H - 8}" class="ps-texte">${formatDate(debut)}</text>
-      <text x="${L - marge.d}" y="${H - 8}" text-anchor="end" class="ps-texte">${formatDate(fin)}</text>
+      <text x="${marge.g}" y="${H - 6}" class="ps-texte">${formatDate(debut)}</text>
+      <text x="${L - marge.d}" y="${H - 6}" text-anchor="end" class="ps-texte">${formatDate(fin)}</text>
     </svg>
     <div class="ps-infobulle" aria-hidden="true" hidden></div>`;
+}
+
+// ----- Période affichée par le graphique (le choix est gardé pendant la visite, y compris après l'ajout d'une pesée) -----
+const PERIODES = [
+  { id: '3m', texte: '3 mois', mois: 3 },
+  { id: '6m', texte: '6 mois', mois: 6 },
+  { id: '1a', texte: '1 an', mois: 12 },
+  { id: 'tout', texte: 'Tout', mois: 0 },
+];
+let periodeChoisie = 'tout';
+
+/** Les pesées qui tombent dans la période (elles sont déjà triées). Seul l'affichage change : aucune donnée n'est touchée. */
+export function dansPeriode(pesees, idPeriode) {
+  const p = PERIODES.find((x) => x.id === idPeriode);
+  if (!p?.mois) return pesees;
+  const debut = ajouterMois(aujourdhui(), -p.mois);
+  return pesees.filter((x) => x.date >= debut);
 }
 
 function carteHtml(pesee, precedente) {
@@ -130,6 +204,7 @@ document.addEventListener('pointerdown', (e) => {
   document.querySelectorAll('.ps-infobulle:not([hidden])').forEach((b) => {
     b.hidden = true;
     b.closest('.ps-graph')?.querySelectorAll('.ps-point--actif').forEach((p) => p.classList.remove('ps-point--actif'));
+    b.closest('.ps-graph')?.querySelector('.ps-repere')?.classList.remove('est-visible');
   });
 });
 
@@ -147,7 +222,17 @@ export function rendre(zone, animal) {
 
   let graphique;
   if (pesees.length >= 2) {
-    graphique = `<div class="cp-carte ps-graph"><div class="ps-graph__tete"><h3>Évolution</h3><span class="ps-unite">Poids en kg</span></div>${graphiqueSvg(pesees)}</div>`;
+    graphique = `
+      <div class="cp-carte ps-graph">
+        <div class="ps-graph__tete">
+          <h3>Évolution <span class="ps-unite">(poids en kg)</span></h3>
+          <div class="ps-periodes" role="group" aria-label="Période du graphique">
+            ${PERIODES.map((p) => `<button type="button" class="cp-filtre" aria-pressed="${p.id === periodeChoisie}" data-periode="${p.id}">${p.texte}</button>`).join('')}
+          </div>
+        </div>
+        <div class="ps-graph__zone" data-zone></div>
+        <p class="cp-sr" role="status" data-etat></p>
+      </div>`;
   } else if (pesees.length === 1) {
     graphique = `<p class="ps-note">${icone('info', { taille: 16 })}<span>Ajoutez une deuxième pesée pour voir la courbe.</span></p>`;
   } else {
@@ -171,18 +256,53 @@ export function rendre(zone, animal) {
     ${graphique}
     ${pesees.length ? `<ul class="sn-liste" aria-label="Pesées, de la plus récente à la plus ancienne">${liste}</ul>` : ''}`;
 
-  // Info-bulle des points : survol à la souris, toucher sur téléphone (le survol n'existe pas au doigt).
-  // Elle double la liste de cartes ci-dessous, qui reste la version accessible au clavier et aux lecteurs d'écran.
+  // Graphique : dessiné à la largeur réelle de sa zone, redessiné si cette largeur change (rotation du téléphone, fenêtre redimensionnée)
+  // et quand on change de période. La courbe se trace à l'affichage (animation CSS, supprimée si « réduire les animations »).
   const graph = section.querySelector('.ps-graph');
-  const bulle = graph?.querySelector('.ps-infobulle');
-  if (bulle) {
-    const points = [...graph.querySelectorAll('.ps-point')];
-    const cacher = () => { bulle.hidden = true; points.forEach((p) => p.classList.remove('ps-point--actif')); };
+  if (graph) {
+    const zone = graph.querySelector('[data-zone]');
+    const etat = graph.querySelector('[data-etat]');
+    let largeurDessinee = -1;
+    const dessiner = (annoncer = false) => {
+      const periode = PERIODES.find((p) => p.id === periodeChoisie);
+      const vue = dansPeriode(pesees, periodeChoisie);
+      largeurDessinee = zone.clientWidth;
+      if (vue.length < 2) {
+        zone.innerHTML = `<p class="ps-note ps-note--periode">${icone('info', { taille: 16 })}<span>Moins de deux pesées sur cette période : choisissez une période plus longue.</span></p>`;
+      } else {
+        zone.innerHTML = graphiqueSvg(vue, { largeur: largeurDessinee || 600, periode: periode.mois ? periode.texte : '' });
+      }
+      if (annoncer) etat.textContent = vue.length < 2 ? 'Moins de deux pesées sur cette période.' : `Graphique : ${vue.length} pesées${periode.mois ? `, ${periode.texte}` : ''}.`;
+    };
+    dessiner();
+    new ResizeObserver(() => { if (zone.clientWidth > 0 && Math.abs(zone.clientWidth - largeurDessinee) > 24) dessiner(); }).observe(zone);
+
+    graph.querySelector('.ps-periodes').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-periode]');
+      if (!b || b.dataset.periode === periodeChoisie) return;
+      periodeChoisie = b.dataset.periode;
+      graph.querySelectorAll('[data-periode]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      dessiner(true);
+    });
+
+    // Info-bulle des points : survol à la souris, toucher sur téléphone (le survol n'existe pas au doigt).
+    // Elle double la liste de cartes ci-dessous, qui reste la version accessible au clavier et aux lecteurs d'écran.
+    const cacher = () => {
+      const bulle = zone.querySelector('.ps-infobulle');
+      if (bulle) bulle.hidden = true;
+      zone.querySelectorAll('.ps-point--actif').forEach((p) => p.classList.remove('ps-point--actif'));
+      zone.querySelector('.ps-repere')?.classList.remove('est-visible');
+    };
     const montrer = (cible) => {
       cacher();
-      const point = points[Number(cible.dataset.i)];
+      const bulle = zone.querySelector('.ps-infobulle');
+      const point = zone.querySelectorAll('.ps-point')[Number(cible.dataset.i)];
       point.classList.add('ps-point--actif');
-      bulle.textContent = cible.dataset.info;
+      const repere = zone.querySelector('.ps-repere');
+      repere.setAttribute('x1', point.getAttribute('cx'));
+      repere.setAttribute('x2', point.getAttribute('cx'));
+      repere.classList.add('est-visible');
+      bulle.textContent = cible.dataset.info; // date et poids
       bulle.hidden = false;
       const g = graph.getBoundingClientRect();
       const c = point.getBoundingClientRect();

@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre]     (sans argument : tous les tests)
+// Usage : node tests/lancer.mjs [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique]     (sans argument : tous les tests)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
 
 import http from 'node:http';
@@ -22,6 +22,7 @@ const TESTS = {
   migration: 'test-migration.mjs',
   couleurs: 'test-couleurs.mjs',
   verre: 'test-verre.mjs',
+  graphique: 'test-graphique.mjs',
 };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 
@@ -52,14 +53,14 @@ for (const nom of aLancer) {
   // spawnSync bloquerait le serveur : on lance le test dans un processus séparé et on attend sa fin de façon asynchrone
   const { spawn } = await import('node:child_process');
   const code = await new Promise((fini) => {
-    const enfant = spawn(process.execPath, [script, SORTIE, url, nom], { env: { ...process.env, PORT: String(port++) } });
+    const enfant = spawn(process.execPath, [script, SORTIE, url, nom], { env: { ...process.env, PORT: String(port++), NO_COLOR: '1', FORCE_COLOR: '0' } });
     let texte = '';
     enfant.stdout.on('data', (d) => { texte += d; });
     enfant.stderr.on('data', (d) => { texte += d; });
     const limite = setTimeout(() => enfant.kill(), 280000);
     enfant.on('close', (c) => { clearTimeout(limite); fs.writeFileSync(sortie, texte); fini({ c, texte }); });
   });
-  const t = code.texte;
+  const t = code.texte.replace(/\u001b\[[0-9;]*m/g, ''); // certains terminaux imposent des couleurs : on les retire avant de lire les résultats
   const violations = (t.match(/VIOLATIONS/g) ?? []).length;
   const axeOk = (t.match(/ 0 violation/g) ?? []).length;
   const consoleOk = /ERREURS CONSOLE : aucune/.test(t);
