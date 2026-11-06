@@ -4,16 +4,16 @@
 import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
 import { echapper, aujourdhui, formatDate, formatPoids } from '../../js/utils.js';
-import { badge, carteStat, carteAnimal, vide, bouton } from '../../js/composants.js';
+import { badge, carteStat, carteAnimal, vide, bouton, couleurAnimal } from '../../js/composants.js';
 import { NAV } from '../../js/navigation.js';
 import { rafraichir } from '../../js/router.js';
 import { calculerRappels } from '../animaux/rappels.js';
 import { formulaireAnimal } from '../animaux/animaux.js';
-import { infosEspece, nomEspece, infosType, badgeEcheance, nomCourtSoin, titreSoin } from '../animaux/commun.js';
+import { infosEspece, nomEspece, infosType, classeType, badgeEcheance, nomCourtSoin, titreSoin } from '../animaux/commun.js';
 
-function ligne({ icone: i, titre, meta, fin = '', href }) {
+function ligne({ icone: i, titre, meta, fin = '', href, type = '' }) {
   const corps = `
-    <span class="cp-liste__icone">${icone(i, { taille: 20 })}</span>
+    <span class="cp-liste__icone${type ? ` ${classeType(type)}` : ''}">${icone(i, { taille: 20 })}</span>
     <div class="cp-liste__corps"><span class="cp-liste__titre">${echapper(titre)}</span><span class="cp-liste__meta">${echapper(meta)}</span></div>
     ${fin ? `<div class="cp-liste__fin">${fin}</div>` : ''}`;
   return href
@@ -53,7 +53,7 @@ export function rendre(zone) {
   const activite = [
     ...storage.lister('soins').filter((s) => s.date && s.date <= auj && parId.has(s.animalId)).map((s) => {
       const type = infosType(s.type);
-      return { date: s.date, icone: type.icone, titre: titreSoin(s), animal: parId.get(s.animalId) };
+      return { date: s.date, icone: type.icone, type: s.type, titre: titreSoin(s), animal: parId.get(s.animalId) };
     }),
     ...storage.lister('pesees').filter((p) => p.date && p.date <= auj && parId.has(p.animalId)).map((p) => (
       { date: p.date, icone: 'scale', titre: `Pesée : ${formatPoids(p.poidsKg)}`, animal: parId.get(p.animalId) })),
@@ -61,7 +61,7 @@ export function rendre(zone) {
 
   const blocAnimaux = animaux.length
     ? `<div class="pg-animaux">${animaux.slice(0, 4).map((a) => carteAnimal({
-        id: a.id, nom: a.nom, espece: nomEspece(a), details: a.race, icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '',
+        id: a.id, couleur: couleurAnimal(a), nom: a.nom, espece: nomEspece(a), details: a.race, icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '',
         href: `#/animaux/${encodeURIComponent(a.id)}`,
         badges: retardParAnimal.has(a.id) ? badge({ texte: `${retardParAnimal.get(a.id)} rappel${retardParAnimal.get(a.id) > 1 ? 's' : ''} en retard`, variante: 'alerte', icone: 'bell-ring' }) : '',
       })).join('')}</div>`
@@ -69,7 +69,7 @@ export function rendre(zone) {
 
   const blocRappels = rappels.length
     ? `<ul class="cp-liste">${rappels.slice(0, 3).map((r) => ligne({
-        icone: infosType(r.soin.type).icone,
+        icone: infosType(r.soin.type).icone, type: r.soin.type,
         titre: `${nomCourtSoin(r.soin)} · ${r.animal.nom}`,
         meta: `Prévu le ${formatDate(r.soin.rappel)}`,
         fin: badgeEcheance(r.statut),
@@ -79,7 +79,7 @@ export function rendre(zone) {
 
   const blocActivite = activite.length
     ? `<ul class="cp-liste">${activite.map((x) => ligne({
-        icone: x.icone, titre: x.titre, meta: `${x.animal.nom} · ${formatDate(x.date)}`,
+        icone: x.icone, type: x.type, titre: x.titre, meta: `${x.animal.nom} · ${formatDate(x.date)}`,
         href: `#/animaux/${encodeURIComponent(x.animal.id)}`,
       })).join('')}</ul>`
     : `<div class="cp-carte">${vide({ icone: 'calendar', titre: 'Pas encore d\'activité', texte: 'Vos derniers soins et pesées apparaîtront ici.' })}</div>`;

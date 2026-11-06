@@ -221,19 +221,29 @@ a.cp-carte:hover, .cp-carte--interactive:hover { box-shadow: var(--cp-ombre-m); 
 .cp-avatar {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
   width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
-  background: var(--cp-av-fond, var(--cp-av-1-fond)); color: var(--cp-av-texte, var(--cp-av-1-texte));
+  background: var(--an-fond, var(--cp-surface-2)); color: var(--an-texte, var(--cp-foret));
   font-family: var(--cp-police-titre); font-weight: 700; font-size: 14px; line-height: 1; letter-spacing: .02em;
 }
 .cp-avatar--grand { width: 64px; height: 64px; font-size: 22px; }
 .cp-avatar--petit { width: 24px; height: 24px; font-size: 10px; }
-/* Une couleur par animal : choisie d'après son identifiant (js/composants.js), donc stable d'une visite à l'autre */
-.cp-av-1 { --cp-av-fond: var(--cp-av-1-fond); --cp-av-texte: var(--cp-av-1-texte); } .cp-av-2 { --cp-av-fond: var(--cp-av-2-fond); --cp-av-texte: var(--cp-av-2-texte); }
-.cp-av-3 { --cp-av-fond: var(--cp-av-3-fond); --cp-av-texte: var(--cp-av-3-texte); } .cp-av-4 { --cp-av-fond: var(--cp-av-4-fond); --cp-av-texte: var(--cp-av-4-texte); }
-.cp-av-5 { --cp-av-fond: var(--cp-av-5-fond); --cp-av-texte: var(--cp-av-5-texte); } .cp-av-6 { --cp-av-fond: var(--cp-av-6-fond); --cp-av-texte: var(--cp-av-6-texte); }
-.cp-av-7 { --cp-av-fond: var(--cp-av-7-fond); --cp-av-texte: var(--cp-av-7-texte); } .cp-av-8 { --cp-av-fond: var(--cp-av-8-fond); --cp-av-texte: var(--cp-av-8-texte); }
-.cp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* Une couleur par animal : choisie par l'utilisateur dans sa fiche, sinon d'après son identifiant (js/composants.js), donc stable d'une visite à l'autre.
+   La classe .cp-an-… pose --an-fond, --an-texte et --an-trait ; les enfants (avatar, graphique…) les reprennent. */
+.cp-an-ardoise { --an-fond: var(--cp-an-ardoise-fond); --an-texte: var(--cp-an-ardoise-texte); --an-trait: var(--cp-an-ardoise-trait); }
+.cp-an-turquoise { --an-fond: var(--cp-an-turquoise-fond); --an-texte: var(--cp-an-turquoise-texte); --an-trait: var(--cp-an-turquoise-trait); }
+.cp-an-indigo { --an-fond: var(--cp-an-indigo-fond); --an-texte: var(--cp-an-indigo-texte); --an-trait: var(--cp-an-indigo-trait); }
+.cp-an-magenta { --an-fond: var(--cp-an-magenta-fond); --an-texte: var(--cp-an-magenta-texte); --an-trait: var(--cp-an-magenta-trait); }
+.cp-an-brun { --an-fond: var(--cp-an-brun-fond); --an-texte: var(--cp-an-brun-texte); --an-trait: var(--cp-an-brun-trait); }
+.cp-an-rose { --an-fond: var(--cp-an-rose-fond); --an-texte: var(--cp-an-rose-texte); --an-trait: var(--cp-an-rose-trait); }
+.cp-an-olive { --an-fond: var(--cp-an-olive-fond); --an-texte: var(--cp-an-olive-texte); --an-trait: var(--cp-an-olive-trait); }
+.cp-an-gris { --an-fond: var(--cp-an-gris-fond); --an-texte: var(--cp-an-gris-texte); --an-trait: var(--cp-an-gris-trait); }
 
-/* Carte d'animal */
+/* Une couleur par type de soin : posée sur la ligne du soin, elle teinte la pastille d'icône et le libellé du type */
+.cp-type--vaccin { --t-fond: var(--cp-type-vaccin-fond); --t-texte: var(--cp-type-vaccin-texte); }
+.cp-type--vermifuge { --t-fond: var(--cp-type-vermifuge-fond); --t-texte: var(--cp-type-vermifuge-texte); }
+.cp-type--antiparasitaire { --t-fond: var(--cp-type-antiparasitaire-fond); --t-texte: var(--cp-type-antiparasitaire-texte); }
+.cp-type--veto { --t-fond: var(--cp-type-veto-fond); --t-texte: var(--cp-type-veto-texte); }
+.cp-type--autre { --t-fond: var(--cp-type-autre-fond); --t-texte: var(--cp-type-autre-texte); }
+
 .cp-carte-animal, a.cp-carte.cp-carte-animal { display: flex; align-items: center; gap: var(--cp-espace-3); padding: 12px 14px; }
 .cp-carte-animal__texte { min-width: 0; display: grid; gap: 2px; }
 .cp-carte-animal__nom { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); }
@@ -463,7 +473,7 @@ body:has(dialog[open]) { overflow: hidden; }
 .cp-liste { list-style: none; margin: 0; padding: 0; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
 .cp-liste__ligne { display: flex; align-items: center; gap: var(--cp-espace-3); padding: 10px 14px; min-height: 52px; border-bottom: 1px solid var(--cp-bordure); }
 .cp-liste__ligne:last-child { border-bottom: 0; }
-.cp-liste__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); flex: none; }
+.cp-liste__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, transparent); color: var(--t-texte, var(--cp-texte-doux)); flex: none; }
 .cp-liste__corps { flex: 1; min-width: 0; display: grid; gap: 0; }
 .cp-liste__titre { font-weight: 500; color: var(--cp-foret); line-height: var(--cp-interligne-m); }
 .cp-liste__meta { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
@@ -554,3 +564,10 @@ body:has(dialog[open]) { overflow: hidden; }
 .cp a.cp-btn--principal, .cp a.cp-btn--danger { color: var(--cp-texte-inverse); }
 .cp a.cp-btn--secondaire { color: var(--cp-foret); }
 .cp a.cp-btn--discret { color: var(--cp-texte-doux); }
+
+/* Choix de la couleur d'un animal : une pastille de la couleur devant son nom (le nom est toujours écrit : la couleur ne porte jamais seule l'information) */
+.cp-choix--couleurs { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
+.cp-choix--couleurs .cp-choix__option span { min-height: var(--cp-h-bouton); padding: 0 12px; }
+.cp-choix--couleurs .cp-choix__option[class*="cp-an-"] span::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--an-trait); flex: none; }
+/* Choix du type de soin : l'icône reprend la couleur du type */
+.cp-choix__option[class*="cp-type--"] .ic { color: var(--t-texte); }

@@ -64,15 +64,23 @@
   --cp-info-pale: #DDEBEA;
   --cp-focus: #243D35;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
 
-  /* ----- Couleurs d'avatar (une par animal, choisie d'après son identifiant) : fond / texte, contraste ≥ 6,5:1 ----- */
-  --cp-av-1-fond: #DCE8D8; --cp-av-1-texte: #2A4A3A;  /* sauge */
-  --cp-av-2-fond: #DAE8EE; --cp-av-2-texte: #24505E;  /* ciel */
-  --cp-av-3-fond: #F1E3CC; --cp-av-3-texte: #6B4310;  /* sable */
-  --cp-av-4-fond: #F2DDD3; --cp-av-4-texte: #7A3A26;  /* argile */
-  --cp-av-5-fond: #E9DEEA; --cp-av-5-texte: #5A2F5E;  /* prune */
-  --cp-av-6-fond: #E1E3F1; --cp-av-6-texte: #3A3F7A;  /* lavande */
-  --cp-av-7-fond: #F5DCE2; --cp-av-7-texte: #7B2D45;  /* rose */
-  --cp-av-8-fond: #E6E8C9; --cp-av-8-texte: #4F5314;  /* olive */
+  /* ----- Couleur par type de soin : fond de la pastille d'icône / texte et icône (contraste texte-sur-fond >= 5,8:1).
+     Réservée à l'icône et au libellé du type : les couleurs d'URGENCE (rouge, ambre, vert) restent dans les badges de rappel. ----- */
+  --cp-type-vaccin-fond: #DFE9F7;          --cp-type-vaccin-texte: #1F4E8C;           /* bleu */
+  --cp-type-vermifuge-fond: #D7EEE3;       --cp-type-vermifuge-texte: #14633F;        /* vert */
+  --cp-type-antiparasitaire-fond: #FCE2CC; --cp-type-antiparasitaire-texte: #8A430C;  /* orange */
+  --cp-type-veto-fond: #E9E0F6;            --cp-type-veto-texte: #583A93;             /* violet */
+  --cp-type-autre-fond: #E6E9E8;           --cp-type-autre-texte: #454F4C;            /* gris */
+
+  /* ----- Couleur par animal (8 teintes sans rouge, orange ni vert vifs) : fond d'avatar / initiales (>= 6,2:1) / trait de graphique (>= 4,2:1 sur blanc) ----- */
+  --cp-an-ardoise-fond: #DCE6F0;   --cp-an-ardoise-texte: #2B4764;   --cp-an-ardoise-trait: #3E6A93;
+  --cp-an-turquoise-fond: #D3EEEC; --cp-an-turquoise-texte: #0C5B58; --cp-an-turquoise-trait: #17847F;
+  --cp-an-indigo-fond: #E2E2F5;    --cp-an-indigo-texte: #37378A;    --cp-an-indigo-trait: #5757BE;
+  --cp-an-magenta-fond: #F5DCEA;   --cp-an-magenta-texte: #82205C;   --cp-an-magenta-trait: #B0338A;
+  --cp-an-brun-fond: #EADED0;      --cp-an-brun-texte: #5B3B1B;      --cp-an-brun-trait: #8A5A2E;
+  --cp-an-rose-fond: #F8E0E3;      --cp-an-rose-texte: #8A3544;      --cp-an-rose-trait: #C25A6E;
+  --cp-an-olive-fond: #E4E6CF;     --cp-an-olive-texte: #464B14;     --cp-an-olive-trait: #757B2B;
+  --cp-an-gris-fond: #E1E5E9;      --cp-an-gris-texte: #3C4954;      --cp-an-gris-trait: #66798A;
 
   /* ----- Typographie ----- */
   --cp-police-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

@@ -5,7 +5,7 @@ import { echapper, aujourdhui, formatDate } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, choix, vide } from '../../js/composants.js';
-import { TYPES_SOIN, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
+import { TYPES_SOIN, classeType, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
 
 function formulaireSoin(animal, soin, apres) {
   const s = soin ?? { type: 'vaccin', titre: '', date: aujourdhui(), notes: '', rappel: '' };
@@ -15,7 +15,7 @@ function formulaireSoin(animal, soin, apres) {
   const html = `
     <form class="cp-formulaire sn-form" novalidate>
       ${choix({ nom: 'type', legende: 'Type de soin', valeur: typeInitial, classe: 'cp-choix--tuiles',
-        options: TYPES_SOIN.map((t) => ({ valeur: t.id, texte: t.nom, icone: t.icone })) })}
+        options: TYPES_SOIN.map((t) => ({ valeur: t.id, texte: t.nom, icone: t.icone, classe: classeType(t.id) })) })}
       ${champ({ id: 'soin-titre', label: 'Nom du soin (facultatif)', valeur: s.titre ?? '', placeholder: 'Ex. : Rage, Frontline…', attrs: { name: 'titre', maxlength: 60, autocomplete: 'off' } })}
       ${champ({ id: 'soin-date', label: 'Date du soin', type: 'date', valeur: s.date ?? '', requis: true, attrs: { name: 'date' } })}
       ${champ({ id: 'soin-notes', label: 'Note (facultatif)', type: 'textarea', valeur: s.notes ?? '', attrs: { name: 'notes', maxlength: 500, rows: 3 } })}
@@ -81,7 +81,7 @@ function carteHtml(soin) {
   }
 
   return `
-    <li class="cp-carte sn-carte" data-soin="${echapper(soin.id)}">
+    <li class="cp-carte sn-carte ${classeType(soin.type)}" data-soin="${echapper(soin.id)}">
       <span class="sn-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="sn-carte__corps">
         ${nomPrecis ? `<span class="sn-carte__type">${echapper(categorie)}</span>` : ''}

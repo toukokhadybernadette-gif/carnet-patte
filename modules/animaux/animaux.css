@@ -69,7 +69,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
    ========================================================= */
 .fi-retour { justify-self: start; }
 /* En-tête */
-.fi-entete { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--cp-espace-4); padding: var(--cp-espace-4); }
+.fi-entete { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--cp-espace-4); padding: var(--cp-espace-4); box-shadow: inset 0 3px 0 var(--an-trait, transparent), var(--cp-ombre-s); } /* filet de la couleur de l'animal en haut de sa fiche */
 .fi-avatar { width: 64px; height: 64px; }
 .fi-avatar .ic { width: 28px; height: 28px; }
 .fi-entete__texte { display: grid; gap: var(--cp-espace-1); min-width: 0; }
@@ -116,7 +116,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fi-histo { list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: var(--cp-espace-4); }
 .fi-histo::before { content: ""; position: absolute; left: 19px; top: 8px; bottom: 8px; width: 2px; background: var(--cp-bordure); }
 .fi-histo__ligne { position: relative; display: grid; grid-template-columns: 40px 1fr; gap: var(--cp-espace-4); align-items: start; }
-.fi-histo__icone { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-vert-clair); color: var(--cp-foret); border: 3px solid var(--cp-carte); box-sizing: border-box; }
+.fi-histo__icone { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-foret)); border: 3px solid var(--cp-carte); box-sizing: border-box; }
 .fi-histo__corps { display: grid; gap: 2px; min-width: 0; padding-top: 2px; }
 .fi-histo__titre { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
 .fi-histo__date { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
@@ -137,14 +137,14 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .sn-liste { list-style: none; margin: 0; padding: 0; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
 .sn-liste > li + li { border-top: 1px solid var(--cp-bordure); }
 .sn-carte, .sn-liste > .cp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
-.sn-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); }
+.sn-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
 .sn-carte__corps { display: grid; gap: 0; min-width: 0; }
 .sn-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
 .sn-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
 .sn-ligne { display: flex; align-items: center; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .sn-ligne .ic { display: none; }
 .sn-carte__nom.sn-carte__nom--vide, .rp-carte__nom.rp-carte__nom--vide { color: var(--cp-texte-doux); font-weight: 500; }
-.sn-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cp-texte-doux); }
+.sn-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t-texte, var(--cp-texte-doux)); }
 .sn-carte .sn-carte__notes { margin: var(--cp-espace-1) 0 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte); overflow-wrap: anywhere; white-space: pre-line; }
 .sn-carte__actions { display: flex; gap: var(--cp-espace-1); align-items: center; }
 .sn-carte__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
@@ -172,7 +172,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 /* Fenêtre « Rappel effectué » */
 .rf-form { gap: var(--cp-espace-5); }
 .rf-resume { display: flex; align-items: center; gap: var(--cp-espace-4); flex-wrap: wrap; padding: var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-fond); border: 1px solid var(--cp-bordure); }
-.rf-resume__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--cp-vert-clair); color: var(--cp-foret); flex: none; }
+.rf-resume__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-foret)); flex: none; }
 .rf-resume__texte { display: grid; gap: 2px; flex: 1 1 160px; min-width: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .rf-resume__texte strong { font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
 .rf-delais { display: flex; flex-wrap: wrap; }
@@ -226,10 +226,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-liste > li + li { border-top: 1px solid var(--cp-bordure); }
 .rp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .rp-carte--retard { box-shadow: inset 3px 0 0 var(--cp-terre); }
-.rp-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); }
+.rp-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
 .rp-carte__corps { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--cp-espace-2); min-width: 0; }
 .rp-carte__corps > .rp-carte__type, .rp-carte__corps > .rp-carte__tete { flex-basis: 100%; }
-.rp-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--cp-texte-doux); }
+.rp-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t-texte, var(--cp-texte-doux)); }
 .rp-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
 .rp-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
 .rp-animal { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; font-weight: 400; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); white-space: nowrap; }
@@ -273,10 +273,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-graphique { width: 100%; height: auto; display: block; }
 .ps-grille { stroke: var(--cp-bordure); stroke-width: 1; }
 .ps-texte { fill: var(--cp-texte-doux); font-size: 12px; font-family: var(--cp-police-texte); }
-.ps-ligne { fill: none; stroke: var(--cp-foret); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-.ps-point { fill: var(--cp-carte); stroke: var(--cp-foret); stroke-width: 3; }
+.ps-ligne { fill: none; stroke: var(--an-trait, var(--cp-foret)); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.ps-point { fill: var(--cp-carte); stroke: var(--an-trait, var(--cp-foret)); stroke-width: 3; }
 .ps-point { pointer-events: none; }
-.ps-point--actif { fill: var(--cp-vert-clair); stroke-width: 4; }
+.ps-point--actif { fill: var(--an-fond, var(--cp-vert-clair)); stroke-width: 4; }
 .ps-cible { fill: transparent; stroke: none; cursor: pointer; }
 .ps-infobulle { position: absolute; z-index: 2; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
   padding: var(--cp-espace-2) var(--cp-espace-3); border-radius: var(--cp-rayon-champ); font-size: var(--cp-taille-s); font-weight: 600;

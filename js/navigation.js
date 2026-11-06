@@ -12,9 +12,9 @@
 import * as storage from './storage.js';
 import { icone } from './icons.js';
 import { echapper } from './utils.js';
-import { bouton, avatar } from './composants.js';
+import { bouton, avatar, couleurAnimal } from './composants.js';
 import { compterEnRetard } from '../modules/animaux/rappels.js';
-import { infosEspece, nomEspece } from '../modules/animaux/commun.js';
+import { nomEspece } from '../modules/animaux/commun.js';
 
 // `actif(seg)` dit si l'entrée correspond à la page affichée (seg = morceaux de l'adresse : ['animaux', 'rappels']).
 export const NAV = [
@@ -199,7 +199,7 @@ function afficherResultats(texte) {
   liste.innerHTML = resultats.length
     ? resultats.map((a, i) => `
         <li class="app-recherche__option" role="option" id="recherche-opt-${i}" aria-selected="false" data-id="${echapper(a.id)}">
-          <span class="cp-avatar" aria-hidden="true">${icone(infosEspece(a).icone, { taille: 20 })}</span>
+          ${avatar({ nom: a.nom, id: a.id, couleur: couleurAnimal(a) })}
           <span class="app-recherche__texte"><span class="app-recherche__nom">${echapper(a.nom)}</span>
           <span class="app-recherche__meta">${echapper([nomEspece(a), a.race].filter(Boolean).join(' · '))}</span></span>
         </li>`).join('')

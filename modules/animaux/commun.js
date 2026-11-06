@@ -79,6 +79,9 @@ export function infosType(id) {
   return TYPES_SOIN.find((t) => t.id === id) ?? TYPES_SOIN[TYPES_SOIN.length - 1];
 }
 
+/** Classe CSS qui donne à une ligne la couleur de son type de soin (vaccin bleu, vermifuge vert…). Un type inconnu devient « autre » (gris). */
+export const classeType = (id) => `cp-type--${infosType(id).id}`;
+
 // ----- Rappels -----
 
 /**
@@ -155,7 +158,7 @@ export function ouvrirRappelFait(soin, apres) {
   const html = `
     <form class="cp-formulaire rf-form" novalidate>
       <div class="rf-resume">
-        <span class="rf-resume__icone">${icone(type.icone, { taille: 22 })}</span>
+        <span class="rf-resume__icone ${classeType(soin.type)}">${icone(type.icone, { taille: 22 })}</span>
         <div class="rf-resume__texte">
           <strong>${echapper(titre)}</strong>
           <span>Rappel prévu le ${formatDate(soin.rappel)}</span>

@@ -5,8 +5,8 @@ import { echapper, age, formatDate, formatPoids, aujourdhui } from '../../js/uti
 import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
-import { bouton, badge, vide, activerOnglets, avatar } from '../../js/composants.js';
-import { infosEspece, nomEspece, infosType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
+import { bouton, badge, vide, activerOnglets, avatar, couleurAnimal } from '../../js/composants.js';
+import { infosEspece, nomEspece, infosType, classeType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
 import { formulaireAnimal } from './animaux.js';
 import * as soins from './soins.js';
@@ -26,7 +26,7 @@ const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
 function avatarGrand(animal) {
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
-  return avatar({ grand: true, photo, nom: animal.nom, id: animal.id, icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
+  return avatar({ grand: true, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal), icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
 }
 
 // ----- Données de l'animal (toujours filtrées sur son identifiant) -----
@@ -99,11 +99,11 @@ function evenements(animal) {
   }
   for (const s of soinsDe(animal)) {
     const type = infosType(s.type);
-    ev.push({ date: s.date, rang: 2, icone: type.icone, titre: titreSoin(s), detail: s.notes || '' });
+    ev.push({ date: s.date, rang: 2, icone: type.icone, titre: titreSoin(s), detail: s.notes || '', type: s.type });
     const statut = statutRappel(s);
     if (statut) {
       ev.push({ date: s.rappel, rang: 3, icone: 'bell', titre: `Rappel : ${titreSoin(s)}`, detail: '',
-        badge: badgeEcheance(statut) });
+        badge: badgeEcheance(statut), type: s.type });
     }
   }
   const liste = peseesDe(animal);
@@ -136,7 +136,7 @@ function historiqueHtml(animal, limite) {
       <h3 class="fi-annee__titre">${annee}</h3>
       <ol class="fi-histo">
         ${liste.map((e) => `
-          <li class="fi-histo__ligne">
+          <li class="fi-histo__ligne${e.type ? ` ${classeType(e.type)}` : ''}">
             <span class="fi-histo__icone">${icone(e.icone, { taille: 18 })}</span>
             <div class="fi-histo__corps">
               <div class="fi-histo__titre"><strong>${echapper(e.titre)}</strong>${e.badge ?? ''}</div>
@@ -177,7 +177,7 @@ export function rendre(zone, id, soinCible = '') {
   const idPanneau = (o) => `fi-panneau-${o}`;
 
   zone.innerHTML = `
-    <div class="cp pg fi-page">
+    <div class="cp pg fi-page cp-an-${couleurAnimal(animal)}">
       <a class="pg-lien fi-retour" href="#/animaux">${icone('arrow-left', { taille: 18 })} Mes animaux</a>
 
       <section class="cp-carte fi-entete" aria-label="Identité de l'animal">

@@ -4,8 +4,8 @@ import * as storage from '../../js/storage.js';
 import { echapper, formatDate } from '../../js/utils.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
-import { bouton, avatar, choix, selecteur, vide } from '../../js/composants.js';
-import { infosType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
+import { bouton, avatar, choix, selecteur, vide, couleurAnimal } from '../../js/composants.js';
+import { infosType, classeType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
 
 /** Tous les rappels en attente, du plus urgent au plus lointain. */
 export function calculerRappels() {
@@ -68,7 +68,7 @@ function carteHtml({ soin, animal, statut }) {
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
   const quoi = `${titreSoin(soin)} pour ${animal.nom}`;
   return `
-    <li class="cp-carte rp-carte rp-carte--${statut ? statut.classe : 'fait'}">
+    <li class="cp-carte rp-carte rp-carte--${statut ? statut.classe : 'fait'} ${classeType(soin.type)}">
       <span class="rp-carte__icone" aria-hidden="true">${icone(type.icone, { taille: 24 })}</span>
       <div class="rp-carte__corps">
         ${nom ? `<span class="rp-carte__type">${echapper(categorie)}</span>` : ''}
@@ -76,7 +76,7 @@ function carteHtml({ soin, animal, statut }) {
           <strong class="rp-carte__nom">${echapper(nom || categorie)}</strong>
           ${badgeSoin(soin)}
         </div>
-        <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo, nom: animal.nom, id: animal.id })}<span>${echapper(animal.nom)}</span></a>
+        <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal) })}<span>${echapper(animal.nom)}</span></a>
         <span class="rp-ligne">${icone(statut ? 'bell' : 'check', { taille: 16 })}<span>${statut ? 'Prévu le' : 'Rappel du'} <time datetime="${soin.rappel}">${formatDate(soin.rappel)}</time>${statut ? '' : ' · traité'}</span></span>
         <span class="rp-ligne">${icone('calendar', { taille: 16 })}<span>Dernier soin le <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
       </div>

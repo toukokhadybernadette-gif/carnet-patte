@@ -104,16 +104,28 @@ export function interrupteur({ id, label, actif = false, desactive = false }) {
     <input${attributs({ type: 'checkbox', role: 'switch', id, name: id, checked: actif, disabled: desactive })}><span class="cp-interrupteur__piste" aria-hidden="true"></span></label>`;
 }
 
-/** Groupe de choix en pastilles (boutons radio). options : [{ valeur, texte, icone? }]. `classe` : variante (ex. cp-choix--especes). */
+/** Groupe de choix en pastilles (boutons radio). options : [{ valeur, texte, icone?, classe? }]. `classe` : variante (ex. cp-choix--especes). */
 export function choix({ nom, legende, options = [], valeur = '', desactive = false, classe = '' }) {
   const items = options.map((o) => `
-    <label class="cp-choix__option"><input${attributs({ type: 'radio', name: nom, value: o.valeur, checked: o.valeur === valeur, disabled: desactive })}>
+    <label class="cp-choix__option${o.classe ? ` ${o.classe}` : ''}"><input${attributs({ type: 'radio', name: nom, value: o.valeur, checked: o.valeur === valeur, disabled: desactive })}>
       <span>${o.icone ? icone(o.icone, { taille: 18 }) : ''}${echapper(o.texte)}</span></label>`).join('');
   return `<fieldset class="cp-choix${classe ? ` ${classe}` : ''}"><legend>${echapper(legende)}</legend>${items}</fieldset>`;
 }
 
+/** Les 8 couleurs proposées pour un animal (jetons --cp-an-… dans css/tokens.css). `id` est enregistré dans l'animal (champ facultatif `couleur`). */
+export const PALETTE_ANIMAUX = [
+  { id: 'ardoise', nom: 'Bleu ardoise' }, { id: 'turquoise', nom: 'Turquoise' }, { id: 'indigo', nom: 'Indigo' }, { id: 'magenta', nom: 'Magenta' },
+  { id: 'brun', nom: 'Brun' }, { id: 'rose', nom: 'Rose poudré' }, { id: 'olive', nom: 'Olive' }, { id: 'gris', nom: 'Gris-bleu' },
+];
+
 /** Numéro de couleur (1 à 8) d'un identifiant : stable d'une visite à l'autre, différent d'un animal à l'autre. */
 export const couleurAvatar = (id = '') => 1 + [...String(id)].reduce((somme, c) => (somme * 31 + c.charCodeAt(0)) % 8, 0);
+
+/** Couleur choisie pour l'animal si elle est valide, sinon couleur automatique d'après son identifiant. Retourne l'`id` de PALETTE_ANIMAUX. */
+export function couleurAnimal(animal) {
+  const choisie = PALETTE_ANIMAUX.find((c) => c.id === animal?.couleur);
+  return (choisie ?? PALETTE_ANIMAUX[couleurAvatar(animal?.id ?? animal?.nom ?? '') - 1]).id;
+}
 
 /** « Moka » → « MO », « Jean Pierre » → « JP » */
 export function initiales(nom = '') {
@@ -126,17 +138,18 @@ export function initiales(nom = '') {
  * Avatar rond : la photo si elle existe ; sinon les initiales sur une couleur propre à l'animal (`nom` et `id`) ;
  * sinon, sans nom, une icône. `taille` : petit | normal | grand.
  */
-export function avatar({ icone: nomIcone = 'paw-print', photo = '', grand = false, petit = false, nom = '', id = '' } = {}) {
+export function avatar({ icone: nomIcone = 'paw-print', photo = '', grand = false, petit = false, nom = '', id = '', couleur = '' } = {}) {
   const taille = grand ? ' cp-avatar--grand' : petit ? ' cp-avatar--petit' : '';
-  if (photo) return `<span class="cp-avatar${taille}" aria-hidden="true"><img src="${echapper(photo)}" alt=""></span>`;
-  if (nom) return `<span class="cp-avatar cp-av-${couleurAvatar(id || nom)}${taille}" aria-hidden="true">${echapper(initiales(nom))}</span>`;
+  const teinte = ` cp-an-${PALETTE_ANIMAUX.some((c) => c.id === couleur) ? couleur : PALETTE_ANIMAUX[couleurAvatar(id || nom) - 1].id}`;
+  if (photo) return `<span class="cp-avatar${teinte}${taille}" aria-hidden="true"><img src="${echapper(photo)}" alt=""></span>`;
+  if (nom) return `<span class="cp-avatar${teinte}${taille}" aria-hidden="true">${echapper(initiales(nom))}</span>`;
   return `<span class="cp-avatar${taille}" aria-hidden="true">${icone(nomIcone, { taille: grand ? 32 : 20 })}</span>`;
 }
 
 /** Carte d'animal. `href` la rend cliquable. badges : texte HTML déjà construit avec badge(). */
-export function carteAnimal({ nom, espece, details = '', icone: nomIcone, photo, badges = '', href, selectionnee = false, id = '' }) {
+export function carteAnimal({ nom, espece, details = '', icone: nomIcone, photo, badges = '', href, selectionnee = false, id = '', couleur = '' }) {
   const corps = `
-    ${avatar({ icone: nomIcone, photo, nom, id })}
+    ${avatar({ icone: nomIcone, photo, nom, id, couleur })}
     <div class="cp-carte-animal__texte">
       <span class="cp-carte-animal__nom">${echapper(nom)}</span>
       <span class="cp-carte-animal__meta">${echapper([espece, details].filter(Boolean).join(' · '))}</span>

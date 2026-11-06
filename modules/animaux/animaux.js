@@ -10,7 +10,7 @@ import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.j
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { rafraichir } from '../../js/router.js';
-import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres } from '../../js/composants.js';
+import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres, PALETTE_ANIMAUX, couleurAnimal } from '../../js/composants.js';
 import { ESPECES, infosEspece, nomEspece, erreurChamp } from './commun.js';
 import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
@@ -25,15 +25,16 @@ export function rendre(zone, segments) {
 // ----- Formulaire (ajout et modification) -----
 
 /** Photo de l'animal, ou à défaut l'icône de son espèce (grand rond du formulaire). */
-function apercuHtml(espece, photo) {
+function apercuHtml(espece, photo, couleur) {
   const contenu = typeof photo === 'string' && photo.startsWith('data:image/')
     ? `<img src="${echapper(photo)}" alt="">`
     : icone(infosEspece({ espece }).icone, { taille: 44 });
-  return `<span class="cp-avatar cp-avatar--grand" aria-hidden="true">${contenu}</span>`;
+  return `<span class="cp-avatar cp-avatar--grand cp-an-${couleur}" aria-hidden="true">${contenu}</span>`;
 }
 
 export function formulaireAnimal(animal, apres) {
-  const a = animal ?? { nom: '', espece: 'chien', especeAutre: '', race: '', naissance: '', photo: '' };
+  const a = animal ?? { nom: '', espece: 'chien', especeAutre: '', race: '', naissance: '', photo: '', couleur: '' };
+  const couleurInitiale = PALETTE_ANIMAUX.some((c) => c.id === a.couleur) ? a.couleur : ''; // '' = automatique
   let photo = a.photo || '';
   // Une espèce inconnue (fichier d'une version future) est présentée comme « Autre » plutôt que remplacée par « Chien »
   const especeInitiale = ESPECES.some((e) => e.id === a.espece) ? a.espece : 'autre';
@@ -55,6 +56,10 @@ export function formulaireAnimal(animal, apres) {
         options: ESPECES.map((e) => ({ valeur: e.id, texte: e.nom, icone: e.icone })),
       })}
       <div data-champ-autre>${champ({ id: 'animal-autre', label: "Précisez l'espèce", valeur: a.especeAutre ?? '', placeholder: 'Ex. : Perroquet, Lama…', attrs: { name: 'especeAutre', maxlength: 40 } })}</div>
+      ${choix({
+        nom: 'couleur', legende: 'Couleur (avatar et graphique)', valeur: couleurInitiale, classe: 'cp-choix--couleurs',
+        options: [{ valeur: '', texte: 'Automatique' }, ...PALETTE_ANIMAUX.map((c) => ({ valeur: c.id, texte: c.nom, classe: `cp-an-${c.id}` }))],
+      })}
       ${champ({ id: 'animal-race', label: 'Race (facultatif)', valeur: a.race ?? '', attrs: { name: 'race', maxlength: 60 } })}
       ${champ({ id: 'animal-naissance', label: 'Date de naissance (facultatif)', type: 'date', valeur: a.naissance ?? '', attrs: { name: 'naissance', max: aujourdhui() } })}
       <div class="al-form__actions">
@@ -70,14 +75,14 @@ export function formulaireAnimal(animal, apres) {
     const boutonRetirer = dlg.querySelector('[data-retirer]');
 
     const majApercu = () => {
-      apercu.innerHTML = apercuHtml(form.espece.value, photo);
+      apercu.innerHTML = apercuHtml(form.espece.value, photo, form.couleur.value || couleurAnimal({ id: a.id ?? a.nom })); // sans choix : la couleur automatique
       boutonRetirer.hidden = !photo;
     };
     const majAutre = () => { champAutre.hidden = form.espece.value !== 'autre'; };
     majApercu(); majAutre();
 
     // Les pastilles d'espèce sont des boutons radio : on écoute le formulaire entier
-    form.addEventListener('change', (e) => { if (e.target.name === 'espece') { majApercu(); majAutre(); } });
+    form.addEventListener('change', (e) => { if (e.target.name === 'espece') { majApercu(); majAutre(); } else if (e.target.name === 'couleur') majApercu(); });
     form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
 
     dlg.querySelector('[data-fichier]').addEventListener('change', async (e) => {
@@ -104,6 +109,7 @@ export function formulaireAnimal(animal, apres) {
         race: f.get('race').trim(),
         naissance: f.get('naissance') || '',
         photo,
+        couleur: PALETTE_ANIMAUX.some((c) => c.id === f.get('couleur')) ? f.get('couleur') : '', // '' = automatique
       };
       // Vérifications, avec un message clair sous chaque champ concerné
       const problemes = [];
@@ -147,6 +153,7 @@ function carteHtml(animal, rappels) {
     photo: typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '',
     badges,
     id: animal.id,
+    couleur: couleurAnimal(animal),
     href: `#/animaux/${encodeURIComponent(animal.id)}`,
   });
 }
