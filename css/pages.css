@@ -6,6 +6,18 @@
 .pg-entete__badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
 .pg-entete p { margin: 0; color: var(--cp-texte-doux); max-width: 62ch; }
 .pg-entete--accueil { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--cp-espace-4); }
+.pg-entete--accueil > div { display: grid; gap: 2px; }
+/* Ligne de résumé de l'Accueil : « 2 animaux · 1 rappel en retard » (lien vers les rappels) */
+.ac-resume { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 4px; margin: 0; min-height: 28px; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+a.ac-resume { color: var(--cp-texte-doux); text-decoration: none; }
+a.ac-resume:hover { color: var(--cp-texte); }
+.cp a.ac-resume { color: var(--cp-texte-doux); text-decoration: none; }
+.ac-resume__retard { color: var(--cp-terre); font-weight: 500; }
+.ac-resume .ic { margin-left: 2px; }
+/* Choix « pour quel animal ? » */
+.ac-choix { display: grid; gap: var(--cp-espace-2); }
+.ac-choix__animal { display: flex; align-items: center; gap: var(--cp-espace-3); width: 100%; min-height: var(--cp-cible-tactile); padding: 8px 12px; font: inherit; font-weight: 500; color: var(--cp-foret); text-align: left; cursor: pointer; }
+.ac-choix__animal:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
 .pg-entete--icone { grid-template-columns: auto 1fr; align-items: center; column-gap: var(--cp-espace-4); }
 .pg-entete--icone > div { display: grid; gap: var(--cp-espace-1); }
 
@@ -54,7 +66,8 @@
 
 @media (max-width: 599px) {
   .pg { gap: 20px; }
-  .pg-entete--accueil { grid-template-columns: 1fr; }
+  .pg-entete--accueil { grid-template-columns: 1fr; row-gap: var(--cp-espace-3); }
+  .pg-entete--accueil > .cp-btn { justify-self: start; }
   .pg-stats { grid-template-columns: 1fr 1fr; }
   .pg-stats > .cp-stat:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--cp-bordure); }
   .pg-stats > .cp-stat { padding: 10px 12px; }

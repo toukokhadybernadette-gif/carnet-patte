@@ -1,136 +1,84 @@
-// Accueil : bienvenue, résumé des animaux, raccourcis, rappels et activité récente.
-// Cette page LIT les données (animaux, soins, pesées) mais ne les modifie jamais.
+// Accueil, version allégée : « Bonjour [prénom] », une ligne de résumé, les 3 prochains rappels en version compacte
+// et un petit bouton d'ajout. Cette page LIT les données mais ne les modifie jamais (l'ajout passe par les formulaires existants).
 
 import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
-import { echapper, aujourdhui, formatDate, formatPoids } from '../../js/utils.js';
-import { badge, carteStat, carteAnimal, vide, bouton, couleurAnimal } from '../../js/composants.js';
-import { NAV } from '../../js/navigation.js';
+import { echapper, formatDate } from '../../js/utils.js';
+import { vide, bouton, avatar, couleurAnimal } from '../../js/composants.js';
+import { modale } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { calculerRappels } from '../animaux/rappels.js';
 import { formulaireAnimal } from '../animaux/animaux.js';
-import { infosEspece, nomEspece, infosType, classeType, badgeEcheance, nomCourtSoin, titreSoin } from '../animaux/commun.js';
+import { formulaireSoin } from '../animaux/soins.js';
+import { infosEspece, infosType, classeType, badgeEcheance, nomCourtSoin } from '../animaux/commun.js';
 
-function ligne({ icone: i, titre, meta, fin = '', href, type = '' }) {
-  const corps = `
-    <span class="cp-liste__icone${type ? ` ${classeType(type)}` : ''}">${icone(i, { taille: 20 })}</span>
-    <div class="cp-liste__corps"><span class="cp-liste__titre">${echapper(titre)}</span><span class="cp-liste__meta">${echapper(meta)}</span></div>
-    ${fin ? `<div class="cp-liste__fin">${fin}</div>` : ''}`;
-  return href
-    ? `<li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">${corps}</a></li>`
-    : `<li class="cp-liste__ligne">${corps}</li>`;
+const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
+
+/** Une ligne de rappel compacte : le soin en haut, l'animal et la date dessous, le badge à droite. */
+function ligneRappel(r) {
+  return `
+    <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="#/animaux/rappels">
+      <span class="cp-liste__icone ${classeType(r.soin.type)}">${icone(infosType(r.soin.type).icone, { taille: 18 })}</span>
+      <div class="cp-liste__corps"><span class="cp-liste__titre">${echapper(nomCourtSoin(r.soin))}</span><span class="cp-liste__meta">${echapper(r.animal.nom)} · ${formatDate(r.soin.rappel)}</span></div>
+      <div class="cp-liste__fin">${badgeEcheance(r.statut)}</div>
+    </a></li>`;
 }
 
-/** Les modules à venir, réunis dans une seule carte (les pages restent accessibles depuis le menu). */
-function blocBientot() {
-  const modules = NAV.filter((n) => n.bientot);
-  return `
-    <section class="cp-carte pg-bientot" aria-labelledby="ac-bientot">
-      <h2 class="pg-tuile__titre" id="ac-bientot">Bientôt sur Carnet Patte</h2>
-      <ul class="pg-bientot__liste">
-        ${modules.map((m) => `<li><a class="pg-bientot__lien" href="${m.href}">${icone(m.icone, { taille: 18 })}<span>${echapper(m.titre)}</span></a></li>`).join('')}
-        <li><a class="pg-bientot__lien" href="#/bientot">${icone('compass', { taille: 18 })}<span>Et d'autres modules</span></a></li>
-      </ul>
-    </section>`;
+/** Plusieurs animaux : un petit choix « pour quel animal ? » avant le formulaire du soin. Un seul animal : on va directement au formulaire. */
+function ajouterUnSoin(animaux) {
+  if (animaux.length === 1) { formulaireSoin(animaux[0], null, rafraichir); return; }
+  const html = `
+    <div class="ac-choix" role="group" aria-label="Animal concerné">
+      ${animaux.map((a) => `<button type="button" class="cp-carte ac-choix__animal" data-animal="${echapper(a.id)}">${avatar({ icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '', nom: a.nom, id: a.id, couleur: couleurAnimal(a) })}<span>${echapper(a.nom)}</span></button>`).join('')}
+    </div>`;
+  modale('Pour quel animal ?', html, (dlg) => {
+    dlg.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-animal]');
+      const animal = b && storage.trouver('animaux', b.dataset.animal);
+      if (!animal) return;
+      dlg.close();
+      formulaireSoin(animal, null, rafraichir);
+    });
+  });
 }
 
 export function rendre(zone) {
   zone.classList.add('page-large');
   const { prenom } = storage.lireProfil(); // facultatif : sans prénom, « Bonjour » tout court
 
-  // Même ordre que la page Mes animaux : alphabétique
   const animaux = storage.lister('animaux').sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  const parId = new Map(animaux.map((a) => [a.id, a]));
-  const rappels = calculerRappels();
-  const enRetard = rappels.filter((r) => r.statut.classe === 'retard');
-  const retardParAnimal = new Map();
-  enRetard.forEach((r) => retardParAnimal.set(r.animal.id, (retardParAnimal.get(r.animal.id) ?? 0) + 1));
-  const prochain = rappels[0]; // le plus urgent : calculerRappels trie du plus en retard au plus lointain
-  const libelleProchain = prochain?.statut.classe === 'retard' ? 'Rappel le plus urgent' : 'Prochain rappel';
+  const rappels = calculerRappels(); // du plus en retard au plus lointain
+  const enRetard = rappels.filter((r) => r.statut.classe === 'retard').length;
 
-  // Activité récente : derniers soins et dernières pesées déjà passés
-  const auj = aujourdhui();
-  const activite = [
-    ...storage.lister('soins').filter((s) => s.date && s.date <= auj && parId.has(s.animalId)).map((s) => {
-      const type = infosType(s.type);
-      return { date: s.date, icone: type.icone, type: s.type, titre: titreSoin(s), animal: parId.get(s.animalId) };
-    }),
-    ...storage.lister('pesees').filter((p) => p.date && p.date <= auj && parId.has(p.animalId)).map((p) => (
-      { date: p.date, icone: 'scale', titre: `Pesée : ${formatPoids(p.poidsKg)}`, animal: parId.get(p.animalId) })),
-  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
-
-  const blocAnimaux = animaux.length
-    ? `<div class="pg-animaux">${animaux.slice(0, 4).map((a) => carteAnimal({
-        id: a.id, couleur: couleurAnimal(a), nom: a.nom, espece: nomEspece(a), details: a.race, icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '',
-        href: `#/animaux/${encodeURIComponent(a.id)}`,
-        badges: retardParAnimal.has(a.id) ? badge({ texte: `${retardParAnimal.get(a.id)} rappel${retardParAnimal.get(a.id) > 1 ? 's' : ''} en retard`, variante: 'alerte', icone: 'bell-ring' }) : '',
-      })).join('')}</div>`
-    : `<div class="cp-carte">${vide({ icone: 'paw-print', titre: 'Aucun animal pour l\'instant', texte: 'Ajoutez votre premier compagnon pour suivre sa santé.', action: bouton({ texte: 'Ajouter un animal', icone: 'plus', href: '#/animaux' }) })}</div>`;
+  const resume = animaux.length
+    ? `<a class="ac-resume" href="#/animaux/rappels">${pluriel(animaux.length, 'animal', 'animaux')} · ${enRetard ? `<span class="ac-resume__retard">${pluriel(enRetard, 'rappel en retard', 'rappels en retard')}</span>` : 'aucun rappel en retard'}${icone('chevron-right', { taille: 14 })}</a>`
+    : '<p class="ac-resume ac-resume--vide">Votre carnet est vide pour l\'instant.</p>';
 
   const blocRappels = rappels.length
-    ? `<ul class="cp-liste">${rappels.slice(0, 3).map((r) => ligne({
-        icone: infosType(r.soin.type).icone, type: r.soin.type,
-        titre: `${nomCourtSoin(r.soin)} · ${r.animal.nom}`,
-        meta: `Prévu le ${formatDate(r.soin.rappel)}`,
-        fin: badgeEcheance(r.statut),
-        href: '#/animaux/rappels',
-      })).join('')}</ul>`
-    : `<div class="cp-carte">${vide({ icone: 'circle-check', titre: 'Aucun rappel en attente', texte: 'Ajoutez une date de rappel quand vous notez un soin.' })}</div>`;
-
-  const blocActivite = activite.length
-    ? `<ul class="cp-liste">${activite.map((x) => ligne({
-        icone: x.icone, type: x.type, titre: x.titre, meta: `${x.animal.nom} · ${formatDate(x.date)}`,
-        href: `#/animaux/${encodeURIComponent(x.animal.id)}`,
-      })).join('')}</ul>`
-    : `<div class="cp-carte">${vide({ icone: 'calendar', titre: 'Pas encore d\'activité', texte: 'Vos derniers soins et pesées apparaîtront ici.' })}</div>`;
+    ? `<ul class="cp-liste">${rappels.slice(0, 3).map(ligneRappel).join('')}</ul>`
+    : animaux.length ? `<div class="cp-carte">${vide({ icone: 'circle-check', titre: 'Aucun rappel en attente', texte: 'Ajoutez une date de rappel quand vous notez un soin.' })}</div>` : '';
 
   zone.innerHTML = `
-    <div class="cp pg">
+    <div class="cp pg pg--accueil">
       <header class="pg-entete pg-entete--accueil">
         <div>
           <h1>Bonjour${prenom ? ` ${echapper(prenom)}` : ''}</h1>
-          <p>Voici un aperçu de vos animaux et de ce qui vous attend.</p>
+          ${resume}
         </div>
-        ${bouton({ texte: 'Ajouter un animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } })}
+        ${bouton({ texte: animaux.length ? 'Ajouter un soin' : 'Ajouter un animal', icone: 'plus', taille: 's', attrs: { 'data-act': animaux.length ? 'soin' : 'animal' } })}
       </header>
 
-      <section class="pg-section" aria-label="Résumé">
-        <div class="pg-stats">
-          ${carteStat({ libelle: animaux.length > 1 ? 'Animaux suivis' : 'Animal suivi', valeur: animaux.length, icone: 'paw-print' })}
-          ${carteStat({ libelle: 'Rappels en retard', valeur: enRetard.length, icone: 'bell' })}
-          ${carteStat({ libelle: libelleProchain, valeur: prochain ? prochain.statut.texte : 'Aucun', icone: prochain?.statut.classe === 'retard' ? 'bell-ring' : 'calendar',
-            detail: prochain ? `${nomCourtSoin(prochain.soin)} · ${prochain.animal.nom}` : '' })}
-        </div>
-      </section>
-
-      <section class="pg-section" aria-label="Modules à venir">
-        <div class="pg-raccourcis pg-raccourcis--utiles">
-          ${blocBientot()}
-        </div>
-      </section>
-
-      <section class="pg-section" aria-labelledby="ac-animaux">
+      ${animaux.length ? `
+      <section class="pg-section" aria-labelledby="ac-rappels">
         <div class="pg-section__tete">
-          <h2 id="ac-animaux">Mes animaux</h2>
-          ${animaux.length ? `<a class="pg-lien" href="#/animaux">Tout voir ${icone('chevron-right', { taille: 16 })}</a>` : ''}
+          <h2 id="ac-rappels">Prochains rappels</h2>
+          ${rappels.length ? `<a class="pg-lien" href="#/animaux/rappels">Tout voir ${icone('chevron-right', { taille: 16 })}</a>` : ''}
         </div>
-        ${blocAnimaux}
-      </section>
-
-      <div class="pg-colonnes">
-        <section class="pg-section" aria-labelledby="ac-rappels">
-          <div class="pg-section__tete">
-            <h2 id="ac-rappels">Rappels</h2>
-            ${rappels.length ? `<a class="pg-lien" href="#/animaux/rappels">Tout voir ${icone('chevron-right', { taille: 16 })}</a>` : ''}
-          </div>
-          ${blocRappels}
-        </section>
-        <section class="pg-section" aria-labelledby="ac-activite">
-          <div class="pg-section__tete"><h2 id="ac-activite">Activité récente</h2></div>
-          ${blocActivite}
-        </section>
-      </div>
+        ${blocRappels}
+      </section>` : `<div class="cp-carte">${vide({ niveau: 2, icone: 'paw-print', titre: 'Aucun animal pour l\'instant', texte: 'Ajoutez votre premier compagnon pour suivre ses soins, ses pesées et ses rappels.' })}</div>`}
     </div>`;
 
-  zone.querySelector('[data-act="ajouter"]').addEventListener('click', () => formulaireAnimal(null, rafraichir));
+  zone.querySelector('[data-act]').addEventListener('click', (e) => {
+    if (e.currentTarget.dataset.act === 'soin') ajouterUnSoin(animaux); else formulaireAnimal(null, rafraichir);
+  });
 }

@@ -6,6 +6,8 @@ import { icone } from '../../js/icons.js';
 import { badge, alerte, bouton, champ, avatar } from '../../js/composants.js';
 import { toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
+import { NAV } from '../../js/navigation.js';
+import { echapper } from '../../js/utils.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
   <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">
@@ -13,6 +15,19 @@ const ligne = ({ icone: i, titre, texte, href, bientot }) => `
     <div class="cp-liste__corps"><span class="cp-liste__titre">${titre}</span><span class="cp-liste__meta">${texte}</span></div>
     <div class="cp-liste__fin">${bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : ''}${icone('chevron-right', { taille: 18 })}</div>
   </a></li>`;
+
+/** Les modules à venir : une seule ligne discrète (les pages restent accessibles depuis le menu). */
+function ligneBientot() {
+  const modules = NAV.filter((n) => n.bientot);
+  return `
+    <section class="pg-bientot" aria-labelledby="pf-bientot">
+      <h2 id="pf-bientot">Bientôt sur Carnet Patte</h2>
+      <ul class="pg-bientot__liste">
+        ${modules.map((m) => `<li><a class="pg-bientot__lien" href="${m.href}">${echapper(m.titre)}</a></li>`).join('')}
+        <li><a class="pg-bientot__lien" href="#/bientot">Et d'autres modules</a></li>
+      </ul>
+    </section>`;
+}
 
 export function rendre(zone) {
   zone.classList.add('page-large');
@@ -49,6 +64,8 @@ export function rendre(zone) {
           ${ligne({ icone: 'compass', titre: 'Autres modules à venir', texte: 'Toxique ?, basse-cour, perdus / trouvés, refuges.', href: '#/bientot' })}
         </ul>
       </section>
+
+      ${ligneBientot()}
     </div>`;
 
   zone.querySelector('.pf-form').addEventListener('submit', (e) => {
