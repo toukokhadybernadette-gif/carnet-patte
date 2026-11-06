@@ -5,7 +5,7 @@ import { echapper, formatDate } from '../../js/utils.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, avatar, choix, selecteur, vide, couleurAnimal } from '../../js/composants.js';
-import { infosType, classeType, infosEspece, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
+import { infosType, classeType, infosEspece, badgeEcheance, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
 
 /** Tous les rappels en attente, du plus urgent au plus lointain. */
 export function calculerRappels() {
@@ -74,12 +74,12 @@ function carteHtml({ soin, animal, statut }) {
         ${nom ? `<span class="rp-carte__type">${echapper(categorie)}</span>` : ''}
         <div class="rp-carte__tete">
           <strong class="rp-carte__nom">${echapper(nom || categorie)}</strong>
-          ${badgeSoin(soin)}
         </div>
         <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal) })}<span>${echapper(animal.nom)}</span></a>
         <span class="rp-ligne">${icone(statut ? 'bell' : 'check', { taille: 16 })}<span>${statut ? 'Prévu le' : 'Rappel du'} <time datetime="${soin.rappel}">${formatDate(soin.rappel)}</time>${statut ? '' : ' · traité'}</span></span>
-        <span class="rp-ligne">${icone('calendar', { taille: 16 })}<span>Dernier soin le <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
+        <span class="rp-ligne rp-ligne--dernier">${icone('calendar', { taille: 16 })}<span>Dernier soin le <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
       </div>
+      <div class="rp-carte__etat">${statut ? badgeEcheance(statut) : badgeSoin(soin)}</div>
       <div class="rp-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${quoi}` } }) : ''}
         ${bouton({ texte: 'Voir le soin', variante: 'secondaire', icone: 'chevron-right', taille: 's', href: lienSoin(soin, animal), attrs: { 'aria-label': `Voir le soin ${quoi}` } })}
@@ -101,15 +101,6 @@ function groupeHtml(cle, rappels, limite) {
       <ul class="rp-liste">${visibles.map(carteHtml).join('')}</ul>
       ${reste > 0 ? bouton({ texte: `Afficher ${Math.min(reste, PAS_FAITS)} de plus (${reste} restants)`, variante: 'secondaire', attrs: { 'data-plus': true } }) : ''}
     </section>`;
-}
-
-function chiffreHtml({ libelle, valeur, icone: nomIcone, ton, sous }) {
-  return `
-    <div class="cp-carte cp-stat rp-chiffre rp-chiffre--${ton}" role="group" aria-label="${echapper(libelle)}">
-      <div class="cp-stat__tete"><span>${echapper(libelle)}</span><span class="cp-stat__icone">${icone(nomIcone, { taille: 20 })}</span></div>
-      <span class="cp-stat__valeur">${valeur}</span>
-      <span class="rp-chiffre__sous">${echapper(sous)}</span>
-    </div>`;
 }
 
 export function rendre(zone) {
@@ -146,13 +137,6 @@ export function rendre(zone) {
   zone.innerHTML = `
     <div class="cp pg rp-page">
       ${entete}
-
-      <section class="rp-chiffres" aria-label="Résumé des rappels">
-        ${chiffreHtml({ libelle: 'En retard', valeur: retard, icone: 'bell-ring', ton: 'retard', sous: retard ? 'À faire dès que possible' : 'Aucun retard' })}
-        ${chiffreHtml({ libelle: 'Cette semaine', valeur: parClasse('semaine', enAttente).length, icone: 'clock', ton: 'semaine', sous: 'Sous 7 jours' })}
-        ${chiffreHtml({ libelle: 'Plus tard', valeur: parClasse('plus-tard', enAttente).length, icone: 'calendar', ton: 'plus-tard', sous: 'Au-delà de 7 jours' })}
-        ${chiffreHtml({ libelle: 'Effectués', valeur: faits.length, icone: 'circle-check', ton: 'faits', sous: 'Rappels déjà traités' })}
-      </section>
 
       <div class="rp-outils">
         ${choix({ nom: 'rp-statut', legende: 'Afficher', valeur: filtre.statut, classe: 'rp-statuts', options: STATUTS })}

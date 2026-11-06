@@ -228,7 +228,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-groupe__icone .ic { width: 14px; height: 14px; }
 .rp-liste { list-style: none; margin: 0; padding: 0; background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
 .rp-liste > li + li { border-top: 1px solid var(--cp-bordure); }
-.rp-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.rp-carte { display: grid; grid-template-columns: auto 1fr auto auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .rp-carte--retard { box-shadow: inset 3px 0 0 var(--cp-terre); }
 .rp-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
 .rp-carte__corps { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--cp-espace-2); min-width: 0; }
@@ -242,14 +242,18 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-ligne { display: flex; align-items: center; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); white-space: nowrap; }  /* « Prévu le … » ne passe jamais à la ligne */
 .rp-ligne .ic { display: none; }
 .rp-ligne::before { content: "·"; }
+.rp-carte__etat { display: flex; justify-content: flex-end; }
 .rp-carte__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-2); }
 @media (max-width: 599px) {
-.rp-carte { grid-template-columns: auto 1fr; align-items: start; padding: 10px 12px; }
-.rp-carte__corps { flex-direction: column; align-items: flex-start; row-gap: 2px; }
-.rp-carte__corps > .rp-animal { margin-top: 2px; }
+.rp-carte { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; padding: 10px 12px; }
+.rp-carte__corps { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: var(--cp-espace-2); row-gap: 0; }
+.rp-carte__corps > .rp-carte__type, .rp-carte__corps > .rp-carte__tete { flex-basis: 100%; }
 .rp-ligne::before { content: none; }
-.rp-carte__actions { grid-column: 2; justify-content: flex-start; padding-top: var(--cp-espace-1); }
+.rp-carte__etat { grid-column: 3; grid-row: 1; }
+.rp-carte__actions { grid-column: 2 / -1; justify-content: flex-start; padding-top: var(--cp-espace-1); }
 .rp-carte__actions .cp-btn { flex: 1 1 0; }
+.rp-ligne--dernier { display: none; } /* « Dernier soin le … » est sur la fiche ; sur téléphone la ligne reste courte */
+}
 }
 /* Soin ouvert depuis « Voir le soin » (page Rappels) */
 .sn-carte--cible { background: var(--cp-vert-clair); box-shadow: inset 3px 0 0 var(--cp-foret); }

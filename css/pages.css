@@ -101,3 +101,26 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .secours__etapes { margin: 0; padding-left: var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
 .secours__actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); }
 @media (max-width: 599px) { .secours__actions .cp-btn { width: 100%; } }
+
+/* =========================================================
+   Téléphone : page moins chargée (blocs, marges et espacements réduits ; cibles tactiles de 44 px conservées)
+   ========================================================= */
+@media (max-width: 599px) {
+  .contenu { padding-top: var(--cp-espace-3); }
+  .pg { gap: var(--cp-espace-4); }
+  .pg-section { gap: var(--cp-espace-2); }
+  .pg-entete { gap: 2px; }
+  .cp-carte { padding: var(--cp-espace-3); }
+  .cp-vide { padding: var(--cp-espace-4) var(--cp-espace-3); gap: var(--cp-espace-2); }
+  .cp-vide__icone { width: 44px; height: 44px; }
+  .cp-liste__ligne { padding: 8px 12px; min-height: 48px; }
+  .rp-groupes { gap: var(--cp-espace-4); }
+  .rp-outils { gap: var(--cp-espace-3); }
+  .fi-entete { padding: var(--cp-espace-3); }
+  .fi-avatar { width: 52px; height: 52px; }
+  .fi-chiffres > .fi-chiffre { padding: 8px 12px; }
+  .fi-onglets .cp-onglet-panneau { padding-top: var(--cp-espace-3); }
+  .sn { gap: var(--cp-espace-3); }
+  .ps { gap: var(--cp-espace-3); }
+  .ps-form, .ps-graph { padding: var(--cp-espace-3); }
+}

@@ -67,7 +67,7 @@ verifier(px(await style('.cp-liste', 'backdropFilter')) >= 24 && px(await style(
 verifier(alpha(await style('.cp-liste', 'borderTopColor')) >= 0.8 && (await style('.cp-liste', 'borderTopColor')).startsWith('rgba(255, 255, 255') && parseFloat(await style('.cp-liste', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
 verifier(!/inset 0px 0px 0px 0px/.test(await style('.cp-liste', 'boxShadow')) && (await style('.cp-liste', 'boxShadow')) !== 'none', 'ombre douce');
 await aller2('#/animaux/rappels'); await sleep(800);
-verifier(['.rp-carte', '.rp-chiffre'].every(async (s) => true) && !flou(await style('.rp-carte', 'backdropFilter')) && !flou(await style('.rp-chiffre', 'backdropFilter')), 'pas de flou imbriqué : les lignes de liste et les chiffres d\'une carte à colonnes n\'ont pas de flou propre');
+verifier(!flou(await style('.rp-carte', 'backdropFilter')) && flou(await style('.rp-liste', 'backdropFilter')), 'pas de flou imbriqué : les lignes de rappel n\'ont pas de flou propre, c\'est la liste qui est en verre');
 await aller2('#/animaux/a'); await sleep(800);
 verifier(flou(await style('.fi-entete', 'backdropFilter')) && (await style('.fi-entete', 'boxShadow')).includes('inset'), 'fiche : en-tête en verre, avec son filet de couleur d\'animal conservé');
 await ev(`document.querySelector('[data-act=modifier]').click()`); await sleep(600);

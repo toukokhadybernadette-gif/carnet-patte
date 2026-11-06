@@ -115,6 +115,22 @@ await taille(390, 844); await aller2('#/accueil');
 verifier(await ev(`[...document.querySelectorAll('#barre-haut a')].every(a => a.classList.contains('app-marque')) && !!document.querySelector('#recherche-bouton')`), 'téléphone : barre du haut = logo et recherche seulement');
 await taille(1280, 900);
 
+log('=== ÉTAPE B : barre du bas à 4 onglets, rappels sur téléphone ===');
+await taille(390, 844); await aller2('#/accueil');
+verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,rappels,profil', 'barre du bas : 4 onglets (Accueil, Animaux, Rappels, Profil), plus de Boutique');
+verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique reste dans la section « Bientôt » du menu de gauche');
+await aller2('#/animaux/rappels');
+verifier(await ev(`!document.querySelector('.rp-chiffres')`) && await ev(`document.querySelectorAll('.rp-statuts .rp-nombre').length`) === 4, 'Rappels : plus de carrés de chiffres, les 4 boutons de filtre affichent les nombres');
+const lignesRappel = await ev(`[...document.querySelectorAll('.rp-carte')].map(c => { const nom = c.querySelector('.rp-carte__nom').getBoundingClientRect(); const etat = c.querySelector('.rp-carte__etat').getBoundingClientRect(); const animal = c.querySelector('.rp-animal').getBoundingClientRect(); const date = c.querySelector('.rp-ligne').getBoundingClientRect(); const lh = parseFloat(getComputedStyle(c.querySelector('.rp-carte__nom')).lineHeight); return { nomUneLigne: nom.height <= lh + 1, etatADroite: etat.left > nom.left, animalSousNom: animal.top >= nom.bottom - 1, dateSousNom: date.top >= nom.bottom - 1, dernierCache: getComputedStyle(c.querySelector('.rp-ligne--dernier')).display === 'none' }; })`);
+verifier(lignesRappel.length > 0 && lignesRappel.every((l) => l.nomUneLigne), `390 px : le nom du soin tient sur une seule ligne (${lignesRappel.length} rappels)`);
+verifier(lignesRappel.every((l) => l.etatADroite && l.animalSousNom && l.dateSousNom), 'nom en haut, animal et date en dessous, badge à droite');
+const dansEcran = await ev(`[...document.querySelectorAll('.rp-carte')].every(c => c.scrollWidth <= c.clientWidth + 1) && document.documentElement.scrollWidth <= innerWidth`);
+verifier(dansEcran, 'aucune ligne de rappel ne déborde');
+const hauteurs = await ev(`[...document.querySelectorAll('[data-fait]')].map(b => Math.round(b.getBoundingClientRect().height))`);
+verifier(hauteurs.every((h) => h >= 44), `boutons « Fait » toujours de 44 px minimum (${hauteurs.join(', ')})`);
+await axe('#app', 'Rappels sur téléphone');
+await taille(1280, 900);
+
 log('=== SÉCURITÉ : un prénom piégé s affiche tel quel, sans rien exécuter ===');
 const dialogues = [];
 ws.addEventListener('message', (m) => { const d = JSON.parse(m.data); if (d.method === 'Page.javascriptDialogOpening') { dialogues.push(d.params.message); send('Page.handleJavaScriptDialog', { accept: true }); } });
