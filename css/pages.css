@@ -29,16 +29,12 @@
 
 /* Raccourcis : boutons discrets en ligne ; les modules à venir tiennent sur une ligne de liens */
 .pg-raccourcis { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
-a.cp-carte.pg-tuile, .pg-tuile { display: inline-flex; align-items: center; gap: var(--cp-espace-2); min-height: var(--cp-h-bouton); padding: 0 12px; border-color: var(--cp-bordure-forte); border-radius: var(--cp-rayon-bouton); box-shadow: none; }
-a.cp-carte.pg-tuile:hover { background: var(--cp-surface-2); box-shadow: none; }
-.pg-tuile__icone { display: inline-flex; color: var(--cp-texte-doux); }
+.pg-tuile__icone { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--cp-rayon-champ); background: var(--cp-surface-2); color: var(--cp-foret); }
 .pg-tuile__titre { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-s); color: var(--cp-foret); line-height: var(--cp-interligne-s); }
-.pg-tuile__texte { display: none; }
-.pg-tuile .cp-badge { display: none; }
 
 .pg-raccourcis--utiles .pg-bientot { flex-basis: 100%; }
 .pg-bientot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--cp-espace-4); padding: 0; background: none; box-shadow: none; border: 0; }
-.pg-bientot h3 { margin: 0; font-family: var(--cp-police-texte); font-weight: 400; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.pg-bientot h2 { margin: 0; font-family: var(--cp-police-texte); font-weight: 400; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .pg-bientot__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px var(--cp-espace-4); }
 .pg-bientot__lien { display: inline-flex; align-items: center; min-height: var(--cp-cible-tactile); font-size: var(--cp-taille-s); font-weight: 400; color: var(--cp-texte-doux); text-decoration: underline; text-decoration-color: var(--cp-bordure-forte); text-underline-offset: 3px; }
 .cp .pg-bientot__lien { text-decoration: underline; text-decoration-color: var(--cp-bordure-forte); }

@@ -131,7 +131,7 @@ for (const a of modele.animaux) verifier(listeN.includes(a.nom), `Mes animaux : 
 const rappelsN = await contenu('#/animaux/rappels');
 const manquantsRappels = jetons(vueAncienne.rappels).filter((j) => !retrouve(j, rappelsN));
 verifier(manquantsRappels.length === 0, `Rappels : toutes les dates de l ancienne page sont là ${manquantsRappels.length ? JSON.stringify(manquantsRappels) : ''}`);
-const nbRetardN = await ev(`document.querySelector('#notif-nombre').hidden ? '' : document.querySelector('#notif-nombre').textContent.trim()`);
+const nbRetardN = await ev(`document.querySelector('.app-lateral [data-nav=rappels] [data-retards]').hidden ? '' : document.querySelector('.app-lateral [data-nav=rappels] [data-retards]').textContent.trim()`);
 verifier(nbRetardN === pastilleAncienne, `nombre de rappels en retard identique (ancien « ${pastilleAncienne} », nouveau « ${nbRetardN} »)`);
 for (const id of ids) {
   const nom = modele.animaux.find((a) => a.id === id).nom;

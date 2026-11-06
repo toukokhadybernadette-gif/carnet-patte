@@ -93,10 +93,6 @@ export function construireNavigation() {
     </div>
     <div class="app-haut__actions">
       ${bouton({ variante: 'discret', seul: true, icone: 'search', titre: 'Rechercher', attrs: { class: 'cp-btn cp-btn--discret cp-btn--icone app-bouton-recherche', 'aria-expanded': 'false', id: 'recherche-bouton' } })}
-      <a class="cp-btn cp-btn--discret cp-btn--icone app-notif" href="#/animaux/rappels" id="notif-lien" aria-label="Rappels">
-        ${icone('bell', { taille: 20 })}<span class="cp-compteur" id="notif-nombre" hidden></span>
-      </a>
-      <a class="app-profil" href="#/profil" id="profil-lien" aria-label="Profil">${icone('user', { taille: 20 })}</a>
     </div>`;
 
   el('evitement').addEventListener('click', () => el('contenu').focus());
@@ -113,14 +109,12 @@ export function construireNavigation() {
 export function majProfil() {
   const { prenom } = storage.lireProfil();
   const libelle = prenom ? `Profil de ${prenom}` : 'Profil';
-  const haut = el('profil-lien');
-  haut.setAttribute('aria-label', libelle);
-  haut.innerHTML = prenom ? avatar({ nom: prenom, id: 'profil', petit: true }) : icone('user', { taille: 20 });
   document.querySelectorAll('[data-nav="profil"]').forEach((a) => {
     a.setAttribute('aria-label', libelle);
     a.dataset.etiquette = libelle;
   });
-  // Barre latérale : l'avatar et le prénom remplacent l'icône et le mot « Profil » (la barre du bas garde son icône)
+  // Barre latérale : l'avatar et le prénom remplacent l'icône et le mot « Profil » (la barre du bas garde son icône).
+  // Le Profil et les Rappels ne sont plus répétés dans la barre du haut : ils sont dans le menu (et la barre du bas).
   const lateral = document.querySelector('.app-lateral [data-nav="profil"]');
   lateral.querySelector('.ic, .cp-avatar').outerHTML = prenom ? avatar({ nom: prenom, id: 'profil', petit: true }) : icone('user', { taille: 18 });
   lateral.querySelector('.app-nav__texte').textContent = prenom || 'Profil';
@@ -135,15 +129,11 @@ function ouvrirBientot(ouvert) {
   bloc.querySelector('.app-bientot__titre').setAttribute('aria-expanded', String(ouvert));
 }
 
-// ----- Rappels en retard (cloche) -----
+// ----- Rappels en retard (pastille de l'entrée « Rappels ») -----
 
 export function majRappels() {
   const n = compterEnRetard();
   const libelle = n ? `Rappels : ${n} en retard` : 'Rappels';
-  const pastille = el('notif-nombre');
-  pastille.textContent = n;
-  pastille.hidden = n === 0;
-  el('notif-lien').setAttribute('aria-label', libelle);
   // Entrée « Rappels » de la barre latérale : le nombre est visible, le lien est nommé en entier pour les lecteurs d'écran
   document.querySelectorAll('[data-nav="rappels"]').forEach((a) => {
     a.setAttribute('aria-label', libelle);
@@ -164,10 +154,6 @@ export function majNavigation(seg) {
     const n = NAV.find((x) => x.id === a.dataset.nav);
     if (n.actif(seg)) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
-  if (NAV.find((x) => x.id === 'profil').actif(seg)) el('profil-lien').setAttribute('aria-current', 'page');
-  else el('profil-lien').removeAttribute('aria-current');
-  if (NAV.find((x) => x.id === 'rappels').actif(seg)) el('notif-lien').setAttribute('aria-current', 'page');
-  else el('notif-lien').removeAttribute('aria-current');
   majRappels();
   // Sur la page d'un module à venir, sa section est dépliée pour qu'on voie où l'on est
   if (NAV.some((n) => n.bientot && n.actif(seg))) ouvrirBientot(true);

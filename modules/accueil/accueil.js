@@ -21,19 +21,12 @@ function ligne({ icone: i, titre, meta, fin = '', href }) {
     : `<li class="cp-liste__ligne">${corps}</li>`;
 }
 
-const tuile = ({ icone: i, titre, texte, href, bientot }) => `
-  <a class="cp-carte pg-tuile" href="${href}">
-    <span class="pg-tuile__icone">${icone(i, { taille: 22 })}</span>
-    <span class="pg-tuile__titre">${echapper(titre)}</span>
-    ${bientot ? badge({ texte: 'Bientôt', variante: 'bientot' }) : `<p class="pg-tuile__texte">${echapper(texte)}</p>`}
-  </a>`;
-
 /** Les modules à venir, réunis dans une seule carte (les pages restent accessibles depuis le menu). */
 function blocBientot() {
   const modules = NAV.filter((n) => n.bientot);
   return `
     <section class="cp-carte pg-bientot" aria-labelledby="ac-bientot">
-      <h3 class="pg-tuile__titre" id="ac-bientot">Bientôt sur Carnet Patte</h3>
+      <h2 class="pg-tuile__titre" id="ac-bientot">Bientôt sur Carnet Patte</h2>
       <ul class="pg-bientot__liste">
         ${modules.map((m) => `<li><a class="pg-bientot__lien" href="${m.href}">${icone(m.icone, { taille: 18 })}<span>${echapper(m.titre)}</span></a></li>`).join('')}
         <li><a class="pg-bientot__lien" href="#/bientot">${icone('compass', { taille: 18 })}<span>Et d'autres modules</span></a></li>
@@ -110,12 +103,8 @@ export function rendre(zone) {
         </div>
       </section>
 
-      <section class="pg-section" aria-labelledby="ac-raccourcis">
-        <div class="pg-section__tete"><h2 id="ac-raccourcis" class="cp-sr">Raccourcis</h2></div>
+      <section class="pg-section" aria-label="Modules à venir">
         <div class="pg-raccourcis pg-raccourcis--utiles">
-          ${tuile({ icone: 'paw-print', titre: 'Mes animaux', texte: 'Fiches, soins et pesées', href: '#/animaux' })}
-          ${tuile({ icone: 'bell', titre: 'Rappels', texte: enRetard.length ? `${enRetard.length} en retard` : 'Soins à prévoir', href: '#/animaux/rappels' })}
-          ${tuile({ icone: 'save', titre: 'Sauvegarde', texte: 'Exporter mes données', href: '#/donnees' })}
           ${blocBientot()}
         </div>
       </section>

@@ -26,22 +26,12 @@
 .al-entete { grid-template-columns: 1fr; }
 .al-entete .cp-btn { width: 100%; }
 }
-/* Résumé des rappels */
-a.cp-carte.al-rappels { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: start; box-shadow: inset 3px 0 0 var(--cp-ambre), var(--cp-ombre-s); }
-a.cp-carte.al-rappels--retard { box-shadow: inset 3px 0 0 var(--cp-terre), var(--cp-ombre-s); }
-.al-rappels__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-champ); background: var(--cp-ambre-pale); color: var(--cp-ambre); }
-.al-rappels--retard .al-rappels__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
-.al-rappels__corps { display: grid; gap: 2px; min-width: 0; }
-.al-rappels__titre { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); }
-.al-rappels__sous { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
-.al-rappels ul { list-style: none; margin: var(--cp-espace-3) 0 0; padding: 0; display: grid; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); }
-.al-rappels li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
-.al-rappels .al-rappels__autres { color: var(--cp-texte-doux); font-weight: 500; }
-.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; font-size: var(--cp-taille-s); font-weight: 500; color: var(--cp-foret); white-space: nowrap; align-self: center; }
-@media (max-width: 599px) {
-a.cp-carte.al-rappels { grid-template-columns: auto 1fr; }
-.al-rappels__lien { grid-column: 2; justify-self: start; }
-}
+/* Résumé des rappels : une ligne discrète */
+.al-rappels { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.al-rappels strong { font-weight: 500; color: var(--cp-texte); }
+.al-rappels--retard > .ic { color: var(--cp-terre); }
+.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; min-height: var(--cp-cible-tactile); font-weight: 500; color: var(--cp-foret); white-space: nowrap; }
+@media (min-width: 600px) { .al-rappels__lien { min-height: 28px; } }
 /* Bandeau des exemples */
 .al-exemples { align-items: center; flex-wrap: wrap; }
 .al-exemples .cp-alerte__texte { flex: 1 1 220px; }

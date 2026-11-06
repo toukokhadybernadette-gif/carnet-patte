@@ -59,10 +59,10 @@ await aller2('#/accueil');
 log('ACCUEIL — liste des rappels :', await badges('#ac-rappels ~ .cp-liste .cp-badge, section[aria-labelledby=ac-rappels] .cp-badge'));
 log('  carte du rappel le plus urgent :', await ev(`(()=>{const c=[...document.querySelectorAll('.cp-stat')][2];return c.innerText.replace(/\\s+/g,' ').trim()})()`));
 log('  ordre des animaux :', await ev(`[...document.querySelectorAll('section[aria-labelledby=ac-animaux] .cp-carte-animal__nom')].map(n=>n.textContent).join(', ')`));
-log('  raccourcis :', await ev(`[...document.querySelectorAll('.pg-raccourcis--utiles > a .pg-tuile__titre')].map(t=>t.textContent).join(', ')`), '| carte Bientôt :', await texte('.pg-bientot'), '| liens :', await ev(`[...document.querySelectorAll('.pg-bientot a')].map(a=>a.getAttribute('href')).join(' ')`));
+log('  boutons répétant le menu (doivent avoir disparu) :', await ev(`document.querySelectorAll('.pg-tuile').length`), '| carte Bientôt :', await texte('.pg-bientot'), '| liens :', await ev(`[...document.querySelectorAll('.pg-bientot a')].map(a=>a.getAttribute('href')).join(' ')`));
 await aller2('#/animaux');
 log('MES ANIMAUX — résumé :', await texte('.al-rappels'));
-log('  badges :', await badges('.al-rappels .cp-badge'), '| ordre :', await ev(`[...document.querySelectorAll('[data-grille] .cp-carte-animal__nom')].map(n=>n.textContent).join(', ')`));
+log('  lien vers les rappels :', await ev(`document.querySelector('.al-rappels a')?.getAttribute('href')`), '| ordre :', await ev(`[...document.querySelectorAll('[data-grille] .cp-carte-animal__nom')].map(n=>n.textContent).join(', ')`));
 await aller2('#/animaux/' + idMoka);
 log('FICHE MOKA — chiffre :', await ev(`document.querySelectorAll('.fi-chiffre')[2].innerText.replace(/\\s+/g,' ')`));
 log('  soins :', await ev(`[...document.querySelectorAll('.sn-carte')].map(c=>c.querySelector('.sn-carte__type')?.textContent??'(aucune petite catégorie)'+' / '+c.querySelector('.sn-carte__nom').textContent+' / '+c.querySelector('.cp-badge').className.split('--')[1]).join(' || ')`));
@@ -74,9 +74,9 @@ log('FICHE MIMI — chiffre :', await ev(`document.querySelectorAll('.fi-chiffre
 
 // ===== 2. Navigation
 await aller2('#/animaux/rappels');
-log('NAV ordinateur sur Rappels :', await nav(), '| badge =', await ev(`(()=>{const c=document.querySelector('[data-nav=rappels] [data-retards]');return c.hidden?'masqué':c.textContent})()`), '| nom du lien =', await ev(`document.querySelector('[data-nav=rappels]').getAttribute('aria-label')`), '| cloche active =', await ev(`document.querySelector('#notif-lien').getAttribute('aria-current')`));
+log('NAV ordinateur sur Rappels :', await nav(), '| badge =', await ev(`(()=>{const c=document.querySelector('[data-nav=rappels] [data-retards]');return c.hidden?'masqué':c.textContent})()`), '| nom du lien =', await ev(`document.querySelector('[data-nav=rappels]').getAttribute('aria-label')`), '| entrée Rappels du menu active =', await ev(`document.querySelector('.app-lateral [data-nav=rappels]').getAttribute('aria-current')`));
 await clip('nav-ordinateur', '#barre-laterale', 900);
-for (const [h, nom] of [['#/animaux', 'Mes animaux'], ['#/animaux/' + idMoka, 'fiche'], ['#/accueil', 'Accueil']]) { await aller2(h); log('  sur', nom, ':', await nav(), '| cloche active =', await ev(`document.querySelector('#notif-lien').getAttribute('aria-current')`)); }
+for (const [h, nom] of [['#/animaux', 'Mes animaux'], ['#/animaux/' + idMoka, 'fiche'], ['#/accueil', 'Accueil']]) { await aller2(h); log('  sur', nom, ':', await nav(), '| entrée Rappels du menu active =', await ev(`document.querySelector('.app-lateral [data-nav=rappels]').getAttribute('aria-current')`)); }
 // clavier : Tab depuis « Mes animaux » arrive sur « Rappels »
 await ev(`document.querySelector('[data-nav=animaux]').focus()`); await touche('Tab', 'Tab', 9);
 log('  clavier : Tab après « Mes animaux » =', await ev(`document.activeElement.dataset.nav`), '| Entrée ->', await (async () => { await touche('Enter', 'Enter', 13); await sleep(500); return ev(`location.hash`); })());
@@ -84,7 +84,7 @@ await taille(820, 1000); await aller2('#/animaux/rappels'); await sleep(200);
 log('NAV tablette (barre réduite) :', await nav(), '| compteur visible =', await ev(`(()=>{const c=document.querySelector('[data-nav=rappels] [data-retards]');const b=c.getBoundingClientRect();return !c.hidden&&b.width>0&&getComputedStyle(c).position})()`), '| info-bulle =', await ev(`document.querySelector('[data-nav=rappels]').dataset.etiquette`));
 await clip('nav-tablette', '#barre-laterale', 600);
 await taille(390, 844); await aller2('#/animaux/rappels'); await sleep(200);
-log('NAV mobile : barre du bas =', await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav+(a.getAttribute('aria-current')?'*':'')).join(' ')`), '| cloche active =', await ev(`document.querySelector('#notif-lien').getAttribute('aria-current')`), '| cloche :', await ev(`document.querySelector('#notif-lien').getAttribute('aria-label')`));
+log('NAV mobile : barre du bas =', await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav+(a.getAttribute('aria-current')?'*':'')).join(' ')`), '| Rappels (barre du bas) actif =', await ev(`document.querySelector('#nav-bas [data-nav=rappels]').getAttribute('aria-current')`), '| nom :', await ev(`document.querySelector('#nav-bas [data-nav=rappels]').getAttribute('aria-label')`));
 await ecran('nav-mobile-rappels');
 await taille(1280, 900);
 
@@ -111,7 +111,7 @@ await ev(`document.querySelector('[data-fait="${idVerm}"]').click()`); await sle
 await ev(`document.querySelector('dialog form').requestSubmit()`); await sleep(600);
 const d1 = await donnees();
 log('  « C\'est fait » (Non) : seul rappelFait du vermifuge change =', JSON.stringify(d0.soins.map((s) => s.id === idVerm ? { ...s, rappelFait: true } : s)) === JSON.stringify(d1.soins), '| animaux/pesées intacts =', JSON.stringify(d0.animaux) === JSON.stringify(d1.animaux) && JSON.stringify(d0.pesees) === JSON.stringify(d1.pesees));
-log('  menu : badge Rappels =', await ev(`(()=>{const c=document.querySelector('[data-nav=rappels] [data-retards]');return c.hidden?'masqué':c.textContent})()`), '| nom =', await ev(`document.querySelector('[data-nav=rappels]').getAttribute('aria-label')`), '| cloche =', await ev(`document.querySelector('#notif-nombre').hidden?'masquée':'visible'`));
+log('  menu : badge Rappels =', await ev(`(()=>{const c=document.querySelector('[data-nav=rappels] [data-retards]');return c.hidden?'masqué':c.textContent})()`), '| nom =', await ev(`document.querySelector('[data-nav=rappels]').getAttribute('aria-label')`), '| barre du haut sans cloche =', await ev(`!document.querySelector('#notif-lien')`));
 await aller2('#/accueil');
 log('  accueil sans retard :', await ev(`[...document.querySelectorAll('.cp-stat')][2].innerText.replace(/\\s+/g,' ').trim()`));
 await aller2('#/animaux'); log('  mes animaux :', await texte('.al-rappels'));

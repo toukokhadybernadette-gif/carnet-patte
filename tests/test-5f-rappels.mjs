@@ -66,7 +66,7 @@ const statut = async (v) => { await ev(`document.querySelector('input[name="rp-s
 const animal = async (v) => { await ev(`(()=>{const s=document.querySelector('#rp-animal');s.value='${v}';s.dispatchEvent(new Event('change',{bubbles:true}))})()`); await sleep(150); };
 const pastilles = () => ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option span')].map(s=>s.textContent.replace(/\\s+/g,' ').trim()).join(' / ')`);
 const chiffres = () => ev(`[...document.querySelectorAll('.rp-chiffre')].map(c=>c.getAttribute('aria-label')+'='+c.querySelector('.cp-stat__valeur').textContent).join(' ')`);
-const badgeNav = () => ev(`(document.querySelector('#notif-lien')?.textContent||'').replace(/\\s+/g,' ').trim()`);
+const badgeNav = () => ev(`(()=>{const c=document.querySelector('.app-lateral [data-nav=rappels] [data-retards]');return c.hidden?'':c.textContent.trim()})()`);
 
 // ===== 1. Affichage sur les trois formats
 const d0 = await donnees();

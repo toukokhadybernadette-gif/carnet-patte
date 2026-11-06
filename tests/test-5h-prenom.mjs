@@ -52,7 +52,7 @@ verifier(await ev(`import('/js/storage.js').then(m=>JSON.stringify(m.lireProfil(
 verifier((await donnees()).animaux.length === 1, 'animal importé');
 await aller2('#/accueil');
 verifier(await texte('h1') === 'Bonjour', 'Accueil sans prénom : « Bonjour » tout court');
-verifier(await ev(`document.querySelector('#profil-lien').getAttribute('aria-label')`) === 'Profil', 'lien Profil sans prénom');
+verifier(await ev(`document.querySelector('.app-lateral [data-nav=profil]').getAttribute('aria-label')`) === 'Profil', 'lien Profil (menu) sans prénom');
 
 log('=== PROFIL : saisie du prénom ===');
 const saisir = async (valeur) => { await aller2('#/profil'); await ev(`(()=>{const f=document.querySelector('.pf-form');f.prenom.value=${JSON.stringify(valeur)};f.requestSubmit();})()`); await sleep(500); };
@@ -66,9 +66,22 @@ verifier(await texte('h1') === 'Bonjour Léa <b>' && await ev(`!document.querySe
 await saisir('Léa');
 await aller2('#/accueil');
 verifier(await texte('h1') === 'Bonjour Léa', 'Accueil avec prénom : « Bonjour Léa »');
-verifier(await ev(`document.querySelector('#profil-lien').getAttribute('aria-label')`) === 'Profil de Léa', 'lien Profil : « Profil de Léa »');
+verifier(await ev(`document.querySelector('.app-lateral [data-nav=profil]').getAttribute('aria-label')`) === 'Profil de Léa', 'lien Profil (menu) : « Profil de Léa »');
 verifier(await texte('.app-lateral [data-nav=profil] .app-nav__texte') === 'Léa', 'barre latérale : le prénom remplace « Profil »');
 await ecran('accueil-prenom');
+
+log('=== DOUBLONS SUPPRIMÉS (étape 1) ===');
+await taille(1280, 900); await aller2('#/accueil');
+verifier(await ev(`!document.querySelector('#notif-lien') && !document.querySelector('#profil-lien') && document.querySelectorAll('#barre-haut a[href="#/profil"], #barre-haut a[href="#/animaux/rappels"]').length === 0`), 'barre du haut : plus de cloche ni d icône profil');
+verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=rappels]') && !!document.querySelector('.app-lateral [data-nav=profil]') && !!document.querySelector('#nav-bas [data-nav=rappels]') && !!document.querySelector('#nav-bas [data-nav=profil]')`), 'Rappels et Profil restent dans le menu de gauche et dans la barre du bas');
+verifier(await ev(`document.querySelectorAll('.pg-tuile').length === 0 && ![...document.querySelectorAll('#contenu a')].some(a => ['Mes animaux','Rappels','Sauvegarde'].includes(a.textContent.trim()) && a.closest('.pg-raccourcis'))`), 'Accueil : plus de boutons Mes animaux / Rappels / Sauvegarde');
+verifier(await ev(`!!document.querySelector('.pg-bientot')`), 'Accueil : la ligne « Bientôt » est conservée');
+await importer(JSON.stringify({ ...JSON.parse(ancienExport), soins: [{ id: 's1', animalId: 'a', type: 'vermifuge', titre: '', date: '2025-01-01', notes: '', rappel: '2025-02-01', rappelFait: false }] }));
+await aller2('#/animaux');
+verifier(await ev(`(()=>{const l=document.querySelector('.al-rappels');return !!l && !l.classList.contains('cp-carte') && l.getBoundingClientRect().height < 60 && l.querySelector('a').getAttribute('href') === '#/animaux/rappels'})()`), 'Mes animaux : une petite ligne avec un lien vers Rappels (plus de gros bloc)');
+await taille(390, 844); await aller2('#/accueil');
+verifier(await ev(`[...document.querySelectorAll('#barre-haut a')].every(a => a.classList.contains('app-marque')) && !!document.querySelector('#recherche-bouton')`), 'téléphone : barre du haut = logo et recherche seulement');
+await taille(1280, 900);
 
 log('=== SÉCURITÉ : un prénom piégé s affiche tel quel, sans rien exécuter ===');
 const dialogues = [];
@@ -83,7 +96,7 @@ for (const piege of ['<img src=x onerror=alert(1)>', '<img src=x onerror="window
   verifier(profil.champ === piege, '  page Profil : le champ contient exactement le texte saisi');
   verifier(profil.avatar.length <= 3, '  page Profil : l avatar n affiche que des initiales, en texte');
   await aller2('#/accueil');
-  const accueil = await ev(`({ h1: document.querySelector('h1').textContent, avatarHaut: document.querySelector('#profil-lien .cp-avatar')?.textContent, labelHaut: document.querySelector('#profil-lien').getAttribute('aria-label'), lateral: document.querySelector('.app-lateral [data-nav=profil] .app-nav__texte').textContent, labelLateral: document.querySelector('.app-lateral [data-nav=profil]').getAttribute('aria-label') })`);
+  const accueil = await ev(`({ h1: document.querySelector('h1').textContent, avatarHaut: document.querySelector('.app-lateral [data-nav=profil] .cp-avatar')?.textContent, labelHaut: document.querySelector('#nav-bas [data-nav=profil]').getAttribute('aria-label'), lateral: document.querySelector('.app-lateral [data-nav=profil] .app-nav__texte').textContent, labelLateral: document.querySelector('.app-lateral [data-nav=profil]').getAttribute('aria-label') })`);
   verifier(accueil.h1 === 'Bonjour ' + piege.replace(/\s+/g, ' ').trim().slice(0, 40), '  Accueil : titre « Bonjour » + le texte tel quel');
   verifier(accueil.avatarHaut.length <= 3 && accueil.lateral === piege.slice(0, 40) && accueil.labelHaut === 'Profil de ' + piege.slice(0, 40) && accueil.labelLateral === accueil.labelHaut, '  avatar du haut, barre latérale et noms accessibles : texte uniquement');
   const balises = await ev(`document.querySelectorAll('img[src="x"], svg[onload], [onerror], [onload]').length`);
