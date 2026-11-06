@@ -154,7 +154,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .sn-carte__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
 .sn-carte__actions .cp-btn--secondaire.cp-btn--icone:hover { background: var(--cp-surface-2); color: var(--cp-texte); }
 @media (max-width: 599px) {
-.sn-carte, .sn-liste > .cp-carte { grid-template-columns: auto 1fr; align-items: start; padding: 10px 12px; }
+.sn-carte { grid-template-columns: auto 1fr; align-items: start; padding: 10px 12px; }
 .sn-carte__actions { grid-column: 2; justify-content: space-between; padding-top: var(--cp-espace-1); }
 .sn-carte__actions .cp-btn:not(.cp-btn--icone) { margin-right: auto; }
 }

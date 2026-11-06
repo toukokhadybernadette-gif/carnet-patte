@@ -326,18 +326,42 @@ export function confirmer({ titre, message, libelle = 'Confirmer', danger = true
  */
 export function activerOnglets(racine) {
   const onglets = [...racine.querySelectorAll('[role="tab"]')];
-  const activer = (cible, donnerFocus = false) => {
+  // Trait sous l'onglet actif : il glisse d'un onglet à l'autre (décor, caché aux lecteurs d'écran)
+  const bande = racine.querySelector('[role="tablist"]');
+  const trait = document.createElement('span');
+  trait.className = 'cp-onglets__trait';
+  trait.setAttribute('aria-hidden', 'true');
+  bande.append(trait);
+  let courant = null;
+  const placer = (o) => {
+    trait.style.setProperty('--x', `${o.offsetLeft}px`);
+    trait.style.setProperty('--l', `${o.offsetWidth}px`);
+  };
+  new ResizeObserver(() => { if (courant) placer(courant); }).observe(bande); // la largeur change (téléphone, rotation…)
+
+  const activer = (cible, donnerFocus = false, animer = false) => {
+    courant = cible;
     onglets.forEach((o) => {
       const actif = o === cible;
       o.setAttribute('aria-selected', String(actif));
       o.tabIndex = actif ? 0 : -1;
       const panneau = racine.querySelector(`#${o.getAttribute('aria-controls')}`);
-      if (panneau) panneau.hidden = !actif;
+      if (panneau) {
+        panneau.hidden = !actif;
+        // le panneau apparaît en fondu quand l'utilisateur change d'onglet (pas au premier affichage de la page)
+        if (actif && animer) {
+          panneau.classList.remove('cp-entree');
+          void panneau.offsetWidth; // relance l'animation si on revient sur le même onglet
+          panneau.classList.add('cp-entree');
+          panneau.addEventListener('animationend', () => panneau.classList.remove('cp-entree'), { once: true });
+        }
+      }
     });
+    placer(cible);
     if (donnerFocus) cible.focus();
   };
   onglets.forEach((o, i) => {
-    o.addEventListener('click', () => activer(o));
+    o.addEventListener('click', () => activer(o, false, true));
     o.addEventListener('keydown', (e) => {
       const actifs = onglets.filter((x) => !x.disabled);
       const pos = actifs.indexOf(o);
@@ -346,10 +370,11 @@ export function activerOnglets(racine) {
       else if (e.key === 'ArrowLeft') suivant = actifs[(pos - 1 + actifs.length) % actifs.length];
       else if (e.key === 'Home') suivant = actifs[0];
       else if (e.key === 'End') suivant = actifs[actifs.length - 1];
-      if (suivant) { e.preventDefault(); activer(suivant, true); }
+      if (suivant) { e.preventDefault(); activer(suivant, true, true); }
     });
   });
   activer(onglets.find((o) => o.getAttribute('aria-selected') === 'true') ?? onglets[0]);
+  requestAnimationFrame(() => trait.classList.add('is-pret')); // pas de glissement au tout premier placement
 }
 
 /** Boutons-filtres à bascule : chaque clic inverse aria-pressed. `quandChange(valeursActives)` est facultatif. */

@@ -16,9 +16,14 @@
   <link rel="stylesheet" href="css/pages.css">
   <!-- Un fichier de styles par module -->
   <link rel="stylesheet" href="modules/animaux/animaux.css">
+  <!-- Effet verre : chargé en dernier (retirer cette ligne et .app-fond pour revenir à l'aspect précédent) -->
+  <link rel="stylesheet" href="css/verre.css">
 </head>
 <body>
   <button type="button" class="app-evitement" id="evitement">Aller au contenu</button>
+
+  <!-- Grandes bulles de couleur floues derrière l'appli (décor : css/verre.css) -->
+  <div class="app-fond" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 
   <div class="app" id="app">
     <!-- Barre latérale (tablette et ordinateur), barre du haut et barre du bas sont construites par js/navigation.js -->

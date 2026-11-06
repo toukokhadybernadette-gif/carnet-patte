@@ -398,7 +398,6 @@ body:has(dialog[open]) { overflow: hidden; }
 }
 .cp-onglet:hover:not(:disabled):not([aria-selected="true"]) { background: var(--cp-fond-survol); color: var(--cp-foret); }
 .cp-onglet[aria-selected="true"] { color: var(--cp-foret); font-weight: 600; }
-.cp-onglet[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--cp-foret); }
 .cp-onglet:disabled { color: var(--cp-desactive-texte); cursor: not-allowed; }
 .cp-onglet-panneau { padding-top: var(--cp-espace-4); }
 

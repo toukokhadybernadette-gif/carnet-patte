@@ -19,6 +19,7 @@ import { ajouterExemples } from '../modules/animaux/exemples.js';
 import { rendre as rendreDonnees } from './donnees.js';
 import { rendre as rendreBientot } from './bientot.js';
 import { afficherSecours } from './secours.js';
+import { mesurerEtAdapter } from './fond.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
 
 // ----- Routes -----
@@ -46,4 +47,7 @@ if (etatDonnees) {
 
   // ----- Démarrage -----
   demarrer(document.getElementById('contenu'), majNavigation);
+
+  // ----- Décor animé : figé automatiquement si l'appareil a du mal à le jouer (js/fond.js) -----
+  mesurerEtAdapter();
 }

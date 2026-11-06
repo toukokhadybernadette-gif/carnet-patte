@@ -35,7 +35,7 @@
 
   /* ----- Texte (contrastes mesurés WCAG) ----- */
   --cp-texte: #243D35;        /* 10,7:1 sur --cp-fond */
-  --cp-texte-doux: #5B6B63;   /* 5,2:1 sur --cp-fond */
+  --cp-texte-doux: #46544C;   /* 7,2:1 sur --cp-fond ; assombri pour rester lisible (>= 4,5:1) même sur les bulles de couleur de l'effet verre */
   --cp-texte-inverse: #FFFFFF;/* 11,7:1 sur --cp-foret */
 
   /* ----- Bordures ----- */
@@ -43,7 +43,7 @@
   --cp-bordure-forte: #C9D3C4;  /* contour des boutons secondaires */
 
   /* ----- États fonctionnels (alertes) : terre cuite et ambre, harmonisés avec la palette ----- */
-  --cp-terre: #9A4330;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
+  --cp-terre: #8E3D2B;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
   --cp-terre-pale: #F6E3DC;   /* fond du badge : texte --cp-terre dessus = 5,3:1 */
   --cp-ambre: #7A4F0F;        /* texte « bientôt », attention : 6,5:1 sur --cp-fond */
   --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
@@ -59,7 +59,7 @@
   --cp-placeholder: #6B7973;      /* texte indicatif : 4,6:1 sur blanc */
   --cp-desactive-fond: #E6E9E1;
   --cp-desactive-texte: #66726B;
-  --cp-terre-survol: #7F3525;     /* bouton danger survolé */
+  --cp-terre-survol: #6F2D1F;     /* bouton danger survolé */
   --cp-info: #2B5560;             /* information : bleu-vert sourd, 6,7:1 sur son fond pâle */
   --cp-info-pale: #DDEBEA;
   --cp-focus: #243D35;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
@@ -103,9 +103,9 @@
   --cp-interligne-titre: 1.2;
 
   /* ----- Formes ----- */
-  --cp-rayon-carte: 12px;     /* cartes */
-  --cp-rayon-bouton: 8px;     /* boutons */
-  --cp-rayon-champ: 8px;      /* champs de formulaire */
+  --cp-rayon-carte: 16px;     /* cartes */
+  --cp-rayon-bouton: 10px;    /* boutons */
+  --cp-rayon-champ: 10px;     /* champs de formulaire */
   --cp-rayon-pastille: 999px;
 
   /* ----- Ombres : surtout des filets ; l'ombre distingue les niveaux ----- */

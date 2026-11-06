@@ -1,0 +1,143 @@
+/* ===== Effet verre (amélioration 3) =====
+   Cartes, menus, barres et fenêtres en verre dépoli : fond semi-transparent, flou (backdrop-filter), fine bordure claire,
+   ombre douce, coins arrondis. Derrière : quelques grandes bulles de couleur très floues qui dérivent lentement (.app-fond).
+   Ce fichier est chargé en dernier : pour revenir à l'ancien aspect, il suffit de retirer son <link> dans index.html.
+   LISIBILITÉ : le fond du verre est blanc à 78 % ; les bulles ne dépassent jamais 55 % d opacité. Le texte courant garde au
+   moins 4,5:1 même dans le pire cas (mesuré : tests/test-verre.mjs).
+   PERFORMANCE : le flou n'est appliqué qu'aux grandes surfaces (jamais à chaque ligne d'une liste), il est réduit sur
+   téléphone, et les bulles sont figées si « réduire les animations » est activé. */
+
+:root {
+  --cp-verre-fond: rgba(255, 255, 255, .78);
+  --cp-verre-fond-fort: rgba(255, 255, 255, .88);
+  --cp-verre-bordure: rgba(255, 255, 255, .75);
+  --cp-verre-flou: 18px;
+  --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .7), 0 0 0 1px rgba(36, 61, 53, .05), 0 8px 28px rgba(36, 61, 53, .08);
+  --cp-verre-barre-haut: rgba(246, 245, 240, .66);
+  --cp-verre-barre-laterale: rgba(255, 255, 255, .56);
+  --cp-verre-barre-bas: rgba(255, 255, 255, .76);
+  --cp-verre-fenetre: rgba(255, 255, 255, .88);
+  --cp-verre-menu: rgba(255, 255, 255, .94);
+}
+@media (max-width: 599px) {
+  :root { --cp-verre-flou: 12px; }
+}
+/* Sans backdrop-filter : fonds presque pleins, pour que le texte reste lisible partout */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --cp-verre-fond: rgba(255, 255, 255, .96);
+    --cp-verre-barre-haut: #F6F5F0;
+    --cp-verre-barre-laterale: #EFF1EA;
+    --cp-verre-barre-bas: #FFFFFF;
+    --cp-verre-fenetre: #FFFFFF;
+    --cp-verre-menu: #FFFFFF;
+  }
+}
+
+/* ---------- Fond : bulles de couleur floues qui dérivent très lentement ---------- */
+html { background: var(--cp-fond); }
+body { background: transparent; }
+.app { background: transparent; position: relative; z-index: 0; }
+
+.app-fond { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.app-fond span {
+  position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--bulle) 0%, transparent 68%);
+  will-change: transform; animation: app-bulle var(--duree) ease-in-out infinite alternate;
+}
+.app-fond span:nth-child(1) { --bulle: rgba(168, 191, 165, .55); --duree: 86s; --dx: 16vw;  --dy: 12vh;  top: -24vmax; left: -20vmax; }
+.app-fond span:nth-child(2) { --bulle: rgba(156, 192, 224, .52); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
+.app-fond span:nth-child(3) { --bulle: rgba(242, 201, 160, .50); --duree: 94s; --dx: 18vw;  --dy: -14vh; bottom: -26vmax; left: -14vmax; }
+.app-fond span:nth-child(4) { --bulle: rgba(199, 180, 230, .48); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
+.bulles-figees .app-fond span { animation: none; } /* ajouté par js/fond.js si l'appareil peine à animer le décor */
+@keyframes app-bulle { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(var(--dx), var(--dy), 0) scale(1.14); } }
+
+/* ---------- Surfaces en verre ---------- */
+/* Une carte, sauf les lignes d'une liste et les chiffres d'une carte à colonnes (elles sont DANS un verre : pas de flou imbriqué) */
+.cp-carte:where(:not(.cp-stat, .sn-carte, .rp-carte, .ps-carte, .pg-bientot)),
+.cp-liste, .sn-liste, .rp-liste, .pg-stats, .fi-chiffres, .rp-chiffres, .cp-tableau-enveloppe {
+  background: var(--cp-verre-fond);
+  -webkit-backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.4);
+  backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.4);
+  border: 1px solid var(--cp-verre-bordure);
+  box-shadow: var(--cp-verre-ombre);
+}
+.fi-entete { box-shadow: inset 0 3px 0 var(--an-trait, transparent), var(--cp-verre-ombre); } /* le filet de la couleur de l'animal est gardé */
+/* Cartes d'animaux : plusieurs à l'écran, donc un flou plus léger ; aucun flou sur téléphone */
+.cp-carte.cp-carte-animal { -webkit-backdrop-filter: blur(10px) saturate(1.3); backdrop-filter: blur(10px) saturate(1.3); }
+@media (max-width: 599px) {
+  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .88); }
+}
+a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88)); }
+
+/* Barres */
+.app-haut {
+  background: var(--cp-verre-barre-haut);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid var(--cp-verre-bordure);
+  box-shadow: 0 1px 0 rgba(36, 61, 53, .05);
+}
+.app-lateral {
+  background: var(--cp-verre-barre-laterale);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  border-right: 1px solid var(--cp-verre-bordure);
+}
+.app-nav-bas {
+  background: var(--cp-verre-barre-bas);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid var(--cp-verre-bordure);
+  box-shadow: 0 -1px 0 rgba(36, 61, 53, .05);
+}
+.app-recherche__liste {
+  background: var(--cp-verre-menu);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--cp-verre-bordure); border-radius: 16px; box-shadow: var(--cp-verre-ombre);
+}
+
+/* Fenêtres */
+.cp-modale {
+  background: var(--cp-verre-fenetre);
+  -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5);
+  border: 1px solid var(--cp-verre-bordure); border-radius: 22px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(36, 61, 53, .22);
+}
+.cp-modale::backdrop { background: rgba(36, 61, 53, .30); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+/* Les champs restent bien blancs : c'est là qu'on lit ce qu'on tape */
+.cp-input, .cp-select, .cp-textarea { background-color: rgba(255, 255, 255, .94); }
+
+/* ---------- Mouvement ---------- */
+/* Apparition des pages : la page se fond, puis ses blocs montent doucement l'un après l'autre */
+.contenu > div.page-entree { animation: app-fondu .28s var(--cp-courbe) both; }
+.contenu > div.page-entree .pg > * { animation: app-monte .3s var(--cp-courbe) both; }
+.contenu > div.page-entree .pg > :nth-child(2) { animation-delay: 30ms; }
+.contenu > div.page-entree .pg > :nth-child(3) { animation-delay: 60ms; }
+.contenu > div.page-entree .pg > :nth-child(4) { animation-delay: 90ms; }
+.contenu > div.page-entree .pg > :nth-child(5) { animation-delay: 120ms; }
+.contenu > div.page-entree .pg > :nth-child(6) { animation-delay: 150ms; }
+.contenu > div.page-entree .pg > :nth-child(n+7) { animation-delay: 180ms; }
+@keyframes app-fondu { from { opacity: 0; } to { opacity: 1; } }
+@keyframes app-monte { from { opacity: 0; transform: translateY(12px) scale(.992); } to { opacity: 1; transform: none; } }
+
+/* Boutons : légère élévation au survol, enfoncement au clic */
+.cp-btn:hover:not(:disabled):not([aria-disabled="true"]) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(36, 61, 53, .14); }
+.cp-btn--discret:hover:not(:disabled):not([aria-disabled="true"]) { box-shadow: none; }
+.cp-btn:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(.97); box-shadow: none; }
+.cp-filtre:active:not(:disabled), .cp-couleur:active { transform: scale(.97); }
+.cp-filtre, .cp-couleur { transition: background-color var(--cp-duree-rapide) var(--cp-courbe), border-color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-duree-rapide) var(--cp-courbe); }
+a.cp-carte:hover { transform: translateY(-2px); }
+
+/* Onglets : le trait se déplace d'un onglet à l'autre, le panneau apparaît en fondu */
+.cp-onglets { position: relative; }
+.cp-onglets__trait { position: absolute; left: 0; bottom: 0; height: 2px; width: var(--l, 0); transform: translateX(var(--x, 0)); background: var(--cp-foret); border-radius: 2px; pointer-events: none; }
+.cp-onglets__trait.is-pret { transition: transform .34s var(--cp-courbe), width .34s var(--cp-courbe); }
+.cp-onglet-panneau.cp-entree { animation: app-monte .3s var(--cp-courbe) both; }
+
+/* ---------- « Réduire les animations » : tout est immobile ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app-fond span { animation: none; }
+  .contenu > div.page-entree, .contenu > div.page-entree .pg > *, .cp-onglet-panneau.cp-entree { animation: none; }
+  .cp-btn:hover:not(:disabled):not([aria-disabled="true"]), .cp-btn:active:not(:disabled):not([aria-disabled="true"]),
+  .cp-filtre:active:not(:disabled), .cp-couleur:active, a.cp-carte:hover { transform: none; }
+  .cp-onglets__trait.is-pret { transition: none; }
+}
