@@ -8,7 +8,7 @@ import { icone } from '../../js/icons.js';
 import { bouton, badge, vide, activerOnglets, avatar, couleurAnimal } from '../../js/composants.js';
 import { infosEspece, nomEspece, infosType, classeType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
-import { formulaireAnimal } from './animaux.js';
+import { formulaireAnimal, choisirCouleur } from './animaux.js';
 import * as soins from './soins.js';
 import * as pesees from './pesees.js';
 
@@ -26,7 +26,9 @@ const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
 function avatarGrand(animal) {
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
-  return avatar({ grand: true, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal), icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
+  const rond = avatar({ grand: true, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal), icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
+  // Un clic sur l'avatar ouvre le choix de la couleur (le crayon montre qu'on peut le modifier)
+  return `<button type="button" class="fi-avatar-bouton" data-act="couleur" aria-label="Changer la couleur de ${echapper(animal.nom)}" title="Changer la couleur">${rond}<span class="fi-avatar-bouton__crayon" aria-hidden="true">${icone('palette', { taille: 14 })}</span></button>`;
 }
 
 // ----- Données de l'animal (toujours filtrées sur son identifiant) -----
@@ -266,7 +268,9 @@ export function rendre(zone, id, soinCible = '') {
   zone.querySelector('.fi-entete').addEventListener('click', async (e) => {
     const declencheur = e.target.closest('[data-act]');
     if (!declencheur) return;
-    if (declencheur.dataset.act === 'modifier') {
+    if (declencheur.dataset.act === 'couleur') {
+      choisirCouleur(animal, rafraichir);
+    } else if (declencheur.dataset.act === 'modifier') {
       formulaireAnimal(animal, rafraichir);
     } else if (declencheur.dataset.act === 'supprimer') {
       // Comportement inchangé : storage.supprimer retire l'animal ET ses soins et pesées. On le dit précisément.

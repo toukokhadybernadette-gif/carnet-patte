@@ -32,6 +32,31 @@ function apercuHtml(espece, photo, couleur) {
   return `<span class="cp-avatar cp-avatar--grand cp-an-${couleur}" aria-hidden="true">${contenu}</span>`;
 }
 
+/**
+ * Fenêtre « Couleur de … » : ouverte en cliquant sur l'avatar de la fiche. Un clic sur une couleur l'enregistre aussitôt
+ * (champ facultatif `couleur` de l'animal ; « Automatique » le vide et rend la couleur choisie d'après l'identifiant).
+ */
+export function choisirCouleur(animal, apres) {
+  const actuelle = PALETTE_ANIMAUX.some((c) => c.id === animal.couleur) ? animal.couleur : '';
+  const options = [{ id: '', nom: 'Automatique' }, ...PALETTE_ANIMAUX];
+  const html = `
+    <p class="cp-doux">Cette couleur est reprise sur l'avatar de ${echapper(animal.nom)} et sur son graphique de poids.</p>
+    <div class="cp-choix cp-choix--couleurs" role="group" aria-label="Couleur de ${echapper(animal.nom)}">
+      ${options.map((c) => `<button type="button" class="cp-couleur${c.id ? ` cp-an-${c.id}` : ''}" data-couleur="${c.id}" aria-pressed="${c.id === actuelle}"><span>${echapper(c.nom)}</span></button>`).join('')}
+    </div>`;
+  modale(`Couleur de ${animal.nom}`, html, (dlg) => {
+    dlg.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-couleur]');
+      if (!b) return;
+      storage.modifier('animaux', animal.id, { couleur: b.dataset.couleur });
+      dlg.close();
+      toast('Couleur modifiée');
+      apres();
+    });
+    dlg.querySelector('[aria-pressed="true"]')?.focus();
+  });
+}
+
 export function formulaireAnimal(animal, apres) {
   const a = animal ?? { nom: '', espece: 'chien', especeAutre: '', race: '', naissance: '', photo: '', couleur: '' };
   const couleurInitiale = PALETTE_ANIMAUX.some((c) => c.id === a.couleur) ? a.couleur : ''; // '' = automatique

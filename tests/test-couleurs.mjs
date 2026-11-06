@@ -127,6 +127,25 @@ verifier(await ev(`document.querySelector('dialog input[name=couleur]:checked').
 await ev(`document.querySelector('dialog input[name=couleur][value=""]').click(); document.querySelector('dialog form').requestSubmit()`); await sleep(600);
 verifier((await ev(`JSON.parse(localStorage.getItem('carnetpatte.v1')).animaux.find(a => a.id === 'a').couleur`)) === '' && await cl('.fi-avatar') === auto.find((x) => x.startsWith('Pomme')).split(':')[1], '« Automatique » : champ vidé, la couleur automatique revient');
 
+log('=== CLIC SUR L AVATAR : choix de la couleur ===');
+await importer(jeu());
+await aller2('#/animaux/a');
+verifier(await ev(`document.querySelector('.fi-avatar-bouton')?.getAttribute('aria-label')`) === 'Changer la couleur de Pomme', 'l\'avatar de la fiche est un bouton « Changer la couleur de Pomme »');
+await ev(`document.querySelector('.fi-avatar-bouton').click()`); await sleep(500);
+const boutonsCouleur = await ev(`[...document.querySelectorAll('dialog [data-couleur]')].map(b => b.textContent.trim() + (b.getAttribute('aria-pressed') === 'true' ? '*' : ''))`);
+verifier(boutonsCouleur.length === 9 && boutonsCouleur[0] === 'Automatique*', `fenêtre : « Automatique » (actuel) + 8 couleurs nommées (${boutonsCouleur.join(', ')})`);
+await axe('dialog', 'fenêtre de choix de la couleur');
+await ev(`document.querySelector('dialog [data-couleur=turquoise]').click()`); await sleep(600);
+verifier((await ev(`JSON.parse(localStorage.getItem('carnetpatte.v1')).animaux.find(a => a.id === 'a').couleur`)) === 'turquoise' && await ev(`!document.querySelector('dialog')`), 'un clic enregistre la couleur et ferme la fenêtre');
+verifier(await cl('.fi-avatar') === 'cp-an-turquoise', 'l\'avatar de la fiche est aussitôt turquoise');
+await ev(`document.querySelector('.fi-avatar-bouton').click()`); await sleep(500);
+verifier(await ev(`document.querySelector('dialog [aria-pressed=true]').dataset.couleur`) === 'turquoise', 'rouvrir : la couleur actuelle est marquée');
+await ev(`document.querySelector('dialog [data-couleur=""]').click()`); await sleep(600);
+verifier((await ev(`JSON.parse(localStorage.getItem('carnetpatte.v1')).animaux.find(a => a.id === 'a').couleur`)) === '', '« Automatique » vide le champ');
+await taille(390, 844); await aller2('#/animaux/a');
+verifier(await ev(`(()=>{const r=document.querySelector('.fi-avatar-bouton').getBoundingClientRect();return r.width>=44 && r.height>=44})()`) && await sansDebord(), 'mobile : le bouton avatar fait au moins 44 px, sans défilement horizontal');
+await taille(1280, 900);
+
 log('=== LES 8 COULEURS : contrastes ===');
 const palette = await ev(`(() => { const r = []; for (const k of ['ardoise','turquoise','indigo','magenta','brun','rose','olive','gris']) { const e = document.createElement('span'); e.className = 'cp-avatar cp-an-' + k; document.body.append(e); const s = getComputedStyle(e); const initiales = window.__ratio(s.color, s.backgroundColor); e.style.color = getComputedStyle(document.documentElement).getPropertyValue('--cp-an-' + k + '-trait').trim(); r.push({ k, initiales, trait: window.__ratio(getComputedStyle(e).color, 'rgb(255,255,255)') }); e.remove(); } return r; })()`);
 verifier(palette.length === 8 && palette.every((p) => p.initiales >= 4.5), `initiales sur fond >= 4,5:1 (minimum ${Math.min(...palette.map((p) => p.initiales)).toFixed(2)})`);

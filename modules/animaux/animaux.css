@@ -70,6 +70,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fi-retour { justify-self: start; }
 /* En-tête */
 .fi-entete { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--cp-espace-4); padding: var(--cp-espace-4); box-shadow: inset 0 3px 0 var(--an-trait, transparent), var(--cp-ombre-s); } /* filet de la couleur de l'animal en haut de sa fiche */
+.fi-avatar-bouton { position: relative; display: inline-flex; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.fi-avatar-bouton:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+.fi-avatar-bouton__crayon { position: absolute; right: -2px; bottom: -2px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--cp-carte); color: var(--an-texte, var(--cp-foret)); box-shadow: 0 0 0 1px var(--cp-bordure), var(--cp-ombre-s); transition: transform var(--cp-duree-rapide) var(--cp-courbe); }
+.fi-avatar-bouton:hover .fi-avatar-bouton__crayon { transform: scale(1.12); }
 .fi-avatar { width: 64px; height: 64px; }
 .fi-avatar .ic { width: 28px; height: 28px; }
 .fi-entete__texte { display: grid; gap: var(--cp-espace-1); min-width: 0; }
