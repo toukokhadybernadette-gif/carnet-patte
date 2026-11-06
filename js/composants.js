@@ -112,16 +112,31 @@ export function choix({ nom, legende, options = [], valeur = '', desactive = fal
   return `<fieldset class="cp-choix${classe ? ` ${classe}` : ''}"><legend>${echapper(legende)}</legend>${items}</fieldset>`;
 }
 
-/** Avatar rond : photo si fournie (data:image ou URL), sinon icône. */
-export function avatar({ icone: nomIcone = 'paw-print', photo = '', grand = false } = {}) {
-  const contenu = photo ? `<img src="${echapper(photo)}" alt="">` : icone(nomIcone, { taille: grand ? 40 : 28 });
-  return `<span class="cp-avatar${grand ? ' cp-avatar--grand' : ''}" aria-hidden="true">${contenu}</span>`;
+/** Numéro de couleur (1 à 8) d'un identifiant : stable d'une visite à l'autre, différent d'un animal à l'autre. */
+export const couleurAvatar = (id = '') => 1 + [...String(id)].reduce((somme, c) => (somme * 31 + c.charCodeAt(0)) % 8, 0);
+
+/** « Moka » → « MO », « Jean Pierre » → « JP » */
+export function initiales(nom = '') {
+  const mots = String(nom).trim().split(/\s+/).filter(Boolean);
+  if (!mots.length) return '';
+  return (mots.length > 1 ? mots[0][0] + mots[1][0] : mots[0].slice(0, 2)).toUpperCase();
+}
+
+/**
+ * Avatar rond : la photo si elle existe ; sinon les initiales sur une couleur propre à l'animal (`nom` et `id`) ;
+ * sinon, sans nom, une icône. `taille` : petit | normal | grand.
+ */
+export function avatar({ icone: nomIcone = 'paw-print', photo = '', grand = false, petit = false, nom = '', id = '' } = {}) {
+  const taille = grand ? ' cp-avatar--grand' : petit ? ' cp-avatar--petit' : '';
+  if (photo) return `<span class="cp-avatar${taille}" aria-hidden="true"><img src="${echapper(photo)}" alt=""></span>`;
+  if (nom) return `<span class="cp-avatar cp-av-${couleurAvatar(id || nom)}${taille}" aria-hidden="true">${echapper(initiales(nom))}</span>`;
+  return `<span class="cp-avatar${taille}" aria-hidden="true">${icone(nomIcone, { taille: grand ? 32 : 20 })}</span>`;
 }
 
 /** Carte d'animal. `href` la rend cliquable. badges : texte HTML déjà construit avec badge(). */
-export function carteAnimal({ nom, espece, details = '', icone: nomIcone, photo, badges = '', href, selectionnee = false }) {
+export function carteAnimal({ nom, espece, details = '', icone: nomIcone, photo, badges = '', href, selectionnee = false, id = '' }) {
   const corps = `
-    ${avatar({ icone: nomIcone, photo })}
+    ${avatar({ icone: nomIcone, photo, nom, id })}
     <div class="cp-carte-animal__texte">
       <span class="cp-carte-animal__nom">${echapper(nom)}</span>
       <span class="cp-carte-animal__meta">${echapper([espece, details].filter(Boolean).join(' · '))}</span>

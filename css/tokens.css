@@ -1,8 +1,8 @@
-/* ===== Jetons de design Carnet Patte (étape 1 de la refonte) =====
-   Ce fichier DÉFINIT les polices et les variables de la nouvelle identité.
-   Il n'est pas encore utilisé par les pages : l'apparence actuelle ne change pas.
-   Les anciennes variables (--vert, --creme…) restent dans base.css jusqu'à la migration.
-   Toutes les nouvelles variables commencent par --cp- pour ne rien mélanger. */
+/* ===== Jetons de design Carnet Patte =====
+   Ce fichier DÉFINIT les polices et les variables de l'identité visuelle (version « 5h » : interface plus dense,
+   filets fins à la place des grosses ombres, texte courant 15 px sur ordinateur et 16 px sur téléphone).
+   Les anciennes variables (--vert, --creme…) restent dans base.css pour quelques anciens styles.
+   Toutes les variables commencent par --cp-. */
 
 /* ----- Polices hébergées dans le projet (licence SIL OFL 1.1, voir assets/fonts/*-OFL.txt) -----
    Un navigateur ne télécharge une police que si elle est réellement utilisée par la page. */
@@ -26,11 +26,12 @@
 :root {
   /* ----- Palette officielle ----- */
   --cp-foret: #243D35;        /* texte, titres, boutons principaux, barre latérale */
-  --cp-sauge: #A8BFA5;        /* bordures, séparateurs, illustrations */
+  --cp-sauge: #A8BFA5;        /* illustrations, tirets (plus de bordures sauge) */
   --cp-fond: #F6F5F0;         /* fond de l'application (blanc cassé) */
-  --cp-vert-clair: #D9E6D5;   /* sélections, badges calmes */
+  --cp-vert-clair: #E4EEE0;   /* sélections, badges calmes */
   --cp-beige: #D7A879;        /* accents uniquement : jamais en texte sur fond clair (contraste 1,97) */
-  --cp-carte: #FFFFFF;        /* fond des cartes */
+  --cp-carte: #FFFFFF;        /* fond des cartes (surface) */
+  --cp-surface-2: #EFF1EA;    /* surface en creux : barre latérale, zones secondaires, survol de ligne */
 
   /* ----- Texte (contrastes mesurés WCAG) ----- */
   --cp-texte: #243D35;        /* 10,7:1 sur --cp-fond */
@@ -38,8 +39,8 @@
   --cp-texte-inverse: #FFFFFF;/* 11,7:1 sur --cp-foret */
 
   /* ----- Bordures ----- */
-  --cp-bordure: #DDE5D8;      /* discrète, dérivée du vert clair */
-  --cp-bordure-forte: #A8BFA5;
+  --cp-bordure: #E3E8DE;      /* filet fin de 1 px entre cartes et lignes */
+  --cp-bordure-forte: #C9D3C4;  /* contour des boutons secondaires */
 
   /* ----- États fonctionnels (alertes) : terre cuite et ambre, harmonisés avec la palette ----- */
   --cp-terre: #9A4330;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
@@ -47,13 +48,13 @@
   --cp-ambre: #7A4F0F;        /* texte « bientôt », attention : 6,5:1 sur --cp-fond */
   --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
   --cp-succes: #2F6B4F;       /* confirmations (vert plus soutenu que la sauge) */
-  --cp-succes-pale: #D9E6D5;
+  --cp-succes-pale: #E4EEE0;
   --cp-succes-texte: #1F5A3F;  /* texte sur --cp-succes-pale : 6,3:1 */
 
   /* ----- Interactions (étape 3 : composants) ----- */
   --cp-foret-survol: #1B2E28;     /* bouton principal survolé : 15:1 avec du blanc */
   --cp-foret-actif: #14231E;      /* bouton principal enfoncé */
-  --cp-fond-survol: #E9EEE4;      /* fond d'un élément discret survolé */
+  --cp-fond-survol: #EFF1EA;      /* fond d'un élément discret survolé */
   --cp-bordure-champ: #7C9187;    /* contour des champs : 3,4:1 sur blanc (minimum WCAG 3:1) */
   --cp-placeholder: #6B7973;      /* texte indicatif : 4,6:1 sur blanc */
   --cp-desactive-fond: #E6E9E1;
@@ -63,32 +64,46 @@
   --cp-info-pale: #DDEBEA;
   --cp-focus: #243D35;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
 
+  /* ----- Couleurs d'avatar (une par animal, choisie d'après son identifiant) : fond / texte, contraste ≥ 6,5:1 ----- */
+  --cp-av-1-fond: #DCE8D8; --cp-av-1-texte: #2A4A3A;  /* sauge */
+  --cp-av-2-fond: #DAE8EE; --cp-av-2-texte: #24505E;  /* ciel */
+  --cp-av-3-fond: #F1E3CC; --cp-av-3-texte: #6B4310;  /* sable */
+  --cp-av-4-fond: #F2DDD3; --cp-av-4-texte: #7A3A26;  /* argile */
+  --cp-av-5-fond: #E9DEEA; --cp-av-5-texte: #5A2F5E;  /* prune */
+  --cp-av-6-fond: #E1E3F1; --cp-av-6-texte: #3A3F7A;  /* lavande */
+  --cp-av-7-fond: #F5DCE2; --cp-av-7-texte: #7B2D45;  /* rose */
+  --cp-av-8-fond: #E6E8C9; --cp-av-8-texte: #4F5314;  /* olive */
+
   /* ----- Typographie ----- */
   --cp-police-titre: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --cp-police-texte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --cp-graisse-titre: 700;
+  --cp-graisse-titre: 650;
   --cp-graisse-texte: 400;
   --cp-graisse-bouton: 500;   /* Inter Medium */
+  --cp-graisse-h1: 700;
+  --cp-lettrage-titre: -0.015em;
 
-  --cp-taille-xs: .8125rem;   /* 13 px */
-  --cp-taille-s: .875rem;     /* 14 px */
-  --cp-taille-m: 1rem;        /* 16 px */
-  --cp-taille-l: 1.25rem;     /* 20 px */
-  --cp-taille-xl: 1.625rem;   /* 26 px */
-  --cp-taille-xxl: 2.125rem;  /* 34 px */
+  /* Échelle : taille / interligne. Les valeurs de téléphone sont redéfinies plus bas (moins de 600 px). */
+  --cp-taille-xs: 12px;   --cp-interligne-xs: 16px;    /* étiquettes, badges, légendes */
+  --cp-taille-s: 13px;    --cp-interligne-s: 18px;     /* texte secondaire, méta */
+  --cp-taille-m: 15px;    --cp-interligne-m: 22px;     /* TEXTE COURANT */
+  --cp-taille-l: 17px;    --cp-interligne-l: 24px;     /* titre de section (h2) */
+  --cp-taille-xl: 19px;   --cp-interligne-xl: 26px;    /* titre de fenêtre */
+  --cp-taille-xxl: 26px;  --cp-interligne-xxl: 32px;   /* titre de page (h1) */
+  --cp-taille-chiffre: 24px; --cp-interligne-chiffre: 30px; /* chiffres clés */
   --cp-interligne: 1.5;
   --cp-interligne-titre: 1.2;
 
   /* ----- Formes ----- */
-  --cp-rayon-carte: 20px;     /* cartes : 18 à 24 px */
-  --cp-rayon-bouton: 14px;    /* boutons : 12 à 16 px */
-  --cp-rayon-champ: 12px;     /* champs de formulaire */
+  --cp-rayon-carte: 12px;     /* cartes */
+  --cp-rayon-bouton: 8px;     /* boutons */
+  --cp-rayon-champ: 8px;      /* champs de formulaire */
   --cp-rayon-pastille: 999px;
 
-  /* ----- Ombres très légères ----- */
-  --cp-ombre-s: 0 1px 2px rgba(36, 61, 53, .06);
-  --cp-ombre-m: 0 4px 16px rgba(36, 61, 53, .08);
-  --cp-ombre-l: 0 12px 32px rgba(36, 61, 53, .12);
+  /* ----- Ombres : surtout des filets ; l'ombre distingue les niveaux ----- */
+  --cp-ombre-s: 0 1px 2px rgba(36, 61, 53, .05);     /* cartes au repos */
+  --cp-ombre-m: 0 2px 8px rgba(36, 61, 53, .08);     /* survol d'une carte cliquable, menus déroulants */
+  --cp-ombre-l: 0 12px 32px rgba(36, 61, 53, .14);   /* fenêtres modales */
 
   /* ----- Espacements (échelle de 4 px) ----- */
   --cp-espace-1: 4px;
@@ -109,10 +124,32 @@
   --cp-bp-tablette: 600px;
   --cp-bp-ordinateur: 1024px;   /* (indicatif : les media queries ne lisent pas les variables) */
   --cp-cible-tactile: 44px;     /* taille minimale d'un bouton au doigt */
-  --cp-largeur-barre: 280px;
-  --cp-largeur-barre-reduite: 76px;
-  --cp-hauteur-barre-bas: 68px;
-  --cp-hauteur-barre-haut: 64px;
+  --cp-h-bouton: 36px;          /* hauteur d'un bouton sur ordinateur (44 px sur téléphone et écrans tactiles) */
+  --cp-h-bouton-s: 30px;
+  --cp-h-champ: 36px;
+  --cp-largeur-barre: 232px;
+  --cp-largeur-barre-reduite: 72px;
+  --cp-hauteur-barre-bas: 60px;
+  --cp-hauteur-barre-haut: 52px;
+  --cp-marge-page: 24px;        /* 16 px sur téléphone */
+  --cp-largeur-page: 1040px;    /* largeur maximale du contenu */
+}
+
+/* Téléphone : texte plus grand (16 px, et 16 px minimum dans les champs : Safari sur iPhone zoome sinon), cibles de 44 px */
+@media (max-width: 599px), (pointer: coarse) {
+  :root { --cp-h-bouton: 44px; --cp-h-bouton-s: 44px; --cp-h-champ: 44px; }
+}
+@media (max-width: 599px) {
+  :root {
+    --cp-taille-xs: 13px; --cp-interligne-xs: 18px;
+    --cp-taille-s: 14px;  --cp-interligne-s: 20px;
+    --cp-taille-m: 16px;  --cp-interligne-m: 24px;
+    --cp-taille-l: 18px;  --cp-interligne-l: 26px;
+    --cp-taille-xl: 19px; --cp-interligne-xl: 26px;
+    --cp-taille-xxl: 22px; --cp-interligne-xxl: 28px;
+    --cp-taille-chiffre: 20px; --cp-interligne-chiffre: 26px;
+    --cp-marge-page: 16px;
+  }
 }
 
 /* Respect de la préférence « réduire les animations » */

@@ -65,7 +65,7 @@ export function rendre(zone) {
 
   const blocAnimaux = animaux.length
     ? `<div class="pg-animaux">${animaux.slice(0, 4).map((a) => carteAnimal({
-        nom: a.nom, espece: nomEspece(a), details: a.race, icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '',
+        id: a.id, nom: a.nom, espece: nomEspece(a), details: a.race, icone: infosEspece(a).icone, photo: a.photo?.startsWith('data:image/') ? a.photo : '',
         href: `#/animaux/${encodeURIComponent(a.id)}`,
         badges: retardParAnimal.has(a.id) ? badge({ texte: `${retardParAnimal.get(a.id)} rappel${retardParAnimal.get(a.id) > 1 ? 's' : ''} en retard`, variante: 'alerte', icone: 'bell-ring' }) : '',
       })).join('')}</div>`

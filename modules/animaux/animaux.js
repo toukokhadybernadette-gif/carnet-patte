@@ -146,6 +146,7 @@ function carteHtml(animal, rappels) {
     icone: infosEspece(animal).icone,
     photo: typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '',
     badges,
+    id: animal.id,
     href: `#/animaux/${encodeURIComponent(animal.id)}`,
   });
 }
