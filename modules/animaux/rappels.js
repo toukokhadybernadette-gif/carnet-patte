@@ -76,7 +76,7 @@ function carteHtml({ soin, animal, statut }) {
           <strong class="rp-carte__nom">${echapper(nom || categorie)}</strong>
           ${badgeSoin(soin)}
         </div>
-        <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo })}<span>${echapper(animal.nom)}</span></a>
+        <a class="rp-animal" href="${lienFiche(animal)}">${avatar({ icone: infosEspece(animal).icone, photo, nom: animal.nom, id: animal.id })}<span>${echapper(animal.nom)}</span></a>
         <span class="rp-ligne">${icone(statut ? 'bell' : 'check', { taille: 16 })}<span>${statut ? 'Prévu le' : 'Rappel du'} <time datetime="${soin.rappel}">${formatDate(soin.rappel)}</time>${statut ? '' : ' · traité'}</span></span>
         <span class="rp-ligne">${icone('calendar', { taille: 16 })}<span>Dernier soin le <time datetime="${soin.date}">${formatDate(soin.date)}</time></span></span>
       </div>

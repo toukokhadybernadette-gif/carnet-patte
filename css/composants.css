@@ -548,3 +548,9 @@ body:has(dialog[open]) { overflow: hidden; }
 @media (pointer: coarse), (max-width: 599px) {
   .cp-onglet, .cp-case, .cp-interrupteur { min-height: var(--cp-cible-tactile); }
 }
+
+/* Un bouton qui est un lien garde les couleurs de sa variante (sinon « .cp a » les écrase : texte vert sur fond vert) */
+.cp a.cp-btn { text-decoration: none; }
+.cp a.cp-btn--principal, .cp a.cp-btn--danger { color: var(--cp-texte-inverse); }
+.cp a.cp-btn--secondaire { color: var(--cp-foret); }
+.cp a.cp-btn--discret { color: var(--cp-texte-doux); }

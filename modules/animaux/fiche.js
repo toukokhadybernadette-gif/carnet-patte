@@ -5,7 +5,7 @@ import { echapper, age, formatDate, formatPoids, aujourdhui } from '../../js/uti
 import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
-import { bouton, badge, vide, activerOnglets } from '../../js/composants.js';
+import { bouton, badge, vide, activerOnglets, avatar } from '../../js/composants.js';
 import { infosEspece, nomEspece, infosType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
 import { formulaireAnimal } from './animaux.js';
@@ -25,10 +25,8 @@ const PAS_HISTORIQUE = 30; // nombre d'événements affichés à la fois
 const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
 function avatarGrand(animal) {
-  const contenu = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/')
-    ? `<img src="${echapper(animal.photo)}" alt="">`
-    : icone(infosEspece(animal).icone, { taille: 56 });
-  return `<span class="cp-avatar fi-avatar" aria-hidden="true">${contenu}</span>`;
+  const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
+  return avatar({ grand: true, photo, nom: animal.nom, id: animal.id, icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
 }
 
 // ----- Données de l'animal (toujours filtrées sur son identifiant) -----
