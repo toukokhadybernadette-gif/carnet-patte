@@ -70,6 +70,28 @@ verifier(await ev(`document.querySelector('#profil-lien').getAttribute('aria-lab
 verifier(await texte('.app-lateral [data-nav=profil] .app-nav__texte') === 'Léa', 'barre latérale : le prénom remplace « Profil »');
 await ecran('accueil-prenom');
 
+log('=== SÉCURITÉ : un prénom piégé s affiche tel quel, sans rien exécuter ===');
+const dialogues = [];
+ws.addEventListener('message', (m) => { const d = JSON.parse(m.data); if (d.method === 'Page.javascriptDialogOpening') { dialogues.push(d.params.message); send('Page.handleJavaScriptDialog', { accept: true }); } });
+await ev(`window.__xss = 0`);
+for (const piege of ['<img src=x onerror=alert(1)>', '<img src=x onerror="window.__xss=1">', '"><svg onload=alert(1)>']) {
+  await aller2('#/profil');
+  await ev(`(()=>{const f=document.querySelector('.pf-form');f.prenom.value=${JSON.stringify(piege)};f.requestSubmit();})()`); await sleep(500);
+  const toast = await ev(`[...document.querySelectorAll('.cp-notif__texte')].pop()?.textContent ?? 'ABSENT'`);
+  verifier(toast.includes(piege), `« ${piege} » — message de confirmation (toast) : affiché comme texte`);
+  const profil = await ev(`({ champ: document.querySelector('#profil-prenom').value, titre: document.querySelector('h1').textContent, avatar: document.querySelector('.pg-entete .cp-avatar').textContent })`);
+  verifier(profil.champ === piege, '  page Profil : le champ contient exactement le texte saisi');
+  verifier(profil.avatar.length <= 3, '  page Profil : l avatar n affiche que des initiales, en texte');
+  await aller2('#/accueil');
+  const accueil = await ev(`({ h1: document.querySelector('h1').textContent, avatarHaut: document.querySelector('#profil-lien .cp-avatar')?.textContent, labelHaut: document.querySelector('#profil-lien').getAttribute('aria-label'), lateral: document.querySelector('.app-lateral [data-nav=profil] .app-nav__texte').textContent, labelLateral: document.querySelector('.app-lateral [data-nav=profil]').getAttribute('aria-label') })`);
+  verifier(accueil.h1 === 'Bonjour ' + piege.replace(/\s+/g, ' ').trim().slice(0, 40), '  Accueil : titre « Bonjour » + le texte tel quel');
+  verifier(accueil.avatarHaut.length <= 3 && accueil.lateral === piege.slice(0, 40) && accueil.labelHaut === 'Profil de ' + piege.slice(0, 40) && accueil.labelLateral === accueil.labelHaut, '  avatar du haut, barre latérale et noms accessibles : texte uniquement');
+  const balises = await ev(`document.querySelectorAll('img[src="x"], svg[onload], [onerror], [onload]').length`);
+  verifier(balises === 0, '  aucune balise créée à partir du prénom (img, svg, onerror, onload)');
+  verifier(dialogues.length === 0 && await ev(`window.__xss`) === 0, '  aucune boîte alert() ni script exécuté');
+}
+await saisir('Léa');
+
 log('=== RECHARGEMENT : les données et le prénom sont conservés ===');
 const avant = JSON.stringify(await donnees());
 await send('Page.reload'); await sleep(1800);
