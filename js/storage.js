@@ -5,24 +5,33 @@
 // et les modules qui l'utilisent n'auront presque rien à changer.
 //
 // Forme des données :
-//   { version, exemplesAjoutes, animaux: [], soins: [], pesees: [] }
+//   { version, exemplesAjoutes, profil: { prenom }, animaux: [], soins: [], pesees: [] }
+// `profil` est FACULTATIF : un export plus ancien, sans ce champ, s'importe normalement (le prénom reste vide).
 
 import { uid } from './utils.js';
 
 const CLE = 'carnetpatte.v1';
 const VERSION = 1;
+const PRENOM_MAX = 40; // doit être déclaré AVANT charger() : elle s'exécute dès le chargement du fichier
 const COLLECTIONS = ['animaux', 'soins', 'pesees'];
 
 let donnees = charger();
 
+/** Profil lu dans un fichier ou dans le navigateur : toujours { prenom: texte }, quel que soit ce qui est enregistré. */
+function profilValide(p) {
+  const prenom = typeof p?.prenom === 'string' ? p.prenom.replace(/\s+/g, ' ').trim().slice(0, PRENOM_MAX) : '';
+  return { prenom };
+}
+
 function vide() {
-  return { version: VERSION, exemplesAjoutes: false, animaux: [], soins: [], pesees: [] };
+  return { version: VERSION, exemplesAjoutes: false, profil: profilValide(), animaux: [], soins: [], pesees: [] };
 }
 
 function normaliser(obj) {
   const base = vide();
   for (const c of COLLECTIONS) base[c] = Array.isArray(obj?.[c]) ? obj[c] : [];
   base.exemplesAjoutes = Boolean(obj?.exemplesAjoutes);
+  base.profil = profilValide(obj?.profil);
   return base;
 }
 
@@ -78,6 +87,19 @@ export function supprimer(collection, id) {
     donnees.pesees = donnees.pesees.filter((p) => p.animalId !== id);
   }
   sauver();
+}
+
+// ----- Profil (facultatif) -----
+
+/** { prenom } — le prénom est une chaîne vide tant que l'utilisateur n'en a pas saisi. */
+export function lireProfil() {
+  return { ...donnees.profil };
+}
+
+export function modifierProfil(changements) {
+  donnees.profil = profilValide({ ...donnees.profil, ...changements });
+  sauver();
+  return lireProfil();
 }
 
 // ----- Drapeau "les animaux d'exemple ont déjà été ajoutés" -----

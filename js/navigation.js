@@ -12,7 +12,7 @@
 import * as storage from './storage.js';
 import { icone } from './icons.js';
 import { echapper } from './utils.js';
-import { bouton } from './composants.js';
+import { bouton, avatar } from './composants.js';
 import { compterEnRetard } from '../modules/animaux/rappels.js';
 import { infosEspece, nomEspece } from '../modules/animaux/commun.js';
 
@@ -103,7 +103,27 @@ export function construireNavigation() {
   document.querySelector('[data-bientot] .app-bientot__titre').addEventListener('click', () => ouvrirBientot(!bientotOuvert()));
   initialiserRecherche();
   majRappels();
+  majProfil();
   window.addEventListener('donnees-modifiees', majRappels);
+  window.addEventListener('donnees-modifiees', majProfil);
+}
+
+// ----- Profil : avatar à initiales et prénom, s'il y en a un (facultatif) -----
+
+export function majProfil() {
+  const { prenom } = storage.lireProfil();
+  const libelle = prenom ? `Profil de ${prenom}` : 'Profil';
+  const haut = el('profil-lien');
+  haut.setAttribute('aria-label', libelle);
+  haut.innerHTML = prenom ? avatar({ nom: prenom, id: 'profil', petit: true }) : icone('user', { taille: 20 });
+  document.querySelectorAll('[data-nav="profil"]').forEach((a) => {
+    a.setAttribute('aria-label', libelle);
+    a.dataset.etiquette = libelle;
+  });
+  // Barre latérale : l'avatar et le prénom remplacent l'icône et le mot « Profil » (la barre du bas garde son icône)
+  const lateral = document.querySelector('.app-lateral [data-nav="profil"]');
+  lateral.querySelector('.ic, .cp-avatar').outerHTML = prenom ? avatar({ nom: prenom, id: 'profil', petit: true }) : icone('user', { taille: 18 });
+  lateral.querySelector('.app-nav__texte').textContent = prenom || 'Profil';
 }
 
 // ----- Section « Bientôt » de la barre latérale -----

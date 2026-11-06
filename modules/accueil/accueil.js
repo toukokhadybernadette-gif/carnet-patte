@@ -6,7 +6,9 @@ import { icone } from '../../js/icons.js';
 import { echapper, aujourdhui, formatDate, formatPoids } from '../../js/utils.js';
 import { badge, carteStat, carteAnimal, vide, bouton } from '../../js/composants.js';
 import { NAV } from '../../js/navigation.js';
+import { rafraichir } from '../../js/router.js';
 import { calculerRappels } from '../animaux/rappels.js';
+import { formulaireAnimal } from '../animaux/animaux.js';
 import { infosEspece, nomEspece, infosType, badgeEcheance, nomCourtSoin, titreSoin } from '../animaux/commun.js';
 
 function ligne({ icone: i, titre, meta, fin = '', href }) {
@@ -41,6 +43,7 @@ function blocBientot() {
 
 export function rendre(zone) {
   zone.classList.add('page-large');
+  const { prenom } = storage.lireProfil(); // facultatif : sans prénom, « Bonjour » tout court
 
   // Même ordre que la page Mes animaux : alphabétique
   const animaux = storage.lister('animaux').sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
@@ -90,9 +93,12 @@ export function rendre(zone) {
 
   zone.innerHTML = `
     <div class="cp pg">
-      <header class="pg-entete">
-        <h1>Bonjour</h1>
-        <p>Voici un aperçu de vos animaux et de ce qui vous attend.</p>
+      <header class="pg-entete pg-entete--accueil">
+        <div>
+          <h1>Bonjour${prenom ? ` ${echapper(prenom)}` : ''}</h1>
+          <p>Voici un aperçu de vos animaux et de ce qui vous attend.</p>
+        </div>
+        ${bouton({ texte: 'Ajouter un animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } })}
       </header>
 
       <section class="pg-section" aria-label="Résumé">
@@ -105,7 +111,7 @@ export function rendre(zone) {
       </section>
 
       <section class="pg-section" aria-labelledby="ac-raccourcis">
-        <div class="pg-section__tete"><h2 id="ac-raccourcis">Raccourcis</h2></div>
+        <div class="pg-section__tete"><h2 id="ac-raccourcis" class="cp-sr">Raccourcis</h2></div>
         <div class="pg-raccourcis pg-raccourcis--utiles">
           ${tuile({ icone: 'paw-print', titre: 'Mes animaux', texte: 'Fiches, soins et pesées', href: '#/animaux' })}
           ${tuile({ icone: 'bell', titre: 'Rappels', texte: enRetard.length ? `${enRetard.length} en retard` : 'Soins à prévoir', href: '#/animaux/rappels' })}
@@ -136,4 +142,6 @@ export function rendre(zone) {
         </section>
       </div>
     </div>`;
+
+  zone.querySelector('[data-act="ajouter"]').addEventListener('click', () => formulaireAnimal(null, rafraichir));
 }

@@ -34,7 +34,7 @@ export function rendre(zone) {
         ${bloc({ id: 'dn-import', icone: 'upload', titre: 'Importer', texte: "Charge un fichier d'export. <strong>Attention : cela remplace toutes les données actuelles.</strong>",
           actions: `${bouton({ texte: 'Choisir un fichier…', variante: 'secondaire', icone: 'upload', attrs: { 'data-act': 'choisir' } })}
             <input type="file" accept=".json,application/json" hidden data-fichier aria-label="Fichier de sauvegarde à importer">` })}
-        ${bloc({ id: 'dn-effacer', icone: 'trash-2', titre: 'Tout effacer', danger: true, texte: 'Supprime définitivement tous les animaux, soins et pesées de cet appareil.',
+        ${bloc({ id: 'dn-effacer', icone: 'trash-2', titre: 'Tout effacer', danger: true, texte: 'Supprime définitivement tous les animaux, soins, pesées et votre prénom de cet appareil.',
           actions: bouton({ texte: 'Tout effacer', variante: 'danger', icone: 'trash-2', attrs: { 'data-act': 'effacer' } }) })}
       </div>
     </div>`;
