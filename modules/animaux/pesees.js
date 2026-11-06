@@ -3,7 +3,7 @@
 
 import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, ajouterMois, formatDate, formatPoids, lireISO } from '../../js/utils.js';
-import { confirmer, toast } from '../../js/ui.js';
+import { confirmer, modale, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, vide } from '../../js/composants.js';
 import { erreurChamp } from './commun.js';
@@ -207,6 +207,37 @@ document.addEventListener('pointerdown', (e) => {
     b.closest('.ps-graph')?.querySelector('.ps-repere')?.classList.remove('est-visible');
   });
 });
+
+/** Ajout d'une pesée dans une fenêtre (action rapide de l'Accueil). Mêmes vérifications que le formulaire de l'onglet Poids. */
+export function formulairePesee(animal, apres) {
+  const html = `
+    <form class="cp-formulaire sn-form" novalidate>
+      ${champ({ id: 'mpesee-date', label: 'Date', type: 'date', valeur: aujourdhui(), requis: true, attrs: { name: 'date', max: aujourdhui() } })}
+      ${champ({ id: 'mpesee-poids', label: 'Poids (kg)', valeur: '', requis: true, placeholder: 'Ex. : 4,2', aide: 'Virgule ou point. Petit animal : 0,035 pour 35 g.', attrs: { name: 'poids', inputmode: 'decimal', autocomplete: 'off' } })}
+      <div class="sn-form__actions">
+        ${bouton({ texte: 'Annuler', variante: 'secondaire', attrs: { 'data-annuler': true } })}
+        ${bouton({ texte: 'Enregistrer', type: 'submit', icone: 'check' })}
+      </div>
+    </form>`;
+  modale(`Nouvelle pesée pour ${animal.nom}`, html, (dlg) => {
+    const form = dlg.querySelector('form');
+    dlg.querySelector('[data-annuler]').addEventListener('click', () => dlg.close());
+    form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      form.querySelectorAll('[aria-invalid]').forEach((c) => erreurChamp(c, ''));
+      const erreurDate = verifierDate(form.date.value);
+      const lu = lirePoids(form.poids.value);
+      if (erreurDate) erreurChamp(form.date, erreurDate);
+      if (lu.erreur) erreurChamp(form.poids, lu.erreur);
+      if (erreurDate || lu.erreur) { (erreurDate ? form.date : form.poids).focus(); return; }
+      storage.ajouter('pesees', { animalId: animal.id, date: form.date.value, poidsKg: lu.kg });
+      dlg.close();
+      toast('Pesée ajoutée');
+      apres();
+    });
+  });
+}
 
 /** Affiche la section « Pesées » dans `zone`. */
 export function rendre(zone, animal) {

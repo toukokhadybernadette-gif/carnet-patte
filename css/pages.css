@@ -124,3 +124,42 @@ a.ac-resume:hover { color: var(--cp-texte); }
   .ps { gap: var(--cp-espace-3); }
   .ps-form, .ps-graph { padding: var(--cp-espace-3); }
 }
+
+/* =========================================================
+   Accueil : avatars (stories), actions rapides, conseil du moment, bilan du mois
+   ========================================================= */
+.pg--accueil .pg-entete--accueil { grid-template-columns: 1fr; }
+/* Rangée d'avatars : défilement horizontal, un toucher ouvre la fiche */
+.ac-stories { margin-inline: calc(var(--cp-marge-page) * -1); }
+.ac-stories ul { list-style: none; margin: 0; padding: 4px var(--cp-marge-page) 6px; display: flex; gap: var(--cp-espace-4); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.ac-stories ul::-webkit-scrollbar { display: none; }
+.ac-story { display: grid; justify-items: center; gap: 6px; width: 72px; scroll-snap-align: start; text-decoration: none; color: var(--cp-foret); }
+.cp .ac-story { text-decoration: none; color: var(--cp-foret); }
+.ac-story .cp-avatar { width: 60px; height: 60px; font-size: 20px; box-shadow: 0 0 0 2px var(--cp-carte), 0 0 0 4px var(--an-trait, var(--cp-sauge)); transition: transform var(--cp-duree-rapide) var(--cp-courbe); }
+.ac-story:hover .cp-avatar { transform: scale(1.05); }
+.ac-story:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 12px; }
+.ac-story__nom { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 500; }
+@media (min-width: 1024px) { .ac-stories { margin-inline: 0; } .ac-stories ul { padding-inline: 4px; } }
+
+/* Actions rapides : une grille de cercles (verre « centre de contrôle », voir css/verre.css) */
+.ac-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--cp-espace-3); max-width: 520px; }
+.ac-action { display: grid; justify-items: center; align-content: start; gap: 8px; min-width: 0; padding: 0; border: 0; background: none; font: inherit; color: var(--cp-foret); text-decoration: none; cursor: pointer; }
+.cp .ac-action { color: var(--cp-foret); text-decoration: none; }
+.ac-action__rond { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret); }
+.ac-action__texte { font-size: var(--cp-taille-xs); line-height: 1.25; font-weight: 500; text-align: center; max-width: 84px; }
+.ac-action:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 14px; }
+@media (max-width: 359px) { .ac-actions { gap: var(--cp-espace-2); } .ac-action__rond { width: 56px; height: 56px; } }
+
+/* Conseil du moment */
+.ac-conseil { display: grid; grid-template-columns: auto 1fr; gap: var(--cp-espace-3); align-items: start; }
+.ac-conseil__icone { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret); }
+.ac-conseil__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.ac-conseil__corps p { margin: 0; }
+.ac-conseil__etiquette { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); }
+.ac-conseil__titre { font-size: var(--cp-taille-m); }
+.ac-conseil__texte { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte); }
+.ac-conseil__vet { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-foret); }
+.ac-conseil__source { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); }
+
+/* Bilan du mois */
+.ac-mois { margin: 0; text-align: center; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }

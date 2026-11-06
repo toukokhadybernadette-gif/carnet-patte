@@ -163,6 +163,7 @@ await aller2('#/animaux/a'); await sleep(300);
 await aller2('#/accueil');
 verifier(await ev(`getComputedStyle(document.querySelector('.contenu > div')).animationName`) === 'app-fondu' && await ev(`getComputedStyle(document.querySelector('.contenu > div .pg > *')).animationName`) === 'app-monte', 'changement de page : la page se fond et ses blocs montent doucement');
 await sleep(900);
+await aller2('#/animaux'); await sleep(900); // la page Mes animaux a un bouton principal (l'Accueil n'en a plus : ses ajouts sont des actions rapides)
 const bouton = await ev(`(()=>{const b=document.querySelector('.cp-btn--principal');const r=b.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()`);
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: bouton.x, y: bouton.y }); await sleep(400);
 verifier(await ev(`getComputedStyle(document.querySelector('.cp-btn--principal')).transform`) !== 'none', 'bouton : s\'élève au survol');
@@ -186,6 +187,7 @@ await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-m
 await aller2('#/animaux/b'); await sleep(300); await aller2('#/accueil'); await sleep(300);
 verifier(await ev(`getComputedStyle(document.querySelector('.app-fond span')).animationName`) === 'none', 'bulles immobiles');
 verifier(await ev(`getComputedStyle(document.querySelector('.contenu > div .pg > *')).animationName`) === 'none' && await ev(`getComputedStyle(document.querySelector('.contenu > div')).animationName`) === 'none', 'apparition des pages et des blocs : supprimée');
+await aller2('#/animaux'); await sleep(700); // la page Mes animaux a un bouton principal (l'Accueil n'en a plus : ses ajouts sont des actions rapides)
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: bouton.x, y: bouton.y }); await sleep(300);
 verifier(await ev(`getComputedStyle(document.querySelector('.cp-btn--principal')).transform`) === 'none', 'bouton : plus de mouvement au survol');
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 });

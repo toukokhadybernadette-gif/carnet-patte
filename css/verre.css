@@ -167,3 +167,32 @@ a.cp-carte:hover { transform: translateY(-2px); }
   .cp-filtre:active:not(:disabled), .cp-couleur:active, a.cp-carte:hover { transform: none; }
   .cp-onglets__trait.is-pret { transition: none; }
 }
+
+/* =========================================================
+   Verre « centre de contrôle iOS » (étape C)
+   Éléments gris-mauve translucides (jamais blancs) : on voit les couleurs du fond à travers, très floutées et saturées.
+   Formes très arrondies : cercles, capsules, carrés aux coins ~30 px. Liseré clair et brillant, plus lumineux en haut.
+   Actif : rempli d'une couleur vive qui ressort du verre. Icônes claires, simples, centrées.
+   ========================================================= */
+:root {
+  --cc-fond: rgba(74, 66, 104, .62);
+  --cc-fond-survol: rgba(74, 66, 104, .7);
+  --cc-flou: 30px;
+  --cc-sat: 1.9;
+  --cc-bord: rgba(255, 255, 255, .5);
+  --cc-reflet: inset 0 1.5px 0 rgba(255, 255, 255, .8), inset 0 -1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(255, 255, 255, .16);
+  --cc-ombre: 0 10px 24px rgba(52, 44, 84, .22);
+  --cc-actif: #2F6FED;
+  --cc-icone: #FFFFFF;
+}
+.ac-action__rond {
+  background: var(--cc-fond); color: var(--cc-icone);
+  -webkit-backdrop-filter: blur(var(--cc-flou)) saturate(var(--cc-sat)); backdrop-filter: blur(var(--cc-flou)) saturate(var(--cc-sat));
+  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), var(--cc-ombre);
+  transition: background-color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-duree-rapide) var(--cp-courbe);
+}
+.ac-action:hover .ac-action__rond { background: var(--cc-fond-survol); }
+.ac-action:active .ac-action__rond { background: var(--cc-actif); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --cc-fond: rgba(88, 80, 120, .92); --cc-fond-survol: rgba(74, 66, 104, .96); }
+}

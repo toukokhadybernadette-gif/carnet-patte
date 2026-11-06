@@ -57,7 +57,7 @@ log('RAPPELS — cartes :', await ev(`[...document.querySelectorAll('.rp-carte')
 log('  chaque carte a sa catégorie =', await ev(`[...document.querySelectorAll('.rp-carte')].every(c=>c.querySelector('.rp-carte__nom').textContent.trim())`), '| « Dernier soin le » =', await ev(`[...document.querySelectorAll('.rp-carte')].every(c=>c.textContent.includes('Dernier soin le'))`), '| « Soin du » restant =', await ev(`document.querySelector('.rp-page').textContent.includes('Soin du')`));
 await aller2('#/accueil');
 log('ACCUEIL — liste des rappels :', await badges('#ac-rappels ~ .cp-liste .cp-badge, section[aria-labelledby=ac-rappels] .cp-badge'));
-log('  résumé de l\'Accueil :', await texte('.ac-resume'), '| bouton :', await texte('.pg-entete--accueil .cp-btn'));
+log('  résumé de l\'Accueil :', await texte('.ac-resume'), '| actions rapides :', await ev(`[...document.querySelectorAll('.ac-action')].map(a=>a.textContent.trim()).join(', ')`));
 log('  3 prochains rappels (soin | animal · date) :', await ev(`[...document.querySelectorAll('section[aria-labelledby=ac-rappels] .cp-liste__ligne')].map(x=>x.querySelector('.cp-liste__titre').textContent+' | '+x.querySelector('.cp-liste__meta').textContent).join(' || ')`));
 log('  blocs retirés de l\'Accueil (tous doivent être à 0) : chiffres =', await ev(`document.querySelectorAll('.cp-stat, .pg-stats').length`), '| liste des animaux =', await ev(`document.querySelectorAll('.pg-animaux, section[aria-labelledby=ac-animaux]').length`), '| activité récente =', await ev(`document.querySelectorAll('#ac-activite').length`), '| « Bientôt » =', await ev(`document.querySelectorAll('.pg-bientot').length`), '| boutons répétant le menu =', await ev(`document.querySelectorAll('.pg-tuile').length`));
 await aller2('#/animaux');
