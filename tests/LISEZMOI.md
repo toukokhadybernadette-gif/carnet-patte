@@ -14,7 +14,7 @@ Depuis la racine du projet :
 
 ```
 node tests/lancer.mjs            # tous les tests
-node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions ou 5g
+node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g ou 5h
 node tests/lancer.mjs 5e 5f      # plusieurs
 ```
 
