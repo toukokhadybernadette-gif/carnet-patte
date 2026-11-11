@@ -37,34 +37,51 @@ const sansDebord = () => ev(`document.documentElement.scrollWidth<=innerWidth`);
 const texte = (sel) => ev(`(document.querySelector(${JSON.stringify(sel)})?.innerText ?? 'ABSENT').replace(/\\s+/g,' ').trim()`);
 const jour = (n) => { const d = new Date(); d.setDate(d.getDate() + n); const p = (x) => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
 await send('Page.navigate', { url: URL }); await sleep(1800); await taille(1280, 900); await aller('#/animaux'); await ev(axeSrc);
-// ===== Retouches 3 : couleur unique prune, bugs vus sur iPhone (date, filtre, marges, graphique, pesées, exemples) =====
+// ===== Retouches : couleur unique kaki/beige, boutons nets, bugs iPhone, bugs vus sur iPhone (date, filtre, marges, graphique, pesées, exemples) =====
 let echecs = 0;
 const verifier = (condition, texteLog) => { if (!condition) echecs++; log(`  ${texteLog} = ${condition}`); };
 const importer = (texte) => ev(`import('/js/storage.js').then(m=>m.importer(${JSON.stringify(texte)}))`);
 const A = (id, nom, extra = {}) => ({ id, nom, espece: 'chat', especeAutre: '', race: '', naissance: '', photo: '', ...extra });
 const jeu = (animaux, soins = [], pesees = []) => importer(JSON.stringify({ version: 1, exemplesAjoutes: true, animaux, soins, pesees }));
-const PRUNE = 'rgb(74, 66, 104)';
+const KAKI = 'rgb(91, 99, 52)';
 
-await jeu([A('a', 'Bob', { exemple: true }), A('b', 'Mia', { espece: 'chien' })], [], [
+const SOIN = (id, rappel) => ({ id, animalId: 'a', type: 'vermifuge', titre: '', date: jour(-60), notes: '', rappel: jour(rappel), rappelFait: false });
+await jeu([A('a', 'Bob', { exemple: true }), A('b', 'Mia', { espece: 'chien' })], [SOIN('s1', -3), SOIN('s2', 3), SOIN('s3', 30)], [
   { id: 'p1', animalId: 'a', date: jour(-40), poidsKg: 4.1 }, { id: 'p2', animalId: 'a', date: jour(-20), poidsKg: 4.55 }, { id: 'p3', animalId: 'a', date: jour(-1), poidsKg: 4.1 }]);
 
-log('=== COULEUR UNIQUE (prune) ===');
+log('=== COULEUR UNIQUE (vert kaki) ===');
 await taille(1280, 900); await aller2('#/animaux'); await sleep(800); await ev(`document.querySelector('.cp-filtre[data-valeur=chat]').click()`); await sleep(300);
-verifier(await ev(`getComputedStyle(document.querySelector('.app-marque__logo')).backgroundColor`) === PRUNE, 'logo : prune');
-verifier(await ev(`getComputedStyle(document.documentElement).getPropertyValue('--cp-foret').trim().toLowerCase()`) === '#4a4268', 'couleur principale : #4A4268');
+verifier(await ev(`getComputedStyle(document.querySelector('.app-marque__logo')).backgroundColor`) === KAKI, 'logo : kaki');
+verifier(await ev(`getComputedStyle(document.documentElement).getPropertyValue('--cp-foret').trim().toLowerCase()`) === '#5b6334', 'couleur principale : #5B6334');
 log('  filtre actif :', await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`));
-verifier(await ev(`(() => { const b = document.querySelector('.cp-filtre[aria-pressed="true"]'); return !!b && getComputedStyle(b).backgroundColor === 'rgb(74, 66, 104)'; })()`), 'filtre actif : prune');
+verifier(await ev(`(() => { const b = document.querySelector('.cp-filtre[aria-pressed="true"]'); return !!b && getComputedStyle(b).backgroundColor === 'rgb(91, 99, 52)'; })()`), 'filtre actif : kaki');
 // aucun bleu : on parcourt fonds, textes et contours des éléments de plusieurs pages
-const bleu = `(() => { const out = []; for (const e of document.querySelectorAll('body *:not(.cp-avatar)')) { const cs = getComputedStyle(e); for (const k of ['backgroundColor', 'color', 'borderTopColor']) { const m = cs[k].match(/rgba?\\((\\d+), (\\d+), (\\d+)(?:, ([\\d.]+))?\\)/); if (!m) continue; const r = +m[1], g = +m[2], b = +m[3], a = m[4] === undefined ? 1 : +m[4]; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); const h = mx === mn ? 0 : mx === r ? ((g - b) / (mx - mn) * 60 + 360) % 360 : mx === g ? (b - r) / (mx - mn) * 60 + 120 : (r - g) / (mx - mn) * 60 + 240; if (a > 0.15 && mx - mn > 50 && h >= 185 && h <= 247) out.push(e.className + ':' + k + ':' + cs[k]); } } return out.slice(0, 6); })()`;
+const bleu = `(() => { const out = []; for (const e of document.querySelectorAll('body *:not(.cp-avatar):not([class*="type-"]):not(.cp-liste__icone)')) { const cs = getComputedStyle(e); for (const k of ['backgroundColor', 'color', 'borderTopColor']) { const m = cs[k].match(/rgba?\\((\\d+), (\\d+), (\\d+)(?:, ([\\d.]+))?\\)/); if (!m) continue; const r = +m[1], g = +m[2], b = +m[3], a = m[4] === undefined ? 1 : +m[4]; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); const h = mx === mn ? 0 : mx === r ? ((g - b) / (mx - mn) * 60 + 360) % 360 : mx === g ? (b - r) / (mx - mn) * 60 + 120 : (r - g) / (mx - mn) * 60 + 240; if (a > 0.15 && mx - mn > 50 && h >= 185 && h <= 335) out.push(e.className + ':' + k + ':' + cs[k]); } } return out.slice(0, 6); })()`;
 for (const [h, nom] of [['#/animaux', 'Animaux'], ['#/accueil', 'Accueil'], ['#/animaux/rappels', 'Rappels'], ['#/profil', 'Profil']]) {
   await aller2(h); await sleep(400);
   const r = await ev(bleu);
-  verifier(r.length === 0, `${nom} : aucune couleur bleue (${r.join(' | ') || 'rien'})`);
+  verifier(r.length === 0, `${nom} : aucune couleur bleue ni violette (${r.join(' | ') || 'rien'})`);
 }
 await aller2('#/animaux/a'); await ev(`document.querySelector('[data-onglet=poids]').click()`); await sleep(600);
-verifier((await ev(bleu)).length === 0, 'fiche, onglet Poids : aucune couleur bleue');
-verifier(await ev(`getComputedStyle(document.querySelector('.ps-periodes .cp-filtre[aria-pressed="true"]')).backgroundColor`) === PRUNE, 'périodes du graphique : prune');
-verifier(await ev(`getComputedStyle(document.querySelector('.cp-onglets__trait')).backgroundColor`) === PRUNE, 'onglet actif : trait prune');
+verifier((await ev(bleu)).length === 0, 'fiche, onglet Poids : aucune couleur bleue ni violette');
+verifier(await ev(`getComputedStyle(document.querySelector('.ps-periodes .cp-filtre[aria-pressed="true"]')).backgroundColor`) === KAKI, 'périodes du graphique : kaki');
+verifier(await ev(`getComputedStyle(document.querySelector('.cp-onglets__trait')).backgroundColor`) === KAKI, 'onglet actif : trait kaki');
+
+log('=== BOUTONS NETS : un seul bord, ni anneau ni halo (téléphone) ===');
+await taille(390, 844); await aller2('#/animaux/rappels'); await sleep(900);
+const nets = await ev(`(() => { const out = []; for (const sel of ['.cp-btn', '.rp-statuts .cp-choix__option span', '.app-nav-bas', '.app-nav-bas .cp-nav-bas__item[aria-current=page]']) { const e = document.querySelector(sel); if (!e) { out.push(sel + ' : absent'); continue; } const cs = getComputedStyle(e); const ombre = cs.boxShadow; const anneau = /(rgba?\([^)]*\)) 0px 0px 0px [1-9]\d*px( inset)?/.test(ombre); const bord = parseFloat(cs.borderTopWidth); if (anneau) out.push(sel + ' : anneau ' + ombre); if (bord > 1) out.push(sel + ' : bord ' + bord + 'px'); if (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) out.push(sel + ' : contour ' + cs.outlineStyle); if (cs.backdropFilter !== 'none' && sel !== '.app-nav-bas') out.push(sel + ' : flou ' + cs.backdropFilter); if (cs.webkitTapHighlightColor !== 'rgba(0, 0, 0, 0)') out.push(sel + ' : tap ' + cs.webkitTapHighlightColor); } return out; })()`);
+verifier(nets.length === 0, `boutons, filtres, pastilles et barre : un seul bord, aucun anneau, halo ni flou (${nets.join(' | ') || 'rien à signaler'})`);
+await aller2('#/accueil'); await sleep(700);
+const nets2 = await ev(`(() => { const out = []; for (const sel of ['.ac-action__rond', '[data-fait]', '.ac-story--ajout']) { const e = document.querySelector(sel); if (!e) { out.push(sel + ' : absent'); continue; } const cs = getComputedStyle(e); if (/(rgba?\([^)]*\)) 0px 0px 0px [1-9]\d*px( inset)?/.test(cs.boxShadow)) out.push(sel + ' : anneau ' + cs.boxShadow); if (cs.backdropFilter !== 'none') out.push(sel + ' : flou'); if (cs.webkitTapHighlightColor !== 'rgba(0, 0, 0, 0)') out.push(sel + ' : tap'); } return out; })()`);
+verifier(nets2.length === 0, `Accueil : « Fait », actions rapides, carte Ajouter : bord net (${nets2.join(' | ') || 'rien à signaler'})`);
+// captures zoomées à 200 % : bord du bouton « Fait », des cercles et de la barre du bas
+const zoom = async (nom, sel) => { const r = await ev(`(() => { const b = document.querySelector('${sel}').getBoundingClientRect(); return { x: Math.max(b.left - 12, 0), y: Math.max(b.top - 12, 0) + scrollY, w: b.width + 24, h: b.height + 24 }; })()`); const c = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: r.x, y: r.y, width: Math.min(r.w, 390), height: r.h, scale: 2 } }); fs.writeFileSync(`${S}/shots/${TAG}-${nom}.png`, Buffer.from(c.result.data, 'base64')); };
+await zoom('zoom-fait', '.ac-afaire'); await zoom('zoom-actions', '.ac-actions'); await zoom('zoom-barre', '.app-nav-bas');
+
+log('=== URGENCE : le vert « plus tard » ne se confond pas avec le kaki (forme + texte) ===');
+await aller2('#/animaux/rappels'); await sleep(700);
+const badges = await ev(`(() => { const f = (c) => { const b = document.querySelector('.cp-badge--' + c); return b ? { texte: b.textContent.trim(), icone: b.querySelector('svg')?.innerHTML || '' } : null; }; return { retard: f('alerte'), semaine: f('attention'), plusTard: f('succes') }; })()`);
+verifier(badges.retard && badges.semaine && badges.plusTard && new Set([badges.retard.icone, badges.semaine.icone, badges.plusTard.icone]).size === 3 && [badges.retard, badges.semaine, badges.plusTard].every((b) => b.texte.length > 3), `retard / cette semaine / plus tard : trois icônes différentes et un texte chacun (${[badges.retard, badges.semaine, badges.plusTard].map((b) => b && b.texte).join(' | ')})`);
 
 log('=== PAGE ANIMAUX : exemples en petite ligne, filtre sans rectangle ===');
 await taille(390, 844); await aller2('#/animaux'); await sleep(600); await ev(`document.querySelector('.cp-filtre[data-valeur=chat]').click()`); await sleep(300);
