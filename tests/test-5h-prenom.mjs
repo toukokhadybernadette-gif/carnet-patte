@@ -97,17 +97,21 @@ verifier(await ev(`document.querySelectorAll('.cp-stat, .pg-animaux, #ac-activit
 verifier(await texte('.ac-resume') === '1 animal · 1 rappel en retard', `résumé sur une ligne : « ${await texte('.ac-resume')} »`);
 verifier(await ev(`document.querySelector('.ac-resume').getAttribute('href') === '#/animaux/rappels'`), 'le résumé mène aux rappels');
 // ordre demandé : Bonjour + résumé, avatars, actions rapides, prochains rappels, conseil, ce mois-ci
+verifier(await ev(`(() => { const h = document.querySelector('.ac-hero'); return !!h && !!h.querySelector('h1') && !!h.querySelector('.ac-hero__date') && h.querySelector('.ac-hero__date').textContent.length > 6 && /[a-zé]+ \\d+ [a-zéû]+/i.test(h.querySelector('.ac-hero__date').textContent); })()`), 'carte héros : date du jour en français dans la carte avec « Bonjour »');
+verifier(await ev(`(() => { const a = document.querySelector('.ac-hero [data-afaire]'); return !!a && a.querySelector('[data-fait]') && a.textContent.includes('Vermifuge') && a.textContent.includes('Pomme'); })()`), 'héros : le rappel le plus urgent (vermifuge de Pomme) avec un bouton « Fait » dedans');
 const ordre = await ev(`(() => { const sels = ['h1', '.ac-resume', '.ac-stories', '.ac-actions', '#ac-rappels', '.ac-conseil', '[data-ce-mois]']; const els = sels.map(s => document.querySelector(s)); return els.every(Boolean) && els.every((e, i) => i === 0 || !!(els[i - 1].compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING)); })()`);
 verifier(ordre, 'ordre : Bonjour + résumé, avatars, actions rapides, prochains rappels, conseil, ce mois-ci');
-// avatars
-const stories = await ev(`(() => { const ul = document.querySelector('.ac-stories ul'); return { n: document.querySelectorAll('.ac-story').length, href: document.querySelector('.ac-story').getAttribute('href'), defile: getComputedStyle(ul).overflowX, rond: getComputedStyle(document.querySelector('.ac-story .cp-avatar')).borderRadius, taille: Math.round(document.querySelector('.ac-story .cp-avatar').getBoundingClientRect().width), nom: document.querySelector('.ac-story__nom').textContent }; })()`);
-verifier(stories.n === 1 && stories.href === '#/animaux/a' && stories.defile === 'auto' && stories.taille <= 64 && stories.nom === 'Pomme', `rangée d'avatars ronds de ${stories.taille} px (défilement horizontal : ${stories.defile}), lien vers la fiche`);
+// mes animaux : cartes
+const stories = await ev(`(() => { const ul = document.querySelector('.ac-stories ul'); const c = document.querySelector('.ac-story'); const r = c.getBoundingClientRect(); return { n: document.querySelectorAll('.ac-story:not(.ac-story--ajout)').length, ajout: document.querySelectorAll('.ac-story--ajout').length, href: c.getAttribute('href'), defile: getComputedStyle(ul).overflowX, taille: Math.round(r.width), haut: Math.round(r.height), nom: c.querySelector('.ac-story__nom').textContent, espece: c.querySelector('.ac-story__espece').textContent, avatar: !!c.querySelector('.cp-avatar'), derniereEstAjout: ul.lastElementChild.firstElementChild.classList.contains('ac-story--ajout') }; })()`);
+verifier(stories.n === 1 && stories.ajout === 1 && stories.derniereEstAjout && stories.href === '#/animaux/a' && stories.defile === 'auto' && stories.nom === 'Pomme' && stories.espece.length > 0 && stories.avatar && stories.haut >= 100, `cartes d'animaux (${stories.taille}x${stories.haut} px, défilement horizontal : ${stories.defile}) : avatar, nom, espèce « ${stories.espece} », carte « + Ajouter » à la fin`);
 await ev(`document.querySelector('.ac-story').click()`); await sleep(700);
 verifier(await ev(`location.hash`) === '#/animaux/a' && await texte('.fi-entete h1') === 'Pomme', 'un toucher sur l\'avatar ouvre la fiche de l\'animal');
 await aller2('#/accueil');
 // actions rapides : 4 cercles
 const actionsRapides = await ev(`[...document.querySelectorAll('.ac-action')].map(a => ({ t: a.textContent.trim(), w: Math.round(a.querySelector('.ac-action__rond').getBoundingClientRect().width), rond: getComputedStyle(a.querySelector('.ac-action__rond')).borderRadius, href: a.getAttribute('href') }))`);
-verifier(actionsRapides.map((x) => x.t).join(' | ') === 'Ajouter un soin | Ajouter une pesée | Ajouter un animal | Sauvegarde', `4 actions rapides : ${actionsRapides.map((x) => x.t).join(' | ')}`);
+verifier(actionsRapides.map((x) => x.t).join(' | ') === 'Soin | Pesée | Animal | Sauvegarde', `4 actions rapides, libellés courts : ${actionsRapides.map((x) => x.t).join(' | ')}`);
+verifier(await ev(`(() => { const p = document.querySelector('.ac-actions'); const r = [...p.querySelectorAll('.ac-action__rond')].map(x => Math.round(x.getBoundingClientRect().top)); return r.length === 4 && new Set(r).size === 1 && [...p.querySelectorAll('.ac-action__texte')].every(t => t.getBoundingClientRect().height <= parseFloat(getComputedStyle(t).lineHeight) + 1); })()`), 'actions rapides : un seul panneau, 4 cercles alignés, libellés sur une ligne');
+verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.getAttribute('aria-label') || a.textContent.trim()).slice(0, 3).join(' | ')`) === 'Ajouter un soin | Ajouter une pesée | Ajouter un animal', 'lecteurs d\'écran : noms complets « Ajouter un soin », etc.');
 verifier(actionsRapides.every((x) => x.w >= 44 && x.rond === '50%'), `ce sont des cercles de ${actionsRapides[0].w} px (cible tactile de 44 px minimum)`);
 verifier(actionsRapides[3].href === '#/donnees', '« Sauvegarde » mène à la page Sauvegarde');
 await ev(`document.querySelector('.ac-action[data-act=soin]').click()`); await sleep(600);
@@ -123,7 +127,8 @@ await ev(`(()=>{const f=document.querySelector('dialog form');f.poids.value='502
 const apresPesee = (await donnees()).pesees;
 verifier(apresPesee.length === 3 && apresPesee.some((p) => p.poidsKg === 502.5 && p.animalId === 'a' && p.date === aujour) && await ev(`!document.querySelector('dialog')`), 'pesée de 502,5 kg enregistrée pour Pomme, avec la date du jour, fenêtre fermée');
 // ce mois-ci
-verifier(await texte('[data-ce-mois]') === 'Ce mois-ci : 2 soins faits, 2 pesées', `bilan du mois : « ${await texte('[data-ce-mois]')} » (2 soins et 2 pesées datés d'aujourd'hui ; le soin et la pesée d'il y a 100 jours ne comptent pas)`);
+const moisTxt = await ev(`[...document.querySelectorAll('[data-ce-mois] .ac-pastille')].map(l => l.textContent.trim()).join(' | ')`);
+verifier(moisTxt === '2 soins faits | 2 pesées', `« Ce mois-ci » en pastilles : « ${moisTxt} » (2 soins et 2 pesées datés d'aujourd'hui ; le soin et la pesée d'il y a 100 jours ne comptent pas)`);
 // rappels : année omise pour l'année en cours seulement
 const metas = await ev(`[...document.querySelectorAll('section[aria-labelledby=ac-rappels] .cp-liste__meta')].map(m => m.textContent)`);
 const anneeCourante = aujour.slice(0, 4);
@@ -132,7 +137,7 @@ const rappelCourant = metas.find((m) => m.startsWith('Pomme'));
 verifier(metas.filter((m) => /\d{4}/.test(m)).length === (unAn.slice(0, 4) === anneeCourante ? 0 : 1), 'l\'année est omise pour l\'année en cours et affichée pour une autre année');
 const ligneHaute = await ev(`[...document.querySelectorAll('section[aria-labelledby=ac-rappels] .cp-liste__corps')].every(c => { const lh = parseFloat(getComputedStyle(c.querySelector('.cp-liste__meta')).lineHeight); return c.querySelector('.cp-liste__meta').getBoundingClientRect().height <= lh + 1; })`);
 verifier(ligneHaute, 'chaque ligne « animal · date » tient sur une seule ligne');
-await taille(390, 844); await aller2('#/accueil');
+await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
 verifier(await ev(`[...document.querySelectorAll('.cp-liste__meta')].every(m => m.getBoundingClientRect().height <= parseFloat(getComputedStyle(m).lineHeight) + 1) && document.documentElement.scrollWidth <= innerWidth`), 'téléphone (390 px) : aucune ligne coupée, pas de défilement horizontal');
 await taille(1280, 900);
 
@@ -146,6 +151,9 @@ verifier(conseils.tous.every((c) => /(consult|appel|urgence)/i.test(c.texte) || 
 verifier(conseils.phrase === 'En cas de doute, appelez votre vétérinaire.', 'la phrase de prudence est celle demandée');
 const mois = new Date().getMonth();
 verifier(await texte('.ac-conseil__titre') === conseils.parMois[mois], `le conseil affiché est celui du mois en cours : « ${conseils.parMois[mois]} »`);
+verifier(await ev(`(() => { const t = document.querySelector('.ac-conseil__texte'); const lh = parseFloat(getComputedStyle(t).lineHeight); return t.getBoundingClientRect().height <= lh * 2 + 2 && document.querySelector('.ac-conseil__vet').hidden && document.querySelector('[data-conseil-suite]').textContent === 'Lire la suite'; })()`), 'conseil : 2 lignes visibles au maximum, phrase de prudence et source cachées, bouton « Lire la suite »');
+await ev(`document.querySelector('[data-conseil-suite]').click()`); await sleep(200);
+verifier(await ev(`(() => { const t = document.querySelector('.ac-conseil__texte'); const lh = parseFloat(getComputedStyle(t).lineHeight); return !document.querySelector('.ac-conseil__vet').hidden && !document.querySelector('.ac-conseil__source').hidden && document.querySelector('[data-conseil-suite]').getAttribute('aria-expanded') === 'true' && t.getBoundingClientRect().height >= lh * 2; })()`), '« Lire la suite » : texte complet, phrase de prudence et source visibles');
 verifier((await texte('.ac-conseil')).includes('En cas de doute, appelez votre vétérinaire.') && (await texte('.ac-conseil__source')).startsWith('Source :'), 'la phrase « En cas de doute, appelez votre vétérinaire. » et la source sont affichées');
 verifier(await ev(`!document.querySelector('.ac-conseil a, .ac-conseil img')`), 'le conseil ne contient que du texte (ni lien ni image)');
 await axe('#app', 'Accueil complet');
@@ -154,7 +162,7 @@ log('=== ACCUEIL : plusieurs animaux, sans retard, sans animal ===');
 await importerJeu([A('a', 'Pomme'), A('b', 'Bob', { espece: 'chat' })]);
 await aller2('#/accueil');
 verifier(await texte('.ac-resume') === '2 animaux · aucun rappel en retard', `sans retard : « ${await texte('.ac-resume')} »`);
-verifier(await ev(`document.querySelectorAll('.ac-story').length`) === 2 && await texte('[data-ce-mois]') === 'Ce mois-ci : 0 soin fait, 0 pesée', 'deux avatars ; bilan du mois à zéro');
+verifier(await ev(`document.querySelectorAll('.ac-story:not(.ac-story--ajout)').length`) === 2 && await ev(`[...document.querySelectorAll('[data-ce-mois] .ac-pastille')].map(l => l.textContent.trim()).join(' | ')`) === '0 soin fait | 0 pesée', 'deux cartes d\'animaux (+ la carte Ajouter) ; bilan du mois à zéro');
 await ev(`document.querySelector('.ac-action[data-act=soin]').click()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Pour quel animal ?' && document.querySelectorAll('dialog .ac-choix__animal').length === 2`), 'deux animaux : un petit choix « Pour quel animal ? »');
 await axe('dialog', 'choix de l\'animal');
@@ -167,18 +175,18 @@ verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textConten
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 await importerJeu([]);
 await aller2('#/accueil');
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Ajouter un animal | Sauvegarde' && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : seulement « Ajouter un animal » et « Sauvegarde », message d\'accueil, pas de conseil');
+verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Animal | Sauvegarde' && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : seulement « Animal » et « Sauvegarde », message d\'accueil, pas de conseil');
 await ev(`document.querySelector('.ac-action[data-act=animal]').click()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Nouvel animal'`), '« Ajouter un animal » ouvre le formulaire d\'un nouvel animal');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 await axe('#app', 'Accueil vide');
 await importer(JSON.stringify({ ...JSON.parse(ancienExport), soins: [{ id: 's1', animalId: 'a', type: 'vermifuge', titre: '', date: '2025-01-01', notes: '', rappel: '2025-02-01', rappelFait: false }] }));
-await taille(390, 844); await aller2('#/accueil');
+await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
 verifier(await ev(`[...document.querySelectorAll('#barre-haut a')].every(a => a.classList.contains('app-marque')) && !!document.querySelector('#recherche-bouton')`), 'téléphone : barre du haut = logo et recherche seulement');
 await taille(1280, 900);
 
 log('=== ÉTAPE B : barre du bas à 4 onglets, rappels sur téléphone ===');
-await taille(390, 844); await aller2('#/accueil');
+await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
 verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,rappels,profil', 'barre du bas : 4 onglets (Accueil, Animaux, Rappels, Profil), plus de Boutique');
 verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique reste dans la section « Bientôt » du menu de gauche');
 await aller2('#/animaux/rappels');
