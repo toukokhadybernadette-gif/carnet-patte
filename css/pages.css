@@ -6,6 +6,18 @@
 .pg-entete__badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cp-espace-2); }
 .pg-entete p { margin: 0; color: var(--cp-texte-doux); max-width: 62ch; }
 .pg-entete--accueil { grid-template-columns: 1fr auto; align-items: end; column-gap: var(--cp-espace-4); }
+.pg-entete--accueil > div { display: grid; gap: 2px; }
+/* Ligne de résumé de l'Accueil : « 2 animaux · 1 rappel en retard » (lien vers les rappels) */
+.ac-resume { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 4px; margin: 0; min-height: 28px; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+a.ac-resume { color: var(--cp-texte-doux); text-decoration: none; }
+a.ac-resume:hover { color: var(--cp-texte); }
+.cp a.ac-resume { color: var(--cp-texte-doux); text-decoration: none; }
+.ac-resume__retard { color: var(--cp-terre); font-weight: 500; }
+.ac-resume .ic { margin-left: 2px; }
+/* Choix « pour quel animal ? » */
+.ac-choix { display: grid; gap: var(--cp-espace-2); }
+.ac-choix__animal { display: flex; align-items: center; gap: var(--cp-espace-3); width: 100%; min-height: var(--cp-cible-tactile); padding: 8px 12px; font: inherit; font-weight: 500; color: var(--cp-foret); text-align: left; cursor: pointer; }
+.ac-choix__animal:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
 .pg-entete--icone { grid-template-columns: auto 1fr; align-items: center; column-gap: var(--cp-espace-4); }
 .pg-entete--icone > div { display: grid; gap: var(--cp-espace-1); }
 
@@ -54,7 +66,8 @@
 
 @media (max-width: 599px) {
   .pg { gap: 20px; }
-  .pg-entete--accueil { grid-template-columns: 1fr; }
+  .pg-entete--accueil { grid-template-columns: 1fr; row-gap: var(--cp-espace-3); }
+  .pg-entete--accueil > .cp-btn { justify-self: start; }
   .pg-stats { grid-template-columns: 1fr 1fr; }
   .pg-stats > .cp-stat:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--cp-bordure); }
   .pg-stats > .cp-stat { padding: 10px 12px; }
@@ -88,3 +101,65 @@
 .secours__etapes { margin: 0; padding-left: var(--cp-espace-5); display: grid; gap: var(--cp-espace-2); }
 .secours__actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); }
 @media (max-width: 599px) { .secours__actions .cp-btn { width: 100%; } }
+
+/* =========================================================
+   Téléphone : page moins chargée (blocs, marges et espacements réduits ; cibles tactiles de 44 px conservées)
+   ========================================================= */
+@media (max-width: 599px) {
+  .contenu { padding-top: var(--cp-espace-3); }
+  .pg { gap: var(--cp-espace-4); }
+  .pg-section { gap: var(--cp-espace-2); }
+  .pg-entete { gap: 2px; }
+  .cp-carte { padding: var(--cp-espace-3); }
+  .cp-vide { padding: var(--cp-espace-4) var(--cp-espace-3); gap: var(--cp-espace-2); }
+  .cp-vide__icone { width: 44px; height: 44px; }
+  .cp-liste__ligne { padding: 8px 12px; min-height: 48px; }
+  .rp-groupes { gap: var(--cp-espace-4); }
+  .rp-outils { gap: var(--cp-espace-3); }
+  .fi-entete { padding: var(--cp-espace-3); }
+  .fi-avatar { width: 52px; height: 52px; }
+  .fi-chiffres > .fi-chiffre { padding: 8px 12px; }
+  .fi-onglets .cp-onglet-panneau { padding-top: var(--cp-espace-3); }
+  .sn { gap: var(--cp-espace-3); }
+  .ps { gap: var(--cp-espace-3); }
+  .ps-form, .ps-graph { padding: var(--cp-espace-3); }
+}
+
+/* =========================================================
+   Accueil : avatars (stories), actions rapides, conseil du moment, bilan du mois
+   ========================================================= */
+.pg--accueil .pg-entete--accueil { grid-template-columns: 1fr; }
+/* Rangée d'avatars : défilement horizontal, un toucher ouvre la fiche */
+.ac-stories { margin-inline: calc(var(--cp-marge-page) * -1); }
+.ac-stories ul { list-style: none; margin: 0; padding: 4px var(--cp-marge-page) 6px; display: flex; gap: var(--cp-espace-4); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.ac-stories ul::-webkit-scrollbar { display: none; }
+.ac-story { display: grid; justify-items: center; gap: 6px; width: 72px; scroll-snap-align: start; text-decoration: none; color: var(--cp-foret); }
+.cp .ac-story { text-decoration: none; color: var(--cp-foret); }
+.ac-story .cp-avatar { width: 60px; height: 60px; font-size: 20px; box-shadow: 0 0 0 2px var(--cp-carte), 0 0 0 4px var(--an-trait, var(--cp-sauge)); transition: transform var(--cp-duree-rapide) var(--cp-courbe); }
+.ac-story:hover .cp-avatar { transform: scale(1.05); }
+.ac-story:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 12px; }
+.ac-story__nom { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 500; }
+@media (min-width: 1024px) { .ac-stories { margin-inline: 0; } .ac-stories ul { padding-inline: 4px; } }
+
+/* Actions rapides : une grille de cercles (verre « centre de contrôle », voir css/verre.css) */
+.ac-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--cp-espace-3); max-width: 520px; }
+.ac-action { display: grid; justify-items: center; align-content: start; gap: 8px; min-width: 0; padding: 0; border: 0; background: none; font: inherit; color: var(--cp-foret); text-decoration: none; cursor: pointer; }
+.cp .ac-action { color: var(--cp-foret); text-decoration: none; }
+.ac-action__rond { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret); }
+.ac-action__texte { font-size: var(--cp-taille-xs); line-height: 1.25; font-weight: 500; text-align: center; max-width: 84px; }
+.ac-action:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 4px; border-radius: 14px; }
+@media (max-width: 359px) { .ac-actions { gap: var(--cp-espace-2); } .ac-action__rond { width: 56px; height: 56px; } }
+
+/* Conseil du moment */
+.ac-conseil { display: grid; grid-template-columns: auto 1fr; gap: var(--cp-espace-3); align-items: start; }
+.ac-conseil__icone { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret); }
+.ac-conseil__corps { display: grid; gap: var(--cp-espace-1); min-width: 0; }
+.ac-conseil__corps p { margin: 0; }
+.ac-conseil__etiquette { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); }
+.ac-conseil__titre { font-size: var(--cp-taille-m); }
+.ac-conseil__texte { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte); }
+.ac-conseil__vet { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-foret); }
+.ac-conseil__source { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); }
+
+/* Bilan du mois */
+.ac-mois { margin: 0; text-align: center; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }

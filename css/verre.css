@@ -53,9 +53,9 @@ body { background: transparent; }
   background: radial-gradient(circle at 50% 50%, var(--bulle) 0%, transparent 68%);
   will-change: transform; animation: app-bulle var(--duree) ease-in-out infinite alternate;
 }
-.app-fond span:nth-child(1) { --bulle: rgba(156, 192, 224, .52); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
-.app-fond span:nth-child(2) { --bulle: rgba(242, 201, 160, .50); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
-.app-fond span:nth-child(3) { --bulle: rgba(199, 180, 230, .48); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
+.app-fond span:nth-child(1) { --bulle: rgba(112, 160, 236, .66); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
+.app-fond span:nth-child(2) { --bulle: rgba(255, 172, 112, .62); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
+.app-fond span:nth-child(3) { --bulle: rgba(176, 134, 238, .6); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
 .bulles-figees .app-fond span { animation: none; } /* ajouté par js/fond.js si l'appareil peine à animer le décor */
 @keyframes app-bulle { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(var(--dx), var(--dy), 0) scale(1.14); } }
 
@@ -105,7 +105,7 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
 .cp-modale {
   background: var(--cp-verre-fenetre);
   -webkit-backdrop-filter: blur(34px) saturate(1.6); backdrop-filter: blur(34px) saturate(1.6);
-  border: 1px solid var(--cp-verre-bordure); border-radius: 22px;
+  border: 1px solid var(--cp-verre-bordure); border-radius: 30px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(36, 61, 53, .22);
 }
 .cp-modale::backdrop { background: rgba(36, 61, 53, .30); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
@@ -166,4 +166,111 @@ a.cp-carte:hover { transform: translateY(-2px); }
   .cp-btn:hover:not(:disabled):not([aria-disabled="true"]), .cp-btn:active:not(:disabled):not([aria-disabled="true"]),
   .cp-filtre:active:not(:disabled), .cp-couleur:active, a.cp-carte:hover { transform: none; }
   .cp-onglets__trait.is-pret { transition: none; }
+}
+
+/* =========================================================
+   Verre « centre de contrôle iOS » (étape C)
+   Éléments gris-mauve translucides (jamais blancs) : on voit les couleurs du fond à travers, très floutées et saturées.
+   Formes très arrondies : cercles, capsules, carrés aux coins ~30 px. Liseré clair et brillant, plus lumineux en haut.
+   Actif : rempli d'une couleur vive qui ressort du verre. Icônes claires, simples, centrées.
+   ========================================================= */
+:root {
+  --cc-fond: rgba(74, 66, 104, .62);
+  --cc-fond-survol: rgba(74, 66, 104, .7);
+  --cc-flou: 30px;
+  --cc-sat: 1.9;
+  --cc-bord: rgba(255, 255, 255, .5);
+  --cc-reflet: inset 0 1.5px 0 rgba(255, 255, 255, .8), inset 0 -1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(255, 255, 255, .16);
+  --cc-ombre: 0 10px 24px rgba(52, 44, 84, .22);
+  --cc-actif: #2A64DD;
+  --cc-icone: #FFFFFF;
+}
+.ac-action__rond {
+  background: var(--cc-fond); color: var(--cc-icone);
+  -webkit-backdrop-filter: blur(var(--cc-flou)) saturate(var(--cc-sat)); backdrop-filter: blur(var(--cc-flou)) saturate(var(--cc-sat));
+  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), var(--cc-ombre);
+  transition: background-color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-duree-rapide) var(--cp-courbe);
+}
+.ac-action:hover .ac-action__rond { background: var(--cc-fond-survol); }
+.ac-action:active .ac-action__rond { background: var(--cc-actif); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --cc-fond: rgba(88, 80, 120, .92); --cc-fond-survol: rgba(74, 66, 104, .96); }
+}
+
+/* ---------- Barre du bas : capsule de verre flottante, détachée des bords (téléphone) ---------- */
+.app-nav-bas {
+  left: var(--cp-espace-4); right: var(--cp-espace-4); bottom: calc(var(--cp-espace-3) + env(safe-area-inset-bottom));
+  max-width: 440px; margin-inline: auto; padding: 6px; border-radius: 999px;
+  background: rgba(74, 66, 104, .74);
+  -webkit-backdrop-filter: blur(34px) saturate(var(--cc-sat)); backdrop-filter: blur(34px) saturate(var(--cc-sat));
+  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), 0 14px 34px rgba(52, 44, 84, .3);
+}
+.contenu { padding-bottom: calc(76px + var(--cp-espace-5) + env(safe-area-inset-bottom)); } /* la capsule flotte : le contenu ne passe pas dessous */
+#toasts, .cp-notifs { bottom: calc(76px + var(--cp-espace-5) + env(safe-area-inset-bottom)); }
+.app-nav-bas .cp-nav-bas { gap: 4px; }
+.app-nav-bas .cp-nav-bas__item { color: #FFFFFF; min-height: 54px; border-radius: 999px; font-weight: 500; transition: background-color var(--cp-duree-rapide) var(--cp-courbe), color var(--cp-duree-rapide) var(--cp-courbe); }
+.app-nav-bas .cp-nav-bas__item:hover { color: #FFFFFF; background: rgba(255, 255, 255, .16); }
+/* page active : capsule blanche opaque, texte et icône foncés (ressort nettement sur le verre) */
+.app-nav-bas .cp-nav-bas__item[aria-current="page"] { background: rgba(255, 255, 255, .97); color: var(--cp-foret); font-weight: 600; box-shadow: 0 2px 8px rgba(36, 61, 53, .2); }
+.app-nav-bas .cp-nav-bas__item[aria-current="page"]::before { display: none; }
+.app-nav-bas .cp-nav-bas__icone .ic { filter: drop-shadow(0 1px 1px rgba(36, 61, 53, .18)); }
+.app-nav-bas .cp-nav-bas__compteur { box-shadow: 0 0 0 2px rgba(74, 66, 104, .95); }
+.app-nav-bas .cp-nav-bas__item[aria-current="page"] .cp-nav-bas__compteur { box-shadow: 0 0 0 2px #FFFFFF; }
+@media (min-width: 600px) { .contenu { padding-bottom: var(--cp-espace-8); } #toasts, .cp-notifs { bottom: var(--cp-espace-5); } }
+
+/* ---------- Boutons : capsules de verre teinté, liseré clair plus brillant en haut ---------- */
+.cp-btn { border-radius: 999px; }
+.cp-btn--principal {
+  background: rgba(74, 66, 104, .84); color: #FFFFFF; border-color: var(--cc-bord);
+  -webkit-backdrop-filter: blur(20px) saturate(var(--cc-sat)); backdrop-filter: blur(20px) saturate(var(--cc-sat));
+  box-shadow: var(--cc-reflet), 0 6px 16px rgba(52, 44, 84, .2);
+}
+.cp-btn--principal:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: rgba(62, 54, 92, .92); }
+.cp-btn--principal:active:not(:disabled):not([aria-disabled="true"]) { background: var(--cc-actif); }
+.cp-btn--secondaire {
+  background: rgba(120, 110, 160, .16); color: var(--cp-foret); border-color: rgba(255, 255, 255, .75);
+  -webkit-backdrop-filter: blur(20px) saturate(var(--cc-sat)); backdrop-filter: blur(20px) saturate(var(--cc-sat));
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .9), inset 0 0 0 1px rgba(74, 66, 104, .1), 0 4px 12px rgba(52, 44, 84, .08);
+}
+.cp-btn--secondaire:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: rgba(120, 110, 160, .26); }
+.cp-btn--secondaire:active:not(:disabled):not([aria-disabled="true"]) { background: rgba(42, 100, 221, .22); }
+.cp-btn--danger { box-shadow: var(--cc-reflet), 0 6px 16px rgba(142, 61, 43, .22); border-color: rgba(255, 255, 255, .4); }
+.cp-btn--discret { border-radius: 999px; }
+
+/* ---------- Pastilles et filtres : capsules en verre teinté vert sauge, très floues ; l'actif ressort en bleu vif ---------- */
+.cp-filtre:not([aria-pressed="true"]):not(:disabled), .rp-statuts .cp-choix__option span {
+  -webkit-backdrop-filter: blur(20px) saturate(var(--cc-sat)); backdrop-filter: blur(20px) saturate(var(--cc-sat));
+  border-radius: 999px; box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(86, 120, 82, .18), 0 3px 10px rgba(52, 44, 84, .07);
+}
+.cp-filtre[aria-pressed="true"], .rp-statuts .cp-choix__option input:checked + span {
+  background: var(--cc-actif); color: #FFFFFF; border-color: rgba(255, 255, 255, .6);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .55), 0 6px 16px rgba(42, 100, 221, .35);
+}
+.cp-filtre[aria-pressed="true"]:hover:not(:disabled) { background: #1F52C0; }
+.rp-statuts input:checked + span .rp-nombre, .cp-filtre[aria-pressed="true"] .cp-filtre__nombre { background: rgba(10, 30, 90, .4); color: #FFFFFF; opacity: 1; box-shadow: none; }
+.rp-statuts .cp-choix__option input:checked + span { box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .55), 0 6px 16px rgba(42, 100, 221, .35); }
+
+/* =========================================================
+   Boutons qui rebondissent (étape D)
+   Au toucher le bouton s'enfonce vite ; au relâchement il revient avec un petit dépassement (ressort).
+   Courbe à dépassement : le « 1.56 » fait aller un peu au-delà de la taille normale avant de se poser.
+   ========================================================= */
+:root { --cp-ressort: cubic-bezier(.34, 1.56, .64, 1); --cp-ressort-duree: 420ms; --cp-appui-duree: 90ms; }
+.cp-btn, .cp-filtre, .cp-couleur, .cp-choix__option span, .ac-action__rond, .ac-story .cp-avatar, .app-nav-bas .cp-nav-bas__item {
+  transition-property: background-color, border-color, box-shadow, color, transform;
+  transition-duration: var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-ressort-duree);
+  transition-timing-function: var(--cp-courbe), var(--cp-courbe), var(--cp-courbe), var(--cp-courbe), var(--cp-ressort);
+}
+.cp-btn:active:not(:disabled):not([aria-disabled="true"]), .cp-filtre:active:not(:disabled), .cp-couleur:active { transform: scale(.93); }
+.cp-choix__option:active input:not(:disabled) + span { transform: scale(.94); }
+.ac-action:active .ac-action__rond { transform: scale(.88); }
+.ac-story:active .cp-avatar { transform: scale(.9); }
+.app-nav-bas .cp-nav-bas__item:active { transform: scale(.9); }
+.cp-btn:active, .cp-filtre:active, .cp-couleur:active, .cp-choix__option:active span, .ac-action:active .ac-action__rond,
+.ac-story:active .cp-avatar, .app-nav-bas .cp-nav-bas__item:active { transition-duration: var(--cp-appui-duree); transition-timing-function: ease-out; }
+/* « Réduire les animations » : pas de rebond, ni d'enfoncement */
+@media (prefers-reduced-motion: reduce) {
+  .cp-btn, .cp-filtre, .cp-couleur, .cp-choix__option span, .ac-action__rond, .ac-story .cp-avatar, .app-nav-bas .cp-nav-bas__item { transition-duration: 1ms; }
+  .cp-btn:active, .cp-filtre:active, .cp-couleur:active, .cp-choix__option:active input + span, .ac-action:active .ac-action__rond,
+  .ac-story:active .cp-avatar, .app-nav-bas .cp-nav-bas__item:active { transform: none !important; }
 }

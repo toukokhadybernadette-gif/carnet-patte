@@ -117,7 +117,9 @@ verifier(await ev(`getComputedStyle(document.querySelector('.ps-ligne')).stroke`
 await aller2('#/animaux');
 verifier(await ev(`[...document.querySelectorAll('[data-grille] a')].find(a => a.textContent.includes('Pomme')).querySelector('.cp-avatar').className.includes('cp-an-magenta')`), 'liste des animaux : avatar en magenta');
 await aller2('#/accueil');
-verifier(await ev(`[...document.querySelectorAll('section[aria-labelledby=ac-animaux] a')].find(a => a.textContent.includes('Pomme')).querySelector('.cp-avatar').className.includes('cp-an-magenta')`), 'Accueil : avatar en magenta');
+await ev(`document.querySelector('.ac-action[data-act=soin]').click()`); await sleep(500);
+verifier(await ev(`[...document.querySelectorAll('dialog .ac-choix__animal')].find(a => a.textContent.includes('Pomme')).querySelector('.cp-avatar').className.includes('cp-an-magenta')`), 'Accueil : l\'avatar de Pomme est magenta dans le choix « Pour quel animal ? »');
+await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(300);
 await aller2('#/animaux/rappels');
 verifier(await ev(`[...document.querySelectorAll('.rp-animal')].filter(a => a.textContent.includes('Pomme')).every(a => a.querySelector('.cp-avatar').className.includes('cp-an-magenta'))`), 'Rappels : avatar en magenta');
 // retour à « Automatique »

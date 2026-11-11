@@ -65,7 +65,7 @@ const groupes = () => ev(`[...document.querySelectorAll('.rp-groupe__titre')].ma
 const statut = async (v) => { await ev(`document.querySelector('input[name="rp-statut"][value="${v}"]').click()`); await sleep(150); };
 const animal = async (v) => { await ev(`(()=>{const s=document.querySelector('#rp-animal');s.value='${v}';s.dispatchEvent(new Event('change',{bubbles:true}))})()`); await sleep(150); };
 const pastilles = () => ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option span')].map(s=>s.textContent.replace(/\\s+/g,' ').trim()).join(' / ')`);
-const chiffres = () => ev(`[...document.querySelectorAll('.rp-chiffre')].map(c=>c.getAttribute('aria-label')+'='+c.querySelector('.cp-stat__valeur').textContent).join(' ')`);
+const chiffres = () => ev(`[...document.querySelectorAll('.rp-statuts input')].map(i=>i.nextElementSibling.textContent.replace(/\\s+/g,' ').trim().replace(/ (\\d+)$/, '=$1')).join(' ')`);
 const badgeNav = () => ev(`(()=>{const c=document.querySelector('.app-lateral [data-nav=rappels] [data-retards]');return c.hidden?'':c.textContent.trim()})()`);
 
 // ===== 1. Affichage sur les trois formats
@@ -77,7 +77,7 @@ for (const [tn, w, h] of [['ordinateur', 1280, 900], ['tablette', 820, 1000], ['
 }
 await taille(1280, 900); await aller2('#/animaux/rappels');
 log('sous-titre :', await texte('.rp-page .pg-entete p'));
-log('chiffres :', await chiffres(), '(attendu En retard=2 Cette semaine=2 Plus tard=2 Effectués=2)');
+log('nombres des boutons de filtre :', await chiffres(), '(attendu À faire=6 En retard=2 À venir=4 Effectués=2)', '| plus aucun carré de chiffres =', await ev(`!document.querySelector('.rp-chiffres, .rp-chiffre')`));
 log('groupes par défaut :', await groupes());
 log('cartes (ordre) :', await cartes());
 log('soin orphelin (animal disparu) absent =', await ev(`!document.querySelector('#contenu').textContent.includes('Orphelin')`), '| soin sans rappel absent =', await ev(`!document.querySelector('#contenu').textContent.includes('Sans rappel')`));
@@ -156,7 +156,7 @@ for (let i = 0; i < 25; i++) gros.soins.push({ id: 'g' + i, animalId: ['a', 'b']
 await ev(`import('/js/storage.js').then(m=>m.importer(${JSON.stringify(JSON.stringify(gros))}))`);
 const t0 = Date.now(); await aller2('#/animaux/rappels'); log('longue liste : affichée en', Date.now() - t0, 'ms (dont 500 ms d\'attente) | cartes à faire =', await ev(`document.querySelectorAll('.rp-carte').length`));
 await axe('#contenu', 'longue liste');
-await statut('faits'); log('  effectués affichés =', await ev(`document.querySelectorAll('.rp-carte').length`), '/', await ev(`document.querySelector('.rp-chiffre--faits .cp-stat__valeur').textContent`), '| bouton =', await texte('[data-plus]'));
+await statut('faits'); log('  effectués affichés =', await ev(`document.querySelectorAll('.rp-carte').length`), '/', await ev(`document.querySelector('.rp-statuts input[value=faits] + span .rp-nombre').textContent`), '| bouton =', await texte('[data-plus]'));
 await ev(`document.querySelector('[data-plus]').click()`); await sleep(200);
 log('  après « Afficher plus » :', await ev(`document.querySelectorAll('.rp-carte').length`), '| focus sur le 21e =', await ev(`[...document.querySelectorAll('.rp-carte')].indexOf(document.activeElement.closest('.rp-carte'))`));
 await taille(390, 844); log('  mobile : sans défilement horizontal =', await sansDebord()); await taille(1280, 900);

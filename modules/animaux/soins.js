@@ -7,7 +7,7 @@ import { icone } from '../../js/icons.js';
 import { bouton, champ, choix, vide } from '../../js/composants.js';
 import { TYPES_SOIN, classeType, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
 
-function formulaireSoin(animal, soin, apres) {
+export function formulaireSoin(animal, soin, apres) {
   const s = soin ?? { type: 'vaccin', titre: '', date: aujourdhui(), notes: '', rappel: '' };
   const typeInitial = TYPES_SOIN.some((t) => t.id === s.type) ? s.type : 'autre';
   const rappelTraite = Boolean(soin && soin.rappel && soin.rappelFait);
