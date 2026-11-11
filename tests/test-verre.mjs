@@ -86,25 +86,25 @@ const regles = await ev(`(() => { let trouve = false; for (const f of document.s
 verifier(regles, 'repli prévu pour un navigateur sans backdrop-filter (fonds presque pleins)');
 
 log('=== PASTILLES EN VERT SAUGE (urgence inchangée) ===');
-const vert = (c) => { const m = (c ?? '').match(/[\d.]+/g)?.map(Number); return !!m && m[1] > m[0] && m[1] > m[2] && (m[3] ?? 1) < 0.7; }; // dominante verte, translucide
+const vert = (c) => { const m = (c ?? '').match(/[\d.]+/g)?.map(Number); return !!m && m[2] > m[1] && m[2] >= m[0] && (m[3] ?? 1) < 0.7; }; // dominante mauve (couleur unique), translucide
 await aller2('#/animaux/rappels'); await sleep(900);
-verifier(await ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option input:not(:checked) + span')].length === 3`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:not(:checked) + span')).backgroundColor`)), 'boutons de filtre (En retard, À venir, Effectués) : verre teinté vert sauge translucide');
-verifier(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).backgroundColor`) === 'rgb(42, 100, 221)' && await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).color`) === 'rgb(255, 255, 255)', 'bouton de filtre choisi (À faire) : rempli de bleu vif, texte blanc (il ressort nettement du verre vert sauge)');
-verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts input:not(:checked) + span .rp-nombre')).backgroundColor`)), 'compteurs dans les boutons de filtre non choisis : vert sauge');
-verifier(await ev(`!!document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')).backgroundColor`)), 'compteur d\'un groupe « Cette semaine » : vert sauge');
+verifier(await ev(`[...document.querySelectorAll('.rp-statuts .cp-choix__option input:not(:checked) + span')].length === 3`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:not(:checked) + span')).backgroundColor`)), 'boutons de filtre (En retard, À venir, Effectués) : verre teinté prune clair translucide');
+verifier(await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).backgroundColor`) === 'rgb(74, 66, 104)' && await ev(`getComputedStyle(document.querySelector('.rp-statuts .cp-choix__option input:checked + span')).color`) === 'rgb(255, 255, 255)', 'bouton de filtre choisi (À faire) : rempli de prune, texte blanc (il ressort nettement du verre prune clair)');
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.rp-statuts input:not(:checked) + span .rp-nombre')).backgroundColor`)), 'compteurs dans les boutons de filtre non choisis : prune clair');
+verifier(await ev(`!!document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')`) && vert(await ev(`getComputedStyle(document.querySelector('.rp-groupe--semaine .rp-groupe__titre .cp-compteur')).backgroundColor`)), 'compteur d\'un groupe « Cette semaine » : prune clair');
 // l'urgence garde ses couleurs d'avant
 const rgb = (sel) => ev(`getComputedStyle(document.querySelector(${JSON.stringify(sel)})).backgroundColor`);
 verifier(await rgb('.rp-groupe--retard .rp-groupe__titre .cp-compteur') === 'rgb(246, 227, 220)', 'compteur du groupe « En retard » : toujours rouge pâle');
 verifier(await rgb('.cp-badge--alerte') === 'rgb(246, 227, 220)' && await rgb('.cp-badge--attention') === 'rgb(246, 232, 201)' && await rgb('.cp-badge--succes') === 'rgb(228, 238, 224)', 'badges d\'échéance : rouge pâle, ambre pâle et vert pâle inchangés');
 verifier(await rgb('.app-nav__compteur') === 'rgb(142, 61, 43)', 'pastille rouge des retards dans le menu : inchangée');
 await aller2('#/animaux'); await sleep(900);
-verifier(await ev(`document.querySelectorAll('.cp-filtre').length >= 2`) && vert(await ev(`getComputedStyle(document.querySelector('.cp-filtre')).backgroundColor`)), 'filtres par espèce (Mes animaux) : vert sauge translucide');
+verifier(await ev(`document.querySelectorAll('.cp-filtre').length >= 2`) && vert(await ev(`getComputedStyle(document.querySelector('.cp-filtre')).backgroundColor`)), 'filtres par espèce (Mes animaux) : prune clair translucide');
 await ev(`document.querySelector('.cp-filtre').click()`); await sleep(200);
-verifier(await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`) === 'rgb(42, 100, 221)', 'filtre activé : rempli de bleu vif (état très lisible)');
+verifier(await ev(`getComputedStyle(document.querySelector('.cp-filtre[aria-pressed="true"]')).backgroundColor`) === 'rgb(74, 66, 104)', 'filtre activé : rempli de prune (état très lisible)');
 await ev(`document.querySelector('.cp-filtre[aria-pressed="true"]').click()`); await sleep(100);
 await aller2('#/accueil'); await sleep(500);
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(150);
-verifier(vert(await ev(`getComputedStyle(document.querySelector('.app-bientot__nombre')).backgroundColor`)), 'compteur de la section « Bientôt » du menu : vert sauge');
+verifier(vert(await ev(`getComputedStyle(document.querySelector('.app-bientot__nombre')).backgroundColor`)), 'compteur de la section « Bientôt » du menu : prune clair');
 await ev(`document.querySelector('.app-bientot__titre').click()`);
 
 log('=== LISIBILITÉ MESURÉE SUR CAPTURE (texte rendu transparent pour lire le vrai fond, bulles à 3 positions) ===');
@@ -178,7 +178,7 @@ verifier(contrasteIcones.length === 4 && contrasteIcones.every((c) => c >= 3), `
 const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return { gauche: b.left, droite: innerWidth - b.right, bas: innerHeight - b.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: s.position, actif: (() => { const a = e.querySelector('[aria-current="page"]'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
 verifier(barre.position === 'fixed' && barre.gauche >= 12 && barre.droite >= 12 && barre.bas >= 8, `barre du bas flottante, détachée des bords (${Math.round(barre.gauche)} px à gauche, ${Math.round(barre.droite)} à droite, ${Math.round(barre.bas)} du bas)`);
 verifier(barre.rayon >= barre.h / 2 - 1 && /blur/.test(barre.flou) && rgbaDe(barre.fond)[3] < 0.9, `capsule de verre : coins en demi-cercle (${barre.rayon} px pour ${Math.round(barre.h)} px de haut), flou, fond translucide`);
-verifier(barre.actif.fond.startsWith('rgba(255, 255, 255') && rgbaDe(barre.actif.fond)[3] >= 0.95 && barre.actif.texte === 'rgb(36, 61, 53)', 'onglet actif : capsule blanche opaque, texte foncé');
+verifier(barre.actif.fond.startsWith('rgba(255, 255, 255') && rgbaDe(barre.actif.fond)[3] >= 0.95 && barre.actif.texte === 'rgb(74, 66, 104)', 'onglet actif : capsule blanche opaque, texte foncé');
 await ev(`window.scrollTo(0, document.documentElement.scrollHeight)`); await sleep(300);
 const sousBarre = await ev(`(() => { const barre = document.querySelector('.app-nav-bas').getBoundingClientRect(); const dernier = [...document.querySelectorAll('#contenu .pg > *')].pop().getBoundingClientRect(); return { fin: dernier.bottom, hautBarre: barre.top }; })()`);
 verifier(sousBarre.fin <= sousBarre.hautBarre - 4, `en bas de page, le dernier élément reste au-dessus de la barre (${Math.round(sousBarre.fin)} px < ${Math.round(sousBarre.hautBarre)} px)`);
@@ -203,7 +203,7 @@ await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(
 // fond plus coloré
 const bulles = await ev(`[...document.querySelectorAll('.app-fond span')].map(s => getComputedStyle(s).backgroundImage)`);
 const alphas = bulles.map((b) => Number((b.match(/rgba\([^)]*,\s*([\d.]+)\)/) ?? [0, 0])[1]));
-verifier(alphas.length === 3 && alphas.every((a) => a >= 0.58), `fond plus coloré : trois bulles (pêche, bleu, lilas) à ${alphas.map((a) => Math.round(a * 100)).join(' %, ')} % d'opacité`);
+verifier(alphas.length === 3 && alphas.every((a) => a >= 0.58), `fond plus coloré : trois bulles (rose, pêche, lilas) à ${alphas.map((a) => Math.round(a * 100)).join(' %, ')} % d'opacité`);
 await taille(1280, 900);
 
 log('=== MOUVEMENT ===');

@@ -113,7 +113,7 @@ function evenements(animal) {
     let detail = '';
     if (i > 0) {
       const diff = Math.round((p.poidsKg - liste[i - 1].poidsKg) * 1000) / 1000;
-      if (diff !== 0) detail = `${diff > 0 ? '+' : '−'}${Math.abs(diff).toLocaleString('fr-FR')} kg depuis la pesée précédente`;
+      if (diff !== 0) detail = `${diff > 0 ? '+' : '−'}${Math.abs(diff).toLocaleString('fr-FR')} kg`;
     }
     ev.push({ date: p.date, rang: 1, icone: 'scale', titre: `Pesée : ${formatPoids(p.poidsKg)}`, detail });
   });

@@ -264,11 +264,7 @@ function rendreListe(zone) {
       ${animaux.length ? `
         ${resumeHtml(rappels)}
         ${aDesExemples ? `
-          <div class="cp-alerte cp-alerte--info al-exemples">
-            ${icone('info', { taille: 20 })}
-            <div class="cp-alerte__texte">Les animaux marqués « exemple » servent à découvrir l'appli.</div>
-            ${bouton({ texte: 'Supprimer les exemples', variante: 'secondaire', taille: 's', attrs: { 'data-act': 'effacer-exemples' } })}
-          </div>` : ''}
+          <p class="al-exemples">Les animaux « exemple » servent à découvrir l'appli. <button type="button" class="al-exemples__lien" data-act="effacer-exemples">Supprimer les exemples</button></p>` : ''}
         ${outilsHtml}
         ${grilleHtml}` : videHtml}
     </div>`;

@@ -66,7 +66,7 @@ export function champ({ id, label, type = 'text', valeur = '', placeholder = '',
   const decrit = [aide && `${id}-aide`, erreur && `${id}-erreur`].filter(Boolean).join(' ');
   const commun = {
     id, name: id, class: type === 'textarea' ? 'cp-textarea' : 'cp-input', placeholder, disabled: desactive, required: requis,
-    'aria-invalid': erreur ? 'true' : false, 'aria-describedby': decrit || false, ...attrs,
+    'aria-invalid': erreur ? 'true' : false, 'aria-describedby': decrit || false, ...(type === 'date' ? { lang: 'fr' } : {}), ...attrs,
   };
   const controle = type === 'textarea'
     ? `<textarea${attributs(commun)}>${echapper(valeur)}</textarea>`

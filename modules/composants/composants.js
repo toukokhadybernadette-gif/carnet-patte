@@ -18,15 +18,15 @@ const SECTIONS = [
 ];
 
 const COULEURS = [
-  ['Vert forêt', '--cp-foret', '#243D35', 'Texte, titres, bouton principal', '#fff'],
-  ['Vert sauge', '--cp-sauge', '#A8BFA5', 'Bordures, illustrations', '#243D35'],
-  ['Blanc cassé', '--cp-fond', '#F6F5F0', 'Fond de l\'application', '#243D35'],
-  ['Vert clair', '--cp-vert-clair', '#D9E6D5', 'Sélections, badges calmes', '#243D35'],
-  ['Beige chaud', '--cp-beige', '#D7A879', 'Accents (jamais en texte sur fond clair)', '#243D35'],
+  ['Prune', '--cp-foret', '#4A4268', 'Couleur unique : titres, boutons, actifs', '#fff'],
+  ['Prune clair', '--cp-sauge', '#B7B0D0', 'Bordures, illustrations', '#2B2644'],
+  ['Blanc cassé', '--cp-fond', '#F7F5FA', 'Fond de l\'application', '#2B2644'],
+  ['Prune très clair', '--cp-vert-clair', '#ECE9F5', 'Sélections, badges calmes', '#2B2644'],
+  ['Beige chaud', '--cp-beige', '#D7A879', 'Accents (jamais en texte sur fond clair)', '#2B2644'],
   ['Terre cuite', '--cp-terre', '#9A4330', 'Retard, erreur, danger', '#fff'],
   ['Ambre', '--cp-ambre', '#7A4F0F', 'Attention, bientôt', '#fff'],
   ['Succès', '--cp-succes-texte', '#1F5A3F', 'Confirmation', '#fff'],
-  ['Information', '--cp-info', '#2B5560', 'Information', '#fff'],
+  ['Information', '--cp-info', '#4A4268', 'Information', '#fff'],
 ];
 
 const section = (id, titre, intro, corps) => `

@@ -113,7 +113,7 @@ export function graphiqueSvg(pesees, { largeur = 600, periode = '' } = {}) {
   min = Math.max(min - marge15, 0); max += marge15;
 
   const graduationsAxe = graduations(min, max);
-  const marge = { g: Math.round(14 + 6 * Math.max(...graduationsAxe.map((g) => g.texte.length))), d: 14, h: 12, b: 26 }; // la marge gauche suit la longueur des chiffres
+  const marge = { g: Math.round(14 + 6 * Math.max(...graduationsAxe.map((g) => g.texte.length))), d: 16, h: 26, b: 26 }; // la marge gauche suit la longueur des chiffres
   const largeurUtile = L - marge.g - marge.d;
   const hauteur = H - marge.h - marge.b;
 
@@ -180,8 +180,8 @@ function carteHtml(pesee, precedente) {
   if (precedente) {
     const diff = Math.round((pesee.poidsKg - precedente.poidsKg) * 10000) / 10000;
     variation = diff !== 0
-      ? `<span class="ps-ligne-info">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 16 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg depuis la pesée précédente</span></span>`
-      : `<span class="ps-ligne-info">${icone('minus', { taille: 16 })}<span>Poids inchangé depuis la pesée précédente</span></span>`;
+      ? `<span class="ps-ligne-info">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 16 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg</span></span>`
+      : `<span class="ps-ligne-info">${icone('minus', { taille: 16 })}<span>Poids inchangé</span></span>`;
   }
   const nom = `la pesée de ${formatPoids(pesee.poidsKg)} du ${formatDate(pesee.date)}`;
   return `
