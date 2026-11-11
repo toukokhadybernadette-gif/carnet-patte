@@ -8,16 +8,16 @@
    téléphone, et les bulles sont figées si « réduire les animations » est activé. */
 
 :root {
-  --cp-verre-fond: rgba(250, 240, 218, .52);
-  --cp-verre-fond-fort: rgba(251, 243, 224, .72);
-  --cp-verre-bordure: rgba(255, 249, 232, .85);
+  --cp-verre-fond: rgba(245, 243, 239, .55);
+  --cp-verre-fond-fort: rgba(246, 244, 240, .74);
+  --cp-verre-bordure: rgba(255, 253, 250, .85);
   --cp-verre-flou: 28px;
   --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(46, 42, 24, .06), 0 8px 24px rgba(46, 42, 24, .10);
-  --cp-verre-barre-haut: rgba(244, 236, 218, .6);
-  --cp-verre-barre-laterale: rgba(247, 238, 218, .5);
-  --cp-verre-barre-bas: rgba(247, 238, 218, .65);
-  --cp-verre-fenetre: rgba(251, 245, 230, .8);
-  --cp-verre-menu: rgba(251, 246, 234, .96);
+  --cp-verre-barre-haut: rgba(236, 232, 225, .6);
+  --cp-verre-barre-laterale: rgba(238, 234, 228, .5);
+  --cp-verre-barre-bas: rgba(238, 234, 228, .65);
+  --cp-verre-fenetre: rgba(246, 244, 240, .82);
+  --cp-verre-menu: rgba(246, 244, 240, .96);
   /* Pastilles en verre teinté vert sauge léger (boutons de filtre, compteurs, puces) : l'urgence garde ses propres couleurs */
   --cp-sauge-verre: rgba(150, 150, 90, .2);
   --cp-sauge-verre-fort: rgba(150, 150, 90, .34);
@@ -30,15 +30,15 @@
 /* Sans backdrop-filter : fonds presque pleins, pour que le texte reste lisible partout */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root {
-    --cp-verre-fond: rgba(251, 246, 232, .97);
-    --cp-verre-fond-fort: #FBF6E8;
-    --cp-sauge-verre: #E7E8D0;
-    --cp-sauge-verre-fort: #DAD8B8;
-    --cp-verre-barre-haut: #F4EEE0;
-    --cp-verre-barre-laterale: #EDE5D2;
-    --cp-verre-barre-bas: #F4EEE0;
-    --cp-verre-fenetre: #FBF6E8;
-    --cp-verre-menu: #FBF6E8;
+    --cp-verre-fond: rgba(245, 243, 239, .97);
+    --cp-verre-fond-fort: #F5F3EF;
+    --cp-sauge-verre: #E4E6D6;
+    --cp-sauge-verre-fort: #D6D8C4;
+    --cp-verre-barre-haut: #ECE8E1;
+    --cp-verre-barre-laterale: #E4DFD6;
+    --cp-verre-barre-bas: #ECE8E1;
+    --cp-verre-fenetre: #F5F3EF;
+    --cp-verre-menu: #F5F3EF;
   }
 }
 
@@ -53,9 +53,9 @@ body { background: transparent; }
   background: radial-gradient(circle at 50% 50%, var(--bulle) 0%, transparent 68%);
   will-change: transform; animation: app-bulle var(--duree) ease-in-out infinite alternate;
 }
-.app-fond span:nth-child(1) { --bulle: rgba(240, 214, 160, .62); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
-.app-fond span:nth-child(2) { --bulle: rgba(198, 206, 140, .6); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
-.app-fond span:nth-child(3) { --bulle: rgba(214, 170, 128, .58); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
+.app-fond span:nth-child(1) { --bulle: rgba(222, 214, 200, .62); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
+.app-fond span:nth-child(2) { --bulle: rgba(200, 208, 170, .6); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
+.app-fond span:nth-child(3) { --bulle: rgba(196, 184, 172, .58); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
 .bulles-figees .app-fond span { animation: none; } /* ajouté par js/fond.js si l'appareil peine à animer le décor */
 @keyframes app-bulle { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(var(--dx), var(--dy), 0) scale(1.14); } }
 
@@ -73,7 +73,7 @@ body { background: transparent; }
 /* Cartes d'animaux : plusieurs à l'écran, donc un flou plus léger ; aucun flou sur téléphone */
 .cp-carte.cp-carte-animal { -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); }
 @media (max-width: 599px) {
-  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(251, 245, 230, .76); }
+  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(246, 244, 240, .78); }
 }
 a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88)); }
 
@@ -130,7 +130,7 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
 .cp-badge:not([class*="cp-badge--"]), .cp-badge--neutre { border: 1px solid var(--cp-sauge-verre-bord); }
 
 /* Les champs restent bien blancs : c'est là qu'on lit ce qu'on tape */
-.cp-input, .cp-select, .cp-textarea { background-color: rgba(255, 252, 244, .96); }
+.cp-input, .cp-select, .cp-textarea { background-color: rgba(252, 251, 248, .96); }
 
 /* ---------- Mouvement ---------- */
 /* Apparition des pages : la page se fond, puis ses blocs montent doucement l'un après l'autre */
@@ -207,7 +207,7 @@ a.cp-carte:hover { transform: translateY(-2px); }
 .app-nav-bas .cp-nav-bas__item { color: #FFFFFF; min-height: 54px; border-radius: 999px; font-weight: 500; transition: background-color var(--cp-duree-rapide) var(--cp-courbe), color var(--cp-duree-rapide) var(--cp-courbe); }
 .app-nav-bas .cp-nav-bas__item:hover { color: #FFFFFF; background: rgba(255, 255, 255, .16); }
 /* page active : capsule blanche opaque, texte et icône foncés (ressort nettement sur le verre) */
-.app-nav-bas .cp-nav-bas__item[aria-current="page"] { background: #FBF7EC; color: var(--cp-foret-texte); font-weight: 600; box-shadow: 0 1px 3px rgba(46, 42, 24, .25); }
+.app-nav-bas .cp-nav-bas__item[aria-current="page"] { background: #F5F3EF; color: var(--cp-foret-texte); font-weight: 600; box-shadow: 0 1px 3px rgba(46, 42, 24, .25); }
 .app-nav-bas .cp-nav-bas__item[aria-current="page"]::before { display: none; }
 .app-nav-bas .cp-nav-bas__icone .ic { filter: drop-shadow(0 1px 1px rgba(46, 42, 24, .18)); }
 .app-nav-bas .cp-nav-bas__compteur { box-shadow: none; }
@@ -223,17 +223,17 @@ a.cp-carte:hover { transform: translateY(-2px); }
 .cp-btn--principal:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: #4B5229; }
 .cp-btn--principal:active:not(:disabled):not([aria-disabled="true"]) { background: #3C4220; }
 .cp-btn--secondaire {
-  background: #F7F1E2; color: var(--cp-foret-texte); border-color: #B3A986;
+  background: #F3F0EB; color: var(--cp-foret-texte); border-color: #AFA79B;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(60, 56, 30, .12);
 }
-.cp-btn--secondaire:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: #EDE5D2; }
-.cp-btn--secondaire:active:not(:disabled):not([aria-disabled="true"]) { background: #E1D8BF; }
+.cp-btn--secondaire:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: #E4DFD6; }
+.cp-btn--secondaire:active:not(:disabled):not([aria-disabled="true"]) { background: #D9D2C7; }
 .cp-btn--danger { border-color: #6F2D1F; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 3px 7px rgba(142, 61, 43, .25); }
 .cp-btn--discret { border-radius: 999px; box-shadow: none; }
 
 /* ---------- Pastilles et filtres : même règle ; l'actif est rempli de kaki ---------- */
 .cp-filtre:not([aria-pressed="true"]):not(:disabled), .rp-statuts .cp-choix__option span {
-  background: #F2EBD8; color: var(--cp-texte); border: 1px solid #B3A986; border-radius: 999px;
+  background: #EFEBE5; color: var(--cp-texte); border: 1px solid #AFA79B; border-radius: 999px;
   -webkit-backdrop-filter: none; backdrop-filter: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(60, 56, 30, .1);
 }

@@ -78,6 +78,13 @@ verifier(nets2.length === 0, `Accueil : « Fait », actions rapides, carte Ajout
 const zoom = async (nom, sel) => { const r = await ev(`(() => { const b = document.querySelector('${sel}').getBoundingClientRect(); return { x: Math.max(b.left - 12, 0), y: Math.max(b.top - 12, 0) + scrollY, w: b.width + 24, h: b.height + 24 }; })()`); const c = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: r.x, y: r.y, width: Math.min(r.w, 390), height: r.h, scale: 2 } }); fs.writeFileSync(`${S}/shots/${TAG}-${nom}.png`, Buffer.from(c.result.data, 'base64')); };
 await zoom('zoom-fait', '.ac-afaire'); await zoom('zoom-actions', '.ac-actions'); await zoom('zoom-barre', '.app-nav-bas');
 
+log('=== ACCUEIL : étiquette sur une ligne, première carte alignée sur la marge ===');
+await aller2('#/accueil'); await sleep(800);
+verifier(await ev(`(() => { const e = document.querySelector('.ac-afaire__etiquette'); const lh = parseFloat(getComputedStyle(e).lineHeight); return !!e && e.getBoundingClientRect().height <= lh + 1; })()`), '« À faire » : sur une seule ligne (téléphone)');
+const marges = await ev(`(() => { const ul = document.querySelector('.ac-stories ul'); const carte = document.querySelector('.ac-story').getBoundingClientRect(); const titre = document.querySelector('#ac-animaux').getBoundingClientRect(); const hero = document.querySelector('.ac-hero').getBoundingClientRect(); return { carte: Math.round(carte.left), titre: Math.round(titre.left), hero: Math.round(hero.left), scroll: ul.scrollLeft, droite: ul.getBoundingClientRect().right, largeur: innerWidth }; })()`);
+verifier(marges.carte === marges.titre && marges.carte === marges.hero && marges.carte >= 12 && marges.scroll === 0, `première carte d'animal alignée sur la marge des autres blocs (carte ${marges.carte} px, titre ${marges.titre} px, héros ${marges.hero} px)`);
+verifier(marges.droite >= marges.largeur - 1, 'le défilement des cartes va jusqu\'au bord droit de l\'écran');
+
 log('=== URGENCE : le vert « plus tard » ne se confond pas avec le kaki (forme + texte) ===');
 await aller2('#/animaux/rappels'); await sleep(700);
 const badges = await ev(`(() => { const f = (c) => { const b = document.querySelector('.cp-badge--' + c); return b ? { texte: b.textContent.trim(), icone: b.querySelector('svg')?.innerHTML || '' } : null; }; return { retard: f('alerte'), semaine: f('attention'), plusTard: f('succes') }; })()`);

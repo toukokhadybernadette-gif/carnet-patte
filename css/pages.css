@@ -135,10 +135,10 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .ac-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-2); padding: var(--cp-espace-5); border-radius: 32px; }
 .ac-hero__date { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 600; color: var(--cp-texte-doux); text-transform: none; }
 .ac-hero h1 { margin: 0; }
-.ac-afaire { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); margin: var(--cp-espace-2) 0 0; padding: var(--cp-espace-3); border-radius: 22px; background: rgba(252, 247, 233, .78); border: 1px solid rgba(255, 249, 232, .9); }
+.ac-afaire { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); margin: var(--cp-espace-2) 0 0; padding: var(--cp-espace-3); border-radius: 22px; background: rgba(246, 244, 240, .8); border: 1px solid rgba(255, 253, 250, .9); }
 .ac-afaire--ok { display: block; margin-top: var(--cp-espace-2); font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-l); color: var(--cp-foret-texte); text-align: left; }
 .ac-afaire__corps { display: grid; gap: 2px; min-width: 0; }
-.ac-afaire__etiquette { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); }
+.ac-afaire__etiquette { white-space: nowrap; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); }
 .ac-afaire__titre { font-weight: 600; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-texte); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ac-afaire__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 
@@ -156,11 +156,11 @@ a.ac-resume:hover { color: var(--cp-texte); }
 
 /* Mes animaux : vraies petites cartes en défilement horizontal, carte « + Ajouter » à la fin */
 .ac-stories { margin-inline: calc(var(--cp-marge-page) * -1); }
-.ac-stories ul { list-style: none; margin: 0; padding: 2px var(--cp-marge-page) 8px; display: flex; gap: var(--cp-espace-3); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.ac-stories ul { list-style: none; margin: 0; padding: 2px var(--cp-marge-page) 8px; display: flex; gap: var(--cp-espace-3); overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--cp-marge-page); scrollbar-width: none; }
 .ac-stories ul::-webkit-scrollbar { display: none; }
 .ac-stories li { flex: none; }
 .ac-story { display: grid; justify-items: start; align-content: start; gap: 2px; width: 132px; min-height: 132px; padding: var(--cp-espace-3); border-radius: 26px; scroll-snap-align: start; text-decoration: none; color: var(--cp-foret-texte); font: inherit; text-align: left; cursor: pointer;
-  background: rgba(252, 247, 233, .7); border: 1px solid rgba(255, 249, 232, .9); box-shadow: 0 4px 10px rgba(46, 42, 24, .08); }
+  background: rgba(246, 244, 240, .72); border: 1px solid rgba(255, 253, 250, .9); box-shadow: 0 4px 10px rgba(46, 42, 24, .08); }
 .cp .ac-story { text-decoration: none; color: var(--cp-foret-texte); }
 .ac-story .cp-avatar { width: 48px; height: 48px; font-size: 17px; margin-bottom: 8px; box-shadow: 0 0 0 2px var(--cp-carte), 0 0 0 3px var(--an-trait, var(--cp-sauge)); }
 .ac-story:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
@@ -197,5 +197,5 @@ a.ac-resume:hover { color: var(--cp-texte); }
 /* Ce mois-ci : petites pastilles chiffrées */
 .ac-mois { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
 .ac-pastille { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte);
-  background: rgba(252, 247, 233, .7); border: 1px solid rgba(255, 249, 232, .9); box-shadow: 0 2px 6px rgba(46, 42, 24, .08); }
+  background: rgba(246, 244, 240, .72); border: 1px solid rgba(255, 253, 250, .9); box-shadow: 0 2px 6px rgba(46, 42, 24, .08); }
 .ac-pastille strong { font-family: var(--cp-police-titre); font-size: var(--cp-taille-l); line-height: 1; color: var(--cp-foret-texte); }

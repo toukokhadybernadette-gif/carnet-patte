@@ -64,7 +64,7 @@ const fond = await style('.cp-liste', 'backgroundColor');
 verifier(alpha(fond) >= 0.3 && alpha(fond) <= 0.55, `cartes nettement transparentes : blanc à ${Math.round(alpha(fond) * 100)} % (${fond})`);
 const px = (v) => parseFloat((v ?? '').match(/blur\((\d+(?:\.\d+)?)px/)?.[1] ?? '0');
 verifier(px(await style('.cp-liste', 'backdropFilter')) >= 24 && px(await style('.app-lateral', 'backdropFilter')) >= 24, `flou fort sur les cartes (${px(await style('.cp-liste', 'backdropFilter'))} px) et le menu (${px(await style('.app-lateral', 'backdropFilter'))} px)`);
-verifier(alpha(await style('.cp-liste', 'borderTopColor')) >= 0.8 && (await style('.cp-liste', 'borderTopColor')).startsWith('rgba(255, 249, 232') && parseFloat(await style('.cp-liste', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
+verifier(alpha(await style('.cp-liste', 'borderTopColor')) >= 0.8 && (await style('.cp-liste', 'borderTopColor')).startsWith('rgba(255, 253, 250') && parseFloat(await style('.cp-liste', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
 verifier(!/inset 0px 0px 0px 0px/.test(await style('.cp-liste', 'boxShadow')) && (await style('.cp-liste', 'boxShadow')) !== 'none', 'ombre douce');
 await aller2('#/animaux/rappels'); await sleep(800);
 verifier(!flou(await style('.rp-carte', 'backdropFilter')) && flou(await style('.rp-liste', 'backdropFilter')), 'pas de flou imbriqué : les lignes de rappel n\'ont pas de flou propre, c\'est la liste qui est en verre');
