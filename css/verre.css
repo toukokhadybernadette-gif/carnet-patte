@@ -249,3 +249,28 @@ a.cp-carte:hover { transform: translateY(-2px); }
 .cp-filtre[aria-pressed="true"]:hover:not(:disabled) { background: #1F52C0; }
 .rp-statuts input:checked + span .rp-nombre, .cp-filtre[aria-pressed="true"] .cp-filtre__nombre { background: rgba(10, 30, 90, .4); color: #FFFFFF; opacity: 1; box-shadow: none; }
 .rp-statuts .cp-choix__option input:checked + span { box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .55), 0 6px 16px rgba(42, 100, 221, .35); }
+
+/* =========================================================
+   Boutons qui rebondissent (étape D)
+   Au toucher le bouton s'enfonce vite ; au relâchement il revient avec un petit dépassement (ressort).
+   Courbe à dépassement : le « 1.56 » fait aller un peu au-delà de la taille normale avant de se poser.
+   ========================================================= */
+:root { --cp-ressort: cubic-bezier(.34, 1.56, .64, 1); --cp-ressort-duree: 420ms; --cp-appui-duree: 90ms; }
+.cp-btn, .cp-filtre, .cp-couleur, .cp-choix__option span, .ac-action__rond, .ac-story .cp-avatar, .app-nav-bas .cp-nav-bas__item {
+  transition-property: background-color, border-color, box-shadow, color, transform;
+  transition-duration: var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-duree-rapide), var(--cp-ressort-duree);
+  transition-timing-function: var(--cp-courbe), var(--cp-courbe), var(--cp-courbe), var(--cp-courbe), var(--cp-ressort);
+}
+.cp-btn:active:not(:disabled):not([aria-disabled="true"]), .cp-filtre:active:not(:disabled), .cp-couleur:active { transform: scale(.93); }
+.cp-choix__option:active input:not(:disabled) + span { transform: scale(.94); }
+.ac-action:active .ac-action__rond { transform: scale(.88); }
+.ac-story:active .cp-avatar { transform: scale(.9); }
+.app-nav-bas .cp-nav-bas__item:active { transform: scale(.9); }
+.cp-btn:active, .cp-filtre:active, .cp-couleur:active, .cp-choix__option:active span, .ac-action:active .ac-action__rond,
+.ac-story:active .cp-avatar, .app-nav-bas .cp-nav-bas__item:active { transition-duration: var(--cp-appui-duree); transition-timing-function: ease-out; }
+/* « Réduire les animations » : pas de rebond, ni d'enfoncement */
+@media (prefers-reduced-motion: reduce) {
+  .cp-btn, .cp-filtre, .cp-couleur, .cp-choix__option span, .ac-action__rond, .ac-story .cp-avatar, .app-nav-bas .cp-nav-bas__item { transition-duration: 1ms; }
+  .cp-btn:active, .cp-filtre:active, .cp-couleur:active, .cp-choix__option:active input + span, .ac-action:active .ac-action__rond,
+  .ac-story:active .cp-avatar, .app-nav-bas .cp-nav-bas__item:active { transform: none !important; }
+}

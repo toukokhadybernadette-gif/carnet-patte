@@ -221,7 +221,7 @@ await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: bouton.x, y: bou
 verifier(await ev(`getComputedStyle(document.querySelector('.cp-btn--principal')).transform`) !== 'none', 'bouton : s\'élève au survol');
 await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: bouton.x, y: bouton.y, button: 'left', clickCount: 1 }); await sleep(300);
 const enfonce = await ev(`getComputedStyle(document.querySelector('.cp-btn--principal')).transform`);
-verifier(/matrix\(0\.97/.test(enfonce), `bouton : s'enfonce au clic (${enfonce})`);
+verifier(/matrix\(0.9[0-6]/.test(enfonce), `bouton : s'enfonce au clic (${enfonce})`);
 await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: bouton.x, y: bouton.y, button: 'left', clickCount: 1 }); await sleep(600);
 await ev(`document.querySelector('dialog [data-fermer]')?.click()`); await sleep(300);
 await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 });
@@ -247,6 +247,12 @@ await aller2('#/animaux/a'); await sleep(500);
 await ev(`document.querySelector('[data-onglet=poids]').click()`); await sleep(60);
 verifier(await ev(`getComputedStyle(document.querySelector('#fi-panneau-poids')).animationName`) === 'none' && parseFloat(await ev(`getComputedStyle(document.querySelector('.cp-onglets__trait')).transitionDuration`)) <= 0.01, 'onglets : pas d\'animation, le trait se place d\'un coup');
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+
+log('=== REBOND DES BOUTONS (étape D) ===');
+await aller2('#/accueil'); await sleep(500);
+verifier(await ev(`(()=>{const b=getComputedStyle(document.querySelector('.cp-btn')).transitionTimingFunction;return /1\.56/.test(b)})()`), 'boutons : courbe à dépassement (ressort) au relâchement');
+verifier(await ev(`(()=>{const a=document.querySelector('.ac-action__rond');return /1\.56/.test(getComputedStyle(a).transitionTimingFunction)})()`), 'actions rapides : courbe à dépassement');
+verifier(await ev(`import('/js/conseils.js').then(m=>m.CONSEILS.length===12 && m.CONSEILS.every(c=>c.source && !/confirmer/i.test(c.source)))`), 'conseils : 12 conseils, aucune mention « à confirmer » dans les sources');
 
 log('=== PROTECTION DE FLUIDITÉ ===');
 await aller2('#/accueil'); await sleep(500);
