@@ -50,7 +50,7 @@
 }
 .app-marque {
   display: inline-flex; align-items: center; gap: 10px;
-  color: var(--cp-foret); text-decoration: none;
+  color: var(--cp-foret-texte); text-decoration: none;
   font-family: var(--cp-police-titre); font-weight: 700; font-size: 15px; line-height: 20px; letter-spacing: -.01em;
 }
 .cp .app-marque, .app-marque:hover { text-decoration: none; }
@@ -76,7 +76,7 @@
 }
 .app-recherche__option {
   display: flex; align-items: center; gap: var(--cp-espace-3); min-height: var(--cp-cible-tactile); padding: var(--cp-espace-1) var(--cp-espace-3);
-  border-radius: var(--cp-rayon-champ); cursor: pointer; color: var(--cp-foret);
+  border-radius: var(--cp-rayon-champ); cursor: pointer; color: var(--cp-foret-texte);
 }
 .app-recherche__option:hover, .app-recherche__option[aria-selected="true"] { background: var(--cp-surface-2); }
 .app-recherche__option .cp-avatar { width: 32px; height: 32px; font-size: 12px; }
@@ -108,7 +108,7 @@
   font: inherit; font-family: var(--cp-police-texte); font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600;
   text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux);
 }
-.app-bientot__titre:hover { background: rgba(43, 38, 68, .06); }
+.app-bientot__titre:hover { background: rgba(46, 42, 24, .06); }
 .app-bientot__titre:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
 .app-bientot__nombre { font-weight: 500; text-transform: none; letter-spacing: 0; background: var(--cp-vert-clair); border-radius: 9px; padding: 0 7px; line-height: 18px; color: var(--cp-texte-doux); }
 .app-bientot__titre .ic { margin-left: auto; transition: transform var(--cp-duree-rapide) var(--cp-courbe); }

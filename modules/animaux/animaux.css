@@ -30,11 +30,11 @@
 .al-rappels { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-2); margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .al-rappels strong { font-weight: 500; color: var(--cp-texte); }
 .al-rappels--retard > .ic { color: var(--cp-terre); }
-.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; min-height: var(--cp-cible-tactile); font-weight: 500; color: var(--cp-foret); white-space: nowrap; }
+.al-rappels__lien { display: inline-flex; align-items: center; gap: 2px; min-height: var(--cp-cible-tactile); font-weight: 500; color: var(--cp-foret-texte); white-space: nowrap; }
 @media (min-width: 600px) { .al-rappels__lien { min-height: 28px; } }
 /* Bandeau des exemples */
 .al-exemples { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
-.al-exemples__lien { display: inline-block; min-height: 24px; padding: 0 2px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--cp-foret); text-decoration: underline; cursor: pointer; }
+.al-exemples__lien { display: inline-block; min-height: 24px; padding: 0 2px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--cp-foret-texte); text-decoration: underline; cursor: pointer; }
 /* Barre d'outils : recherche et filtres */
 .al-outils { display: grid; gap: var(--cp-espace-3); }
 .al-recherche { max-width: 460px; }
@@ -144,7 +144,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .sn-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--cp-rayon-bouton); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-texte-doux)); }
 .sn-carte__corps { display: grid; gap: 0; min-width: 0; }
 .sn-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
-.sn-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.sn-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .sn-ligne { display: flex; align-items: center; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .sn-ligne .ic { display: none; }
 .sn-carte__nom.sn-carte__nom--vide, .rp-carte__nom.rp-carte__nom--vide { color: var(--cp-texte-doux); font-weight: 500; }
@@ -161,7 +161,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 /* Formulaire de soin */
 .sn-form { gap: var(--cp-espace-5); padding-top: var(--cp-espace-2); }
 .sn-rappel-champ { border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-champ); padding: var(--cp-espace-4); margin: 0; background: var(--cp-fond); }
-.sn-rappel-champ legend { padding: 0 var(--cp-espace-2); font-weight: 600; font-size: var(--cp-taille-s); color: var(--cp-foret); }
+.sn-rappel-champ legend { padding: 0 var(--cp-espace-2); font-weight: 600; font-size: var(--cp-taille-s); color: var(--cp-foret-texte); }
 .sn-form .cp-choix--tuiles { grid-template-columns: repeat(auto-fill, minmax(min(100%, 96px), 1fr)); }
 .sn-form__actions, .rf-actions {
   position: sticky; bottom: calc(var(--cp-espace-5) * -1); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cp-espace-3);
@@ -178,10 +178,10 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rf-resume { display: flex; align-items: center; gap: var(--cp-espace-4); flex-wrap: wrap; padding: var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-fond); border: 1px solid var(--cp-bordure); }
 .rf-resume__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--cp-rayon-champ); background: var(--t-fond, var(--cp-surface-2)); color: var(--t-texte, var(--cp-foret)); flex: none; }
 .rf-resume__texte { display: grid; gap: 2px; flex: 1 1 160px; min-width: 0; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
-.rf-resume__texte strong { font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rf-resume__texte strong { font-size: var(--cp-taille-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .rf-delais { display: flex; flex-wrap: wrap; }
 .rf-date[hidden] { display: none; }
-.rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret); font-size: var(--cp-taille-s); }
+.rf-form .rf-consequence { margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: var(--cp-rayon-champ); background: var(--cp-info-pale); color: var(--cp-foret-texte); font-size: var(--cp-taille-s); }
 /* =========================================================
    Refonte 5f : page Rappels
    ========================================================= */
@@ -235,7 +235,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .rp-carte__corps > .rp-carte__type, .rp-carte__corps > .rp-carte__tete { flex-basis: 100%; }
 .rp-carte__type { font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--t-texte, var(--cp-texte-doux)); }
 .rp-carte__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); }
-.rp-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.rp-carte__nom { font-family: var(--cp-police-texte); font-weight: 500; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .rp-animal { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; font-weight: 400; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); white-space: nowrap; }
 .rp-animal .cp-avatar { width: 22px; height: 22px; font-size: 9px; flex: none; }
 .rp-animal .cp-avatar .ic { width: 12px; height: 12px; }
@@ -284,7 +284,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-note--periode { padding: var(--cp-espace-5) 0; justify-content: center; }
 .ps-graphique { display: block; width: 100%; height: auto; overflow: visible; }
 /* Axes : petits chiffres discrets, grille en pointillés très légers */
-.ps-grille { stroke: rgba(43, 38, 68, .13); stroke-width: 1; stroke-dasharray: 2 4; }
+.ps-grille { stroke: rgba(46, 42, 24, .13); stroke-width: 1; stroke-dasharray: 2 4; }
 .ps-texte { fill: var(--cp-texte-doux); font-size: 10px; font-family: var(--cp-police-texte); font-variant-numeric: tabular-nums; }
 /* Courbe dans la couleur de l'animal, avec un dégradé transparent dessous */
 .ps-degrade-haut { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: .34; }
@@ -309,6 +309,6 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-carte { display: grid; grid-template-columns: auto 1fr auto; gap: var(--cp-espace-3); align-items: center; padding: 10px 14px; min-height: 52px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 .ps-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; color: var(--cp-texte-doux); }
 .ps-carte__corps { display: grid; gap: 0; min-width: 0; }
-.ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret); overflow-wrap: anywhere; }
+.ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .ps-ligne-info { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .ps-ligne-info .ic { flex: none; width: 14px; height: 14px; }

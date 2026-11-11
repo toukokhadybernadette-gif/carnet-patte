@@ -102,11 +102,13 @@ export function statutRappel(soin) {
 
 // ----- Une seule règle de couleur pour les échéances, sur toutes les pages -----
 // rouge : en retard · ambre : cette semaine (7 jours ou moins) · vert : plus tard (au-delà de 7 jours)
+// La FORME de l'icône double la couleur : cloche qui sonne (retard), cloche (cette semaine), calendrier (plus tard)
+const ICONE_ECHEANCE = { retard: 'bell-ring', semaine: 'bell', 'plus-tard': 'calendar' };
 export const VARIANTE_ECHEANCE = { retard: 'alerte', semaine: 'attention', 'plus-tard': 'succes' };
 
 /** Badge d'échéance d'un rappel en attente. `statut` vient de statutRappel() ; `texte` remplace le texte par défaut. */
 export function badgeEcheance(statut, texte = statut.texte) {
-  return badge({ texte, variante: VARIANTE_ECHEANCE[statut.classe], icone: statut.classe === 'retard' ? 'bell-ring' : 'bell' });
+  return badge({ texte, variante: VARIANTE_ECHEANCE[statut.classe], icone: ICONE_ECHEANCE[statut.classe] });
 }
 
 /** Badge de statut d'un soin : effectué, à venir ou en retard (HTML). */

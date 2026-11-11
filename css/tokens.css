@@ -25,44 +25,45 @@
 
 :root {
   /* ----- Palette officielle ----- */
-  --cp-foret: #4A4268;        /* COULEUR UNIQUE de l'interface (prune / mauve de la barre du bas) : titres, boutons, filtres et onglets actifs, logo */
-  --cp-sauge: #B7B0D0;        /* illustrations, tirets : version claire de la couleur unique */
-  --cp-fond: #F7F5FA;         /* fond de l'application (blanc cassé) */
-  --cp-vert-clair: #ECE9F5;   /* sélections, badges calmes (teinte claire de la couleur unique) */
+  --cp-foret: #5B6334;        /* COULEUR UNIQUE de l'interface (vert kaki) : titres, boutons, filtres et onglets actifs, logo */
+  --cp-foret-texte: #454E25;  /* le même kaki, plus foncé, pour le TEXTE (>= 4,5:1 même sur les bulles de couleur) */
+  --cp-sauge: #B8BC8A;        /* illustrations, tirets : version claire de la couleur unique */
+  --cp-fond: #F4EEE0;         /* fond de l'application (blanc cassé) */
+  --cp-vert-clair: #E7E8D0;   /* sélections, badges calmes (teinte claire de la couleur unique) */
   --cp-beige: #D7A879;        /* accents uniquement : jamais en texte sur fond clair (contraste 1,97) */
-  --cp-carte: #FFFFFF;        /* fond des cartes (surface) */
-  --cp-surface-2: #F0EDF6;    /* surface en creux : barre latérale, zones secondaires, survol de ligne */
+  --cp-carte: #FBF7EC;        /* fond des cartes (surface) */
+  --cp-surface-2: #EDE5D2;    /* surface en creux : barre latérale, zones secondaires, survol de ligne */
 
   /* ----- Texte (contrastes mesurés WCAG) ----- */
-  --cp-texte: #2B2644;        /* 10,7:1 sur --cp-fond */
-  --cp-texte-doux: #3D3853;   /* 7,2:1 sur --cp-fond ; assombri pour rester lisible (>= 4,5:1) même sur les bulles de couleur de l'effet verre */
+  --cp-texte: #2E2A18;        /* 10,7:1 sur --cp-fond */
+  --cp-texte-doux: #4A4630;   /* 7,2:1 sur --cp-fond ; assombri pour rester lisible (>= 4,5:1) même sur les bulles de couleur de l'effet verre */
   --cp-texte-inverse: #FFFFFF;/* 11,7:1 sur --cp-foret */
 
   /* ----- Bordures ----- */
-  --cp-bordure: #E5E1EE;      /* filet fin de 1 px entre cartes et lignes */
-  --cp-bordure-forte: #CFC9E0;  /* contour des boutons secondaires */
+  --cp-bordure: #E2D9C2;      /* filet fin de 1 px entre cartes et lignes */
+  --cp-bordure-forte: #CBBF9F;  /* contour des boutons secondaires */
 
   /* ----- États fonctionnels (alertes) : terre cuite et ambre, harmonisés avec la palette ----- */
   --cp-terre: #8E3D2B;        /* texte « en retard », erreurs : 6,0:1 sur --cp-fond */
   --cp-terre-pale: #F6E3DC;   /* fond du badge : texte --cp-terre dessus = 5,3:1 */
   --cp-ambre: #623D06;        /* texte « bientôt », attention : assombri pour rester >= 4,5:1 sur les bulles de couleur du fond */
   --cp-ambre-pale: #F6E8C9;   /* fond du badge : texte --cp-ambre dessus = 5,9:1 */
-  --cp-succes: #2F6B4F;       /* confirmations (vert plus soutenu que la sauge) */
-  --cp-succes-pale: #E4EEE0;
-  --cp-succes-texte: #1F5A3F;  /* texte sur --cp-succes-pale : 6,3:1 */
+  --cp-succes: #1F7A4D;       /* confirmations (vert plus soutenu que la sauge) */
+  --cp-succes-pale: #D9F0E2;
+  --cp-succes-texte: #14573A;  /* texte sur --cp-succes-pale : 6,3:1 */
 
   /* ----- Interactions (étape 3 : composants) ----- */
-  --cp-foret-survol: #3E3758;     /* bouton principal survolé : 15:1 avec du blanc */
-  --cp-foret-actif: #2F2A47;      /* bouton principal enfoncé */
-  --cp-fond-survol: #F0EDF6;      /* fond d'un élément discret survolé */
-  --cp-bordure-champ: #8179A0;    /* contour des champs : 3,4:1 sur blanc (minimum WCAG 3:1) */
-  --cp-placeholder: #6E6788;      /* texte indicatif : 4,6:1 sur blanc */
-  --cp-desactive-fond: #E9E7EF;
-  --cp-desactive-texte: #6A6580;
+  --cp-foret-survol: #4B5229;     /* bouton principal survolé : 15:1 avec du blanc */
+  --cp-foret-actif: #3C4220;      /* bouton principal enfoncé */
+  --cp-fond-survol: #EDE5D2;      /* fond d'un élément discret survolé */
+  --cp-bordure-champ: #8C8160;    /* contour des champs : 3,4:1 sur blanc (minimum WCAG 3:1) */
+  --cp-placeholder: #6E6648;      /* texte indicatif : 4,6:1 sur blanc */
+  --cp-desactive-fond: #E8E1CF;
+  --cp-desactive-texte: #6B654F;
   --cp-terre-survol: #6F2D1F;     /* bouton danger survolé */
-  --cp-info: #4A4268;             /* information : la couleur unique, sur son fond pâle */
-  --cp-info-pale: #ECE9F5;
-  --cp-focus: #4A4268;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
+  --cp-info: #5B6334;             /* information : la couleur unique, sur son fond pâle */
+  --cp-info-pale: #E7E8D0;
+  --cp-focus: #5B6334;            /* anneau de focus clavier (contour de 2 px, décalé de 2 px) */
 
   /* ----- Couleur par type de soin : fond de la pastille d'icône / texte et icône (contraste texte-sur-fond >= 5,8:1).
      Réservée à l'icône et au libellé du type : les couleurs d'URGENCE (rouge, ambre, vert) restent dans les badges de rappel. ----- */
@@ -109,9 +110,9 @@
   --cp-rayon-pastille: 999px;
 
   /* ----- Ombres : surtout des filets ; l'ombre distingue les niveaux ----- */
-  --cp-ombre-s: 0 1px 2px rgba(43, 38, 68, .05);     /* cartes au repos */
-  --cp-ombre-m: 0 2px 8px rgba(43, 38, 68, .08);     /* survol d'une carte cliquable, menus déroulants */
-  --cp-ombre-l: 0 12px 32px rgba(43, 38, 68, .14);   /* fenêtres modales */
+  --cp-ombre-s: 0 1px 2px rgba(46, 42, 24, .05);     /* cartes au repos */
+  --cp-ombre-m: 0 2px 8px rgba(46, 42, 24, .08);     /* survol d'une carte cliquable, menus déroulants */
+  --cp-ombre-l: 0 12px 32px rgba(46, 42, 24, .14);   /* fenêtres modales */
 
   /* ----- Espacements (échelle de 4 px) ----- */
   --cp-espace-1: 4px;
