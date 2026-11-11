@@ -74,7 +74,7 @@ function blocAFaire(urgent) {
     <div class="ac-afaire" data-afaire="${echapper(soin.id)}">
       <span class="cp-liste__icone ${classeType(soin.type)}">${icone(infosType(soin.type).icone, { taille: 20 })}</span>
       <div class="ac-afaire__corps">
-        <span class="ac-afaire__etiquette">À faire maintenant</span>
+        <span class="ac-afaire__etiquette">À faire</span>
         <span class="ac-afaire__titre">${echapper(nom)} · ${echapper(animal.nom)}</span>
         <span class="ac-afaire__meta">${dateCourte(soin.rappel)} ${badgeEcheance(statut)}</span>
       </div>

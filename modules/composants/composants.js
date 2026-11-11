@@ -20,8 +20,8 @@ const SECTIONS = [
 const COULEURS = [
   ['Vert kaki', '--cp-foret', '#5B6334', 'Couleur unique : titres, boutons, actifs', '#fff'],
   ['Kaki clair', '--cp-sauge', '#B8BC8A', 'Bordures, illustrations', '#2E2A18'],
-  ['Sable clair', '--cp-fond', '#F4EEE0', 'Fond de l\'application', '#2E2A18'],
-  ['Kaki très clair', '--cp-vert-clair', '#E7E8D0', 'Sélections, badges calmes', '#2E2A18'],
+  ['Lin clair', '--cp-fond', '#ECE8E1', 'Fond de l\'application', '#2E2A18'],
+  ['Kaki très clair', '--cp-vert-clair', '#E4E6D6', 'Sélections, badges calmes', '#2E2A18'],
   ['Beige chaud', '--cp-beige', '#D7A879', 'Accents (jamais en texte sur fond clair)', '#2E2A18'],
   ['Terre cuite', '--cp-terre', '#9A4330', 'Retard, erreur, danger', '#fff'],
   ['Ambre', '--cp-ambre', '#7A4F0F', 'Attention, bientôt', '#fff'],

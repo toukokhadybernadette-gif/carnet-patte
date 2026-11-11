@@ -350,7 +350,7 @@ body:has(dialog[open]) { overflow: hidden; }
 .cp-alerte__titre { display: block; font-weight: 700; margin-bottom: 2px; }
 .cp-alerte .ic { margin-top: 1px; }
 .cp-alerte--succes { background: var(--cp-succes-pale); color: var(--cp-succes-texte); border-color: #BFD3B9; }
-.cp-alerte--info { background: var(--cp-info-pale); color: var(--cp-info); border-color: #CFC8A8; }
+.cp-alerte--info { background: var(--cp-info-pale); color: var(--cp-info); border-color: #CDC8BA; }
 .cp-alerte--attention { background: var(--cp-ambre-pale); color: var(--cp-ambre); border-color: #E6D2A3; }
 .cp-alerte--erreur { background: var(--cp-terre-pale); color: var(--cp-terre); border-color: #E8C5BA; }
 
