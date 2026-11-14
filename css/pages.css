@@ -171,7 +171,7 @@ a.ac-resume:hover { color: var(--cp-texte); }
 @media (min-width: 1024px) { .ac-stories { margin-inline: 0; } .ac-stories ul { padding-inline: 2px; } }
 
 /* Actions rapides : UN panneau de verre, 4 cercles alignés, libellés courts sur une ligne */
-.ac-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--cp-espace-2); padding: var(--cp-espace-4) var(--cp-espace-3); border-radius: 30px; }
+.ac-actions { display: grid; grid-template-columns: repeat(var(--ac-nb, 4), minmax(0, 1fr)); gap: var(--cp-espace-2); padding: var(--cp-espace-4) var(--cp-espace-3); border-radius: 30px; }
 .ac-action { display: grid; justify-items: center; align-content: start; gap: 8px; min-width: 0; padding: 0; border: 0; background: none; font: inherit; color: var(--cp-foret-texte); text-decoration: none; cursor: pointer; }
 .cp .ac-action { color: var(--cp-foret-texte); text-decoration: none; }
 .ac-action__rond { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
@@ -199,3 +199,10 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .ac-pastille { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte);
   background: rgba(246, 244, 240, .72); border: 1px solid rgba(255, 253, 250, .9); box-shadow: 0 2px 6px rgba(46, 42, 24, .08); }
 .ac-pastille strong { font-family: var(--cp-police-titre); font-size: var(--cp-taille-l); line-height: 1; color: var(--cp-foret-texte); }
+
+/* Cinq actions rapides (avec « Toxique ? ») : cercles un peu plus petits et libellés resserrés sur petit téléphone */
+@media (max-width: 479px) {
+  .ac-actions[style*="--ac-nb:5"] { gap: 4px; padding-inline: 6px; }
+  .ac-actions[style*="--ac-nb:5"] .ac-action__rond { width: 54px; height: 54px; }
+  .ac-actions[style*="--ac-nb:5"] .ac-action__texte { font-size: 12px; }
+}

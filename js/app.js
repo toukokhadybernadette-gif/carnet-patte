@@ -15,6 +15,7 @@ import { rendre as rendreBoutique } from '../modules/boutique/boutique.js';
 import { rendre as rendreCommunaute } from '../modules/communaute/communaute.js';
 import { rendre as rendrePro } from '../modules/pro/pro.js';
 import { rendre as rendreProfil } from '../modules/profil/profil.js';
+import { rendre as rendreToxique } from '../modules/toxique/toxique.js';
 import { ajouterExemples } from '../modules/animaux/exemples.js';
 import { rendre as rendreDonnees } from './donnees.js';
 import { rendre as rendreBientot } from './bientot.js';
@@ -30,6 +31,7 @@ route('boutique', rendreBoutique);
 route('communaute', rendreCommunaute);
 route('pro', rendrePro);
 route('profil', rendreProfil);
+route('toxique', rendreToxique);
 route('donnees', rendreDonnees);
 route('bientot', rendreBientot);
 route('composants', rendreComposants); // page de référence du design, pas dans le menu

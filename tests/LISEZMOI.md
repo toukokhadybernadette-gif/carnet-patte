@@ -14,7 +14,7 @@ Depuis la racine du projet :
 
 ```
 node tests/lancer.mjs            # tous les tests
-node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g ou 5h
+node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h ou toxique
 node tests/lancer.mjs 5e 5f      # plusieurs
 ```
 
@@ -35,6 +35,7 @@ Les captures d'écran sont dans `tests/sortie/shots/`. Le dossier `tests/sortie/
 | `5e` | `test-5e-soins.mjs` | Soins : ajout, modification, suppression, rappel « Fait », formulaires et erreurs |
 | `5f` | `test-5f-rappels.mjs` | Page Rappels : groupes, filtres, « Fait », « Voir le soin », longue liste |
 | `finitions` | `test-finitions.mjs` | Navigation, couleurs d'échéance, noms de soins, Accueil, résumés, barre du bas mobile |
+| `toxique` | `test-toxique.mjs` | Module « Toxique ? » : 80 fiches au moins, sources, aucune dose, numéros des centres antipoison, recherche (accents, majuscules), niveaux par espèce, « pas de fiche » jamais présenté comme « sans danger », action rapide de l'Accueil, trois largeurs, accessibilité |
 | `5g` | `test-5g-pesees.mjs` | Pesées (validation, petits poids, suppression), graphique (alignement des points sur les graduations à 1 px près, info-bulle à la souris et au toucher), Sauvegarde, Bientôt, page introuvable |
 
 Chaque test passe sur trois largeurs : ordinateur (1280 px), tablette (820 px) et mobile (390 px).

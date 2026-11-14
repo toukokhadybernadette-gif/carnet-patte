@@ -33,7 +33,7 @@ export const NAV = [
 // Titre de l'onglet du navigateur selon la page
 function titrePage(seg) {
   if (seg[0] === 'animaux') return seg[1] === 'rappels' ? 'Rappels' : seg[1] ? 'Fiche animal' : 'Mes animaux';
-  const direct = { donnees: 'Sauvegarde', bientot: 'Bientôt', composants: 'Composants' }[seg[0]];
+  const direct = { donnees: 'Sauvegarde', bientot: 'Bientôt', composants: 'Composants', toxique: 'Toxique ?' }[seg[0]];
   return direct ?? NAV.find((n) => n.actif(seg))?.titre ?? 'Page introuvable';
 }
 

@@ -6,7 +6,6 @@ import { icone } from './icons.js';
 import { badge } from './composants.js';
 
 export const MODULES_A_VENIR = [
-  { id: 'toxique', icone: 'shield-alert', titre: 'Toxique ?', texte: 'Vérifier si un aliment ou une plante est dangereux selon l\'espèce.' },
   { id: 'ferme', icone: 'wheat', titre: 'Basse-cour / ferme', texte: 'Suivi de la ponte, de l\'alimentation et des soins du troupeau.' },
   { id: 'perdus-trouves', icone: 'search', titre: 'Perdus / trouvés', texte: 'Signaler un animal perdu ou trouvé. Nécessitera un compte et une base en ligne.' },
   { id: 'refuges', icone: 'house-heart', titre: 'Aide aux refuges', texte: 'Soutenir les refuges près de chez vous. Nécessitera un compte et une base en ligne.' },

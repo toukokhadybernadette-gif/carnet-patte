@@ -1,6 +1,6 @@
 # Carnet Patte
 
-Application web pour les propriétaires d'animaux (module 1 : animaux, soins, rappels, pesées).
+Application web pour les propriétaires d'animaux (module 1 : animaux, soins, rappels, pesées ; module 2 : « Toxique ? », aliments, plantes et produits dangereux selon l'espèce).
 
 ## Lancer
 1. Ouvrir ce dossier dans VS Code.
@@ -12,4 +12,4 @@ Ouvrir `index.html` par double-clic ne fonctionne pas (les modules JS exigent un
 ## Organisation
 - `js/` : cœur de l'appli (stockage, routeur, interface, sauvegarde)
 - `css/` : styles communs
-- `modules/<nom>/` : un dossier par module (seul `animaux` est réalisé)
+- `modules/<nom>/` : un dossier par module (`animaux` et `toxique` sont réalisés ; les fiches de « Toxique ? » sont dans `modules/toxique/donnees.js`)

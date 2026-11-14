@@ -52,7 +52,7 @@ function pourUnAnimal(animaux, suite) {
   });
 }
 
-/** Un des 4 cercles du panneau d'actions : libellé court visible, nom complet pour les lecteurs d'écran. */
+/** Un des cercles du panneau d'actions : libellé court visible, nom complet pour les lecteurs d'écran. */
 const action = ({ id, texte, ic, href, nom = texte }) => {
   const rond = `<span class="ac-action__rond" aria-hidden="true">${icone(ic, { taille: 26 })}</span><span class="ac-action__texte">${texte}</span>`;
   const etiquette = nom === texte ? '' : ` aria-label="${echapper(nom)}"`;
@@ -120,8 +120,10 @@ export function rendre(zone) {
     animaux.length && action({ id: 'soin', texte: 'Soin', nom: 'Ajouter un soin', ic: 'stethoscope' }),
     animaux.length && action({ id: 'pesee', texte: 'Pesée', nom: 'Ajouter une pesée', ic: 'scale' }),
     action({ id: 'animal', texte: 'Animal', nom: 'Ajouter un animal', ic: 'paw-print' }),
+    action({ texte: 'Toxique ?', nom: 'Toxique ? Vérifier un aliment ou une plante', ic: 'shield-alert', href: '#/toxique' }),
     action({ texte: 'Sauvegarde', ic: 'save', href: '#/donnees' }),
-  ].filter(Boolean).join('');
+  ].filter(Boolean);
+  const nbActions = actions.length;
 
   const blocRappels = rappels.length
     ? `<ul class="cp-liste">${rappels.slice(0, 3).map(ligneRappel).join('')}</ul>`
@@ -143,7 +145,7 @@ export function rendre(zone) {
 
       <section class="pg-section" aria-labelledby="ac-actions">
         <h2 id="ac-actions">Actions rapides</h2>
-        <div class="ac-actions cp-carte">${actions}</div>
+        <div class="ac-actions cp-carte" style="--ac-nb:${nbActions}">${actions.join('')}</div>
       </section>
 
       ${animaux.length ? `

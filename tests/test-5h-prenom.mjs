@@ -110,7 +110,7 @@ await aller2('#/accueil');
 // actions rapides : 4 cercles
 const actionsRapides = await ev(`[...document.querySelectorAll('.ac-action')].map(a => ({ t: a.textContent.trim(), w: Math.round(a.querySelector('.ac-action__rond').getBoundingClientRect().width), rond: getComputedStyle(a.querySelector('.ac-action__rond')).borderRadius, href: a.getAttribute('href') }))`);
 verifier(actionsRapides.map((x) => x.t).join(' | ') === 'Soin | Pesée | Animal | Sauvegarde', `4 actions rapides, libellés courts : ${actionsRapides.map((x) => x.t).join(' | ')}`);
-verifier(await ev(`(() => { const p = document.querySelector('.ac-actions'); const r = [...p.querySelectorAll('.ac-action__rond')].map(x => Math.round(x.getBoundingClientRect().top)); return r.length === 4 && new Set(r).size === 1 && [...p.querySelectorAll('.ac-action__texte')].every(t => t.getBoundingClientRect().height <= parseFloat(getComputedStyle(t).lineHeight) + 1); })()`), 'actions rapides : un seul panneau, 4 cercles alignés, libellés sur une ligne');
+verifier(await ev(`(() => { const p = document.querySelector('.ac-actions'); const r = [...p.querySelectorAll('.ac-action__rond')].map(x => Math.round(x.getBoundingClientRect().top)); return r.length === 5 && new Set(r).size === 1 && [...p.querySelectorAll('.ac-action__texte')].every(t => t.getBoundingClientRect().height <= parseFloat(getComputedStyle(t).lineHeight) + 1); })()`), 'actions rapides : un seul panneau, 5 cercles alignés, libellés sur une ligne');
 verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.getAttribute('aria-label') || a.textContent.trim()).slice(0, 3).join(' | ')`) === 'Ajouter un soin | Ajouter une pesée | Ajouter un animal', 'lecteurs d\'écran : noms complets « Ajouter un soin », etc.');
 verifier(actionsRapides.every((x) => x.w >= 44 && x.rond === '50%'), `ce sont des cercles de ${actionsRapides[0].w} px (cible tactile de 44 px minimum)`);
 verifier(actionsRapides[3].href === '#/donnees', '« Sauvegarde » mène à la page Sauvegarde');
@@ -175,7 +175,7 @@ verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textConten
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 await importerJeu([]);
 await aller2('#/accueil');
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Animal | Sauvegarde' && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : seulement « Animal » et « Sauvegarde », message d\'accueil, pas de conseil');
+verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Animal | Toxique ? | Sauvegarde' && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : seulement « Animal », « Toxique ? » et « Sauvegarde », message d\'accueil, pas de conseil');
 await ev(`document.querySelector('.ac-action[data-act=animal]').click()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Nouvel animal'`), '« Ajouter un animal » ouvre le formulaire d\'un nouvel animal');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
