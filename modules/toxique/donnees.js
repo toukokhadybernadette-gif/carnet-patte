@@ -7,7 +7,7 @@
 //  - Les textes sont des synthèses prudentes en français, pas des citations. `signes` = ce qu'on peut observer, d'après la source.
 //
 // NIVEAUX (classification simplifiée de l'appli, d'après les sources ; les sources n'emploient pas ces 4 mots) :
-//  'ok'        sans danger connu pour cette espèce (la source le dit explicitement)
+//  'ok'        pas de toxicité grave connue pour cette espèce (la source le dit explicitement) ; peut quand même causer des troubles digestifs
 //  'prudence'  signes en général limités (digestifs, irritation) ou toxicité décrite comme faible
 //  'toxique'   atteinte possible d'organes, du système nerveux ou du cœur, ou signes importants
 //  'tres'      potentiellement mortel ou urgence, même si la quantité avalée semble faible
@@ -29,10 +29,10 @@ export const DATE_VERIFICATION = 'novembre 2026';
 export const PHRASE_DOUTE = "En cas de doute ou d'ingestion, appelez votre vétérinaire ou un centre antipoison vétérinaire";
 
 // Numéros des centres antipoison vétérinaires français.
-// CNITV : cnitv.fr/Contact (ouvert de 8 h 30 à minuit, 7 jours sur 7). CAPAE-Ouest : numéro publié par Oniris (chuv.oniris-nantes.fr).
+// CNITV : cnitv.fr/Contact (ouvert de 8 h 30 à minuit, 7 jours sur 7). CAPAE-Ouest : numéro et horaires publiés par Oniris (chuv.oniris-nantes.fr/accueil/centre-anti-poison), vérifiés en novembre 2026.
 export const CENTRES_ANTIPOISON = [
   { id: 'cnitv', nom: 'CNITV (Lyon)', tel: '04 78 87 10 40', lien: 'tel:+33478871040', horaires: 'de 8 h 30 à minuit, 7 jours sur 7', site: 'https://www.cnitv.fr/Contact' },
-  { id: 'capae', nom: 'CAPAE-Ouest (Nantes)', tel: '02 40 68 77 40', lien: 'tel:+33240687740', horaires: '', site: 'https://chuv.oniris-nantes.fr/accueil/foire-aux-questions' },
+  { id: 'capae', nom: 'CAPAE-Ouest (Nantes)', tel: '02 40 68 77 40', lien: 'tel:+33240687740', horaires: 'de 8 h 30 à minuit, 365 jours par an', site: 'https://chuv.oniris-nantes.fr/accueil/centre-anti-poison' },
 ];
 
 export const ESPECES_TOXIQUE = [
@@ -54,19 +54,20 @@ export const NOTES_ESPECE = {
 export const NOMS_CATEGORIES = { aliment: 'Aliment', plante: 'Plante', menager: 'Produit ou médicament', dehors: 'Dehors' };
 
 // ----- Adresses des sources -----
-const aspca = (slug) => ['ASPCA', `https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/${slug}`];
-const ASPCA_ALIMENTS = ['ASPCA, aliments à éviter', 'https://www.aspca.org/pet-care/animal-poison-control/people-foods-avoid-feeding-your-pets'];
+// 3e élément facultatif d'une source : les espèces dont elle parle. La page n'affiche que les sources qui concernent l'espèce choisie.
+const aspca = (slug) => ['ASPCA', `https://www.aspca.org/pet-care/aspca-poison-control/toxic-and-non-toxic-plants/${slug}`, ['chien', 'chat', 'cheval']];
+const ASPCA_ALIMENTS = ['ASPCA, aliments à éviter', 'https://www.aspca.org/pet-care/animal-poison-control/people-foods-avoid-feeding-your-pets', ['chien', 'chat']];
 const MERCK_ALIMENTS = ['Manuel vétérinaire Merck, aliments dangereux', 'https://www.merckvetmanual.com/special-pet-topics/poisoning/food-hazards'];
 const MERCK_AVOCAT = ['Manuel vétérinaire Merck, avocat', 'https://www.merckvetmanual.com/toxicology/food-hazards/avocado-persea-spp-toxicosis-in-animals'];
 const MERCK_CHOCOLAT = ['Manuel vétérinaire Merck, chocolat', 'https://www.merckvetmanual.com/toxicology/food-hazards/chocolate-toxicosis-in-animals'];
-const MERCK_OISEAUX_MAISON = ['Manuel vétérinaire Merck, dangers domestiques pour les oiseaux', 'https://www.merckvetmanual.com/bird-owners/routine-care-and-safety-of-birds/household-hazards-for-pet-birds'];
-const MERCK_OISEAUX_TOXIQUES = ['Manuel vétérinaire Merck, intoxications des oiseaux', 'https://merckvetmanual.com/exotic-and-laboratory-animals/pet-birds/toxicoses-of-pet-birds'];
-const MERCK_VOLAILLE = ['Manuel vétérinaire Merck, intoxications des volailles', 'https://www.merckvetmanual.com/poultry/poisonings/poisonings-in-poultry'];
+const MERCK_OISEAUX_MAISON = ['Manuel vétérinaire Merck, dangers domestiques pour les oiseaux', 'https://www.merckvetmanual.com/bird-owners/routine-care-and-safety-of-birds/household-hazards-for-pet-birds', ['oiseau']];
+const MERCK_OISEAUX_TOXIQUES = ['Manuel vétérinaire Merck, intoxications des oiseaux', 'https://merckvetmanual.com/exotic-and-laboratory-animals/pet-birds/toxicoses-of-pet-birds', ['oiseau']];
+const MERCK_VOLAILLE = ['Manuel vétérinaire Merck, intoxications des volailles', 'https://www.merckvetmanual.com/poultry/poisonings/poisonings-in-poultry', ['poule']];
 const MERCK_SENECON = ['Manuel vétérinaire Merck, séneçon', 'https://www.merckvetmanual.com/special-pet-topics/poisoning/pyrrolizidine-alkaloidosis-senecio-poisoning-ragwort-poisoning'];
-const WG_LAPIN = ['Wood Green, plantes et aliments dangereux pour les lapins', 'https://woodgreen.org.uk/pet-advice/rabbit/poisonous-food-and-plants-for-rabbits/'];
-const WG_COBAYE = ["Wood Green, plantes et aliments dangereux pour les cochons d'Inde", 'https://woodgreen.org.uk/pet-advice/guinea-pig/poisonous-food-and-plants-for-guinea-pigs/'];
-const PETMD_OISEAUX = ['PetMD, aliments toxiques pour les oiseaux', 'https://www.petmd.com/bird/foods-are-toxic-birds'];
-const UFIFAS_POULES = ['UF/IFAS Extension, aliments à ne jamais donner aux poules', 'https://blogs.ifas.ufl.edu/holmesco/2026/05/25/10-foods-you-should-never-feed-chickens/'];
+const WG_LAPIN = ['Wood Green, plantes et aliments dangereux pour les lapins', 'https://woodgreen.org.uk/pet-advice/rabbit/poisonous-food-and-plants-for-rabbits/', ['lapin']];
+const WG_COBAYE = ["Wood Green, plantes et aliments dangereux pour les cochons d'Inde", 'https://woodgreen.org.uk/pet-advice/guinea-pig/poisonous-food-and-plants-for-guinea-pigs/', ['rongeur']];
+const PETMD_OISEAUX = ['PetMD, aliments toxiques pour les oiseaux', 'https://www.petmd.com/bird/foods-are-toxic-birds', ['oiseau']];
+const UFIFAS_POULES = ['UF/IFAS Extension, aliments à ne jamais donner aux poules', 'https://blogs.ifas.ufl.edu/holmesco/2026/05/25/10-foods-you-should-never-feed-chickens/', ['poule']];
 const NON_DETAILLE = "La source ne détaille pas les signes : tout contact doit être signalé à un vétérinaire.";
 
 export const FICHES = [

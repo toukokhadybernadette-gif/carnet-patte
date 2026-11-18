@@ -16,10 +16,10 @@ Réalisé (module 2). Accessible par l'action rapide « Toxique ? » de l'Accuei
 
 ## Numéros (vérifiés en novembre 2026)
 - CNITV (Lyon) : 04 78 87 10 40, de 8 h 30 à minuit, 7 jours sur 7 (cnitv.fr/Contact).
-- CAPAE-Ouest (Nantes) : 02 40 68 77 40 (page de l'école Oniris). D'autres sites citent d'autres numéros pour ce centre : à recontrôler si besoin.
+- CAPAE-Ouest (Nantes) : 02 40 68 77 40, de 8 h 30 à minuit, 365 jours par an (page officielle d'Oniris : chuv.oniris-nantes.fr/accueil/centre-anti-poison, vérifiée en novembre 2026).
 
 ## Niveaux
-`ok` (sans danger connu), `prudence`, `toxique`, `tres` (très toxique). Classification **simplifiée de l'appli** : les sources n'emploient pas ces quatre mots. Les critères sont en tête de `donnees.js`.
+`ok` (pas de toxicité grave connue ; la fiche précise que cela peut quand même causer des troubles digestifs), `prudence`, `toxique`, `tres` (très toxique). Classification **simplifiée de l'appli** : les sources n'emploient pas ces quatre mots. Les critères sont en tête de `donnees.js`.
 
 ## Limites connues
 - Peu de données publiques accessibles pour les lapins, rongeurs, oiseaux et poules : leurs fiches s'appuient surtout sur le Manuel vétérinaire Merck, Wood Green (cochon d'Inde, lapin), PetMD et UF/IFAS. Les fiches « rongeurs » concernent le cochon d'Inde ; rien n'est déduit pour le hamster.

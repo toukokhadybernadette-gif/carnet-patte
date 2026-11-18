@@ -104,8 +104,8 @@ await taper('zantedeschia'); verifier((await noms()).length >= 0, 'nom scientifi
 await choisir('chat'); await taper('lys');
 verifier(await niveauDe('Lys') === 'tres', 'chat · lys : très toxique');
 await choisir('chien');
-verifier(await niveauDe('Lys') === 'ok', 'chien · lys : sans danger connu (l\'ASPCA le dit explicitement)');
-await choisir('chat'); await taper('rose'); verifier(await niveauDe('Rose') === 'ok', 'chat · rose : sans danger connu');
+verifier(await niveauDe('Lys') === 'ok', 'chien · lys : pas de toxicité grave connue (l\'ASPCA le dit explicitement)');
+await choisir('chat'); await taper('rose'); verifier(await niveauDe('Rose') === 'ok', 'chat · rose : pas de toxicité grave connue');
 await taper('muguet'); verifier(await niveauDe('Muguet') === 'tres', 'chat · muguet : très toxique');
 await choisir('lapin'); await taper('avocat'); verifier(await niveauDe('Avocat') === 'toxique', 'lapin · avocat : toxique');
 await choisir('oiseau'); await taper('avocat'); verifier(await niveauDe('Avocat') === 'tres', 'oiseau · avocat : très toxique');
@@ -146,9 +146,54 @@ const rang = { tres: 0, toxique: 1, prudence: 2, ok: 3 };
 verifier(ordre.length >= 30 && ordre.every((n, i) => i === 0 || rang[ordre[i - 1]] <= rang[n]), `chien : ${ordre.length} fiches, du plus au moins dangereux`);
 verifier(await ev(`document.querySelectorAll('.tx-carte__tete[aria-expanded="true"]').length`) === 0, 'sans recherche, toutes les fiches sont repliées');
 await ev(`document.querySelector('.tx-filtres [data-cat=plante]').click()`); await sleep(250);
-verifier(await ev(`[...document.querySelectorAll('.tx-carte')].every(c => ['Plante'].includes(c.querySelector('.tx-carte__meta').textContent))`), 'filtre « Plantes » : que des plantes');
+verifier(await ev(`[...document.querySelectorAll('.tx-carte')].every(c => c.dataset.cat === 'plante')`), 'filtre « Plantes » : que des plantes');
 verifier(await ev(`document.querySelector('.tx-filtres [data-cat=plante]').getAttribute('aria-pressed')`) === 'true' && await ev(`document.querySelector('.tx-filtres [data-cat=tous]').getAttribute('aria-pressed')`) === 'false', 'un seul filtre actif à la fois');
 await ev(`document.querySelector('.tx-filtres [data-cat=tous]').click()`);
+
+log('=== SECTIONS DÉROULANTES, FICHES COMPACTES, PASTILLES, URGENCE ===');
+await taille(390, 844); await aller2('#/toxique'); await sleep(500); await choisir('chien'); await taper('');
+const secs = await ev(`[...document.querySelectorAll('.tx-section__tete')].map(b => ({ id: b.dataset.section, ouvert: b.getAttribute('aria-expanded'), txt: b.textContent.replace(/\\s+/g, ' ').trim() }))`);
+verifier(secs.map((x) => x.id).join() === 'tres,toxique,prudence,ok', `4 sections dans l'ordre (${secs.map((x) => x.txt).join(' | ')})`);
+verifier(secs[0].ouvert === 'true' && secs.slice(1).every((x) => x.ouvert === 'false'), '« Très toxique » ouverte, les 3 autres fermées');
+verifier(/^Très toxique \(\d+\)$/.test(secs[0].txt) && /^Pas de toxicité grave connue \(\d+\)$/.test(secs[3].txt), 'titres avec le nombre de fiches');
+verifier(await ev(`document.querySelectorAll('.tx-section__tete').length === 4 && document.querySelector('.tx-filtres').compareDocumentPosition(document.querySelector('.tx-section')) & 4`), 'les filtres restent au-dessus des sections');
+await ev(`document.querySelector('[data-section=toxique]').click()`); await sleep(200);
+verifier(await ev(`document.querySelector('#tx-sec-toxique').hidden === false && document.querySelector('[data-section=toxique]').getAttribute('aria-expanded') === 'true'`), 'toucher « Toxique » l’ouvre');
+await ev(`document.querySelector('.tx-filtres [data-cat=plante]').click()`); await sleep(200);
+verifier(await ev(`document.querySelector('[data-section=toxique]').getAttribute('aria-expanded')`) === 'true', 'l’état ouvert/fermé survit à un changement de filtre');
+await ev(`document.querySelector('.tx-filtres [data-cat=tous]').click()`); await sleep(200);
+await taper('lys');
+verifier(await ev(`document.querySelectorAll('.tx-section').length`) === 0 && await ev(`document.querySelectorAll('.tx-carte').length`) >= 1, 'pendant une recherche : résultats directs, sans sections');
+await taper('');
+verifier(await ev(`document.querySelectorAll('.tx-section').length`) === 4, 'recherche effacée : les sections reviennent');
+verifier(await ev(`!document.querySelector('.tx-carte__meta') && !/^(Plante|Aliment)$/m.test(document.querySelector('.tx-carte__tete').innerText)`), 'plus de ligne « Plante » / « Aliment » sous le nom');
+const hCarte = await ev(`document.querySelector('.tx-carte__tete').getBoundingClientRect().height`);
+verifier(hCarte <= 64, `fiche compacte (${Math.round(hCarte)} px de haut)`);
+verifier(await ev(`(() => { const t = document.querySelector('.tx-carte__tete'); const r = t.getBoundingClientRect(); const ic = t.querySelector('.tx-carte__icone').getBoundingClientRect(); const b = t.querySelector('.cp-badge').getBoundingClientRect(); return Math.abs((ic.top + ic.bottom) / 2 - (b.top + b.bottom) / 2) < 6 && b.left > ic.right; })()`), 'une seule ligne : icône, nom, badge à droite');
+const esp = await ev(`(() => { const f = document.querySelector('.tx-especes'); const r = f.getBoundingClientRect(); return { defile: f.scrollWidth > f.clientWidth, overflowX: getComputedStyle(f).overflowX, h: r.height, tops: Math.max(...[...f.querySelectorAll('.cp-choix__option')].map(o => o.getBoundingClientRect().top)) - Math.min(...[...f.querySelectorAll('.cp-choix__option')].map(o => o.getBoundingClientRect().top)) }; })()`);
+log('espèces :', JSON.stringify(esp)); verifier(esp.defile && esp.overflowX === 'auto' && esp.tops < 3, `espèces : une seule rangée de pastilles qui défile (hauteur ${Math.round(esp.h)} px)`);
+verifier(esp.h <= 90, 'la rangée d’espèces prend peu de place');
+const hurg = await ev(`document.querySelector('.tx-urgence--haut').getBoundingClientRect().height`);
+verifier(hurg <= 130, `bloc urgence compact sur iPhone (${Math.round(hurg)} px de haut)`);
+verifier(await ev(`[...document.querySelectorAll('.tx-urgence--haut .tx-tel')].map(a => a.getAttribute('href')).join()`) === 'tel:+33478871040,tel:+33240687740', 'bloc urgence : CNITV et CAPAE-Ouest');
+await ecran('haut-mobile'); await ev(`document.scrollingElement.scrollTop = 1e7; document.querySelector('.contenu').scrollTop = 1e7`); await sleep(400);
+verifier(await ev(`(() => { const p = document.querySelector('.tx-pied').lastElementChild.getBoundingClientRect(); const nav = document.querySelector('.app-nav-bas'); const n = nav ? nav.getBoundingClientRect() : null; return !n || p.bottom <= n.top + 1; })()`), 'la note en bas de page n’est pas cachée par la barre du bas');
+await ecran('sections-mobile');
+
+log('=== SOURCES FILTRÉES PAR ESPÈCE ===');
+await choisir('rongeur'); await taper('avocat');
+if (await ev(`document.querySelector('.tx-carte__tete').getAttribute('aria-expanded')`) !== 'true') await ev(`document.querySelector('.tx-carte__tete').click()`);
+await sleep(250);
+const srcR = await texte('.tx-carte__detail:not([hidden]) .tx-source');
+verifier(/cochons d'Inde/.test(srcR) && !/poules|lapins|oiseaux/.test(srcR), `rongeurs · avocat : seulement les sources qui les concernent (${srcR})`);
+
+log('=== NIVEAU « ok » : libellé et phrase demandés ===');
+await choisir('chien'); await taper('lys');
+if (await ev(`document.querySelector('.tx-carte__tete').getAttribute('aria-expanded')`) !== 'true') await ev(`document.querySelector('.tx-carte__tete').click()`);
+await sleep(250);
+verifier(await texte('.tx-niveau--ok') === 'Pas de toxicité grave connue', 'badge : « Pas de toxicité grave connue »');
+verifier((await texte('.tx-bandeau--ok')).includes('Peut quand même causer des troubles digestifs, ne pas en donner volontairement.'), 'phrase : « Peut quand même causer des troubles digestifs, ne pas en donner volontairement. »');
+verifier(await ev(`!document.body.innerText.includes('Sans danger connu')`), 'plus aucune mention « Sans danger connu » sur la page');
 
 log('=== COULEURS D\'URGENCE ET FORMES ===');
 await choisir('chat'); await taper('');
@@ -156,7 +201,7 @@ const badges = await ev(`(() => { const o = {}; for (const n of ['ok', 'prudence
 verifier(badges.ok && badges.prudence && badges.toxique && badges.tres, 'les 4 niveaux sont présents pour le chat');
 verifier(new Set(Object.values(badges).map((b) => b.svg)).size === 4 && new Set(Object.values(badges).map((b) => b.mot)).size === 4, `4 formes d'icône différentes et 4 mots différents (${Object.values(badges).map((b) => b.mot).join(' / ')})`);
 verifier(badges.tres.fond === 'rgb(142, 61, 43)' && badges.tres.texte === 'rgb(255, 255, 255)', `très toxique : terre cuite pleine (${badges.tres.fond})`);
-verifier(badges.ok.fond === 'rgb(217, 240, 226)' && badges.prudence.fond === 'rgb(246, 232, 201)' && badges.toxique.fond === 'rgb(246, 227, 220)', 'sans danger : vert · prudence : ambre · toxique : terre cuite pâle (mêmes couleurs que les rappels)');
+verifier(badges.ok.fond === 'rgb(217, 240, 226)' && badges.prudence.fond === 'rgb(246, 232, 201)' && badges.toxique.fond === 'rgb(246, 227, 220)', 'pas de toxicité grave : vert · prudence : ambre · toxique : terre cuite pâle (mêmes couleurs que les rappels)');
 
 log('=== RÉSEAU : rien ne part de l\'appareil ===');
 verifier(await ev(`performance.getEntriesByType('resource').filter(r => !r.name.startsWith(location.origin) && !r.name.includes('cdn.jsdelivr.net')).length`) === 0, 'aucune requête vers un autre site que le serveur de l\'appli');
