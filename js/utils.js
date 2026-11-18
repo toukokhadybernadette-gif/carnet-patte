@@ -53,6 +53,12 @@ export function formatDate(iso) {
   return lireISO(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/** « 18 novembre 2026 » : la date en toutes lettres, en français (affichée à côté des champs date, dont l'aspect dépend de la langue de l'appareil). */
+export function formatDateLongue(iso) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso) || Number.isNaN(lireISO(iso).getTime())) return '';
+  return lireISO(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 /** Âge lisible : "3 ans 2 mois", "5 mois", "12 jours"... */
 export function age(naissance) {
   if (!naissance) return '';

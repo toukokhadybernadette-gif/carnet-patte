@@ -284,7 +284,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-note--periode { padding: var(--cp-espace-5) 0; justify-content: center; }
 .ps-graphique { display: block; width: 100%; height: auto; overflow: visible; }
 /* Axes : petits chiffres discrets, grille en pointillés très légers */
-.ps-grille { stroke: rgba(46, 42, 24, .13); stroke-width: 1; stroke-dasharray: 2 4; }
+.ps-grille { stroke: rgba(var(--cp-ombre-rgb), .13); stroke-width: 1; stroke-dasharray: 2 4; }
 .ps-texte { fill: var(--cp-texte-doux); font-size: 10px; font-family: var(--cp-police-texte); font-variant-numeric: tabular-nums; }
 /* Courbe dans la couleur de l'animal, avec un dégradé transparent dessous */
 .ps-degrade-haut { stop-color: var(--an-trait, var(--cp-foret)); stop-opacity: .34; }

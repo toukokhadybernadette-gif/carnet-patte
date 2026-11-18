@@ -89,23 +89,23 @@
   --cp-graisse-titre: 650;
   --cp-graisse-texte: 400;
   --cp-graisse-bouton: 500;   /* Inter Medium */
-  --cp-graisse-h1: 700;
-  --cp-lettrage-titre: -0.015em;
+  --cp-graisse-h1: 750;
+  --cp-lettrage-titre: -0.02em;
 
   /* Échelle : taille / interligne. Les valeurs de téléphone sont redéfinies plus bas (moins de 600 px). */
   --cp-taille-xs: 12px;   --cp-interligne-xs: 16px;    /* étiquettes, badges, légendes */
   --cp-taille-s: 13px;    --cp-interligne-s: 18px;     /* texte secondaire, méta */
   --cp-taille-m: 15px;    --cp-interligne-m: 22px;     /* TEXTE COURANT */
-  --cp-taille-l: 17px;    --cp-interligne-l: 24px;     /* titre de section (h2) */
+  --cp-taille-l: 20px;    --cp-interligne-l: 28px;     /* titre de section (h2) */
   --cp-taille-xl: 19px;   --cp-interligne-xl: 26px;    /* titre de fenêtre */
-  --cp-taille-xxl: 26px;  --cp-interligne-xxl: 32px;   /* titre de page (h1) */
+  --cp-taille-xxl: 34px;  --cp-interligne-xxl: 40px;   /* titre de page (h1) */
   --cp-taille-chiffre: 24px; --cp-interligne-chiffre: 30px; /* chiffres clés */
   --cp-interligne: 1.5;
   --cp-interligne-titre: 1.2;
 
   /* ----- Formes ----- */
-  --cp-rayon-carte: 28px;     /* cartes et groupes : carrés très arrondis */
-  --cp-rayon-bouton: 10px;    /* boutons */
+  --cp-rayon-carte: 32px;     /* cartes et groupes : carrés très arrondis */
+  --cp-rayon-bouton: 999px;   /* boutons en pilule */    /* boutons */
   --cp-rayon-champ: 10px;     /* champs de formulaire */
   --cp-rayon-pastille: 999px;
 
@@ -129,7 +129,9 @@
   --cp-duree: 220ms;
   --cp-courbe: cubic-bezier(.2, .7, .2, 1);
 
-  /* ----- Mise en page ----- */
+  /* ----- Thème de couleur : les variables de couleur ci-dessus sont les valeurs de départ (kaki) ; css/themes.css (généré) les redéfinit pour chacun des 6 thèmes ----- */
+
+/* ----- Mise en page ----- */
   --cp-bp-tablette: 600px;
   --cp-bp-ordinateur: 1024px;   /* (indicatif : les media queries ne lisent pas les variables) */
   --cp-cible-tactile: 44px;     /* taille minimale d'un bouton au doigt */
@@ -153,9 +155,9 @@
     --cp-taille-xs: 13px; --cp-interligne-xs: 18px;
     --cp-taille-s: 14px;  --cp-interligne-s: 20px;
     --cp-taille-m: 16px;  --cp-interligne-m: 24px;
-    --cp-taille-l: 18px;  --cp-interligne-l: 26px;
+    --cp-taille-l: 20px;  --cp-interligne-l: 28px;
     --cp-taille-xl: 19px; --cp-interligne-xl: 26px;
-    --cp-taille-xxl: 22px; --cp-interligne-xxl: 28px;
+    --cp-taille-xxl: 30px; --cp-interligne-xxl: 36px;
     --cp-taille-chiffre: 20px; --cp-interligne-chiffre: 26px;
     --cp-marge-page: 16px;
   }

@@ -9,6 +9,7 @@ import * as storage from '../../js/storage.js';
 import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
+import { illustration } from '../../js/illustrations.js';
 import { rafraichir } from '../../js/router.js';
 import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres, PALETTE_ANIMAUX, couleurAnimal } from '../../js/composants.js';
 import { ESPECES, infosEspece, nomEspece, erreurChamp } from './commun.js';
@@ -28,8 +29,8 @@ export function rendre(zone, segments) {
 function apercuHtml(espece, photo, couleur) {
   const contenu = typeof photo === 'string' && photo.startsWith('data:image/')
     ? `<img src="${echapper(photo)}" alt="">`
-    : icone(infosEspece({ espece }).icone, { taille: 44 });
-  return `<span class="cp-avatar cp-avatar--grand cp-an-${couleur}" aria-hidden="true">${contenu}</span>`;
+    : illustration(infosEspece({ espece }).icone) || icone(infosEspece({ espece }).icone, { taille: 44 });
+  return `<span class="cp-avatar cp-avatar--grand cp-avatar--illu cp-an-${couleur}" aria-hidden="true">${contenu}</span>`;
 }
 
 /**
@@ -67,12 +68,13 @@ export function formulaireAnimal(animal, apres) {
   const html = `
     <form class="cp-formulaire al-form" novalidate>
       <div class="al-photo">
-        <div data-apercu></div>
+        <div class="al-photo__apercu" data-apercu></div>
         <div class="al-photo__actions">
-          <label class="cp-btn cp-btn--secondaire cp-btn--s">${icone('camera', { taille: 16 })}<span>Choisir une photo</span>
+          <label class="cp-btn cp-btn--principal al-photo__ajout">${icone('camera', { taille: 18 })}<span data-libelle-photo>${photo ? 'Changer la photo' : 'Ajouter une photo'}</span>
             <input type="file" accept="image/*" class="cp-sr" data-fichier>
           </label>
           ${bouton({ texte: 'Retirer la photo', variante: 'discret', taille: 's', attrs: { 'data-retirer': true } })}
+          <p class="al-photo__aide" data-aide-photo>Facultatif. Sans photo, une illustration de l'espèce est utilisée.</p>
         </div>
       </div>
       ${champ({ id: 'animal-nom', label: 'Nom', valeur: a.nom, requis: true, attrs: { name: 'nom', maxlength: 40, autocomplete: 'off' } })}
@@ -102,6 +104,7 @@ export function formulaireAnimal(animal, apres) {
     const majApercu = () => {
       apercu.innerHTML = apercuHtml(form.espece.value, photo, form.couleur.value || couleurAnimal({ id: a.id ?? a.nom })); // sans choix : la couleur automatique
       boutonRetirer.hidden = !photo;
+      dlg.querySelector('[data-libelle-photo]').textContent = photo ? 'Changer la photo' : 'Ajouter une photo';
     };
     const majAutre = () => { champAutre.hidden = form.espece.value !== 'autre'; };
     majApercu(); majAutre();

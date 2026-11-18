@@ -107,10 +107,10 @@ a.ac-resume:hover { color: var(--cp-texte); }
    ========================================================= */
 @media (max-width: 599px) {
   .contenu { padding-top: var(--cp-espace-3); }
-  .pg { gap: var(--cp-espace-4); }
+  .pg { gap: var(--cp-espace-5); }
   .pg-section { gap: var(--cp-espace-2); }
   .pg-entete { gap: 2px; }
-  .cp-carte { padding: var(--cp-espace-3); }
+  .cp-carte { padding: var(--cp-espace-4); }
   .cp-vide { padding: var(--cp-espace-4) var(--cp-espace-3); gap: var(--cp-espace-2); }
   .cp-vide__icone { width: 44px; height: 44px; }
   .cp-liste__ligne { padding: 8px 12px; min-height: 48px; }
@@ -135,7 +135,7 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .ac-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-2); padding: var(--cp-espace-5); border-radius: 32px; }
 .ac-hero__date { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 600; color: var(--cp-texte-doux); text-transform: none; }
 .ac-hero h1 { margin: 0; }
-.ac-afaire { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); margin: var(--cp-espace-2) 0 0; padding: var(--cp-espace-3); border-radius: 22px; background: rgba(246, 244, 240, .8); border: 1px solid rgba(255, 253, 250, .9); }
+.ac-afaire { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); margin: var(--cp-espace-2) 0 0; padding: var(--cp-espace-3); border-radius: 22px; background: rgba(255, 255, 255, .8); border: 1px solid rgba(255, 255, 255, .9); }
 .ac-afaire--ok { display: block; margin-top: var(--cp-espace-2); font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-l); color: var(--cp-foret-texte); text-align: left; }
 .ac-afaire__corps { display: grid; gap: 2px; min-width: 0; }
 .ac-afaire__etiquette { white-space: nowrap; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--cp-texte-doux); }
@@ -160,7 +160,7 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .ac-stories ul::-webkit-scrollbar { display: none; }
 .ac-stories li { flex: none; }
 .ac-story { display: grid; justify-items: start; align-content: start; gap: 2px; width: 132px; min-height: 132px; padding: var(--cp-espace-3); border-radius: 26px; scroll-snap-align: start; text-decoration: none; color: var(--cp-foret-texte); font: inherit; text-align: left; cursor: pointer;
-  background: rgba(246, 244, 240, .72); border: 1px solid rgba(255, 253, 250, .9); box-shadow: 0 4px 10px rgba(46, 42, 24, .08); }
+  background: rgba(255, 255, 255, .72); border: 1px solid rgba(255, 255, 255, .9); box-shadow: 0 4px 10px rgba(var(--cp-ombre-rgb), .08); }
 .cp .ac-story { text-decoration: none; color: var(--cp-foret-texte); }
 .ac-story .cp-avatar { width: 48px; height: 48px; font-size: 17px; margin-bottom: 8px; box-shadow: 0 0 0 2px var(--cp-carte), 0 0 0 3px var(--an-trait, var(--cp-sauge)); }
 .ac-story:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
@@ -197,12 +197,12 @@ a.ac-resume:hover { color: var(--cp-texte); }
 /* Ce mois-ci : petites pastilles chiffrées */
 .ac-mois { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
 .ac-pastille { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 16px; border-radius: 999px; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte);
-  background: rgba(246, 244, 240, .72); border: 1px solid rgba(255, 253, 250, .9); box-shadow: 0 2px 6px rgba(46, 42, 24, .08); }
+  background: rgba(255, 255, 255, .72); border: 1px solid rgba(255, 255, 255, .9); box-shadow: 0 2px 6px rgba(var(--cp-ombre-rgb), .08); }
 .ac-pastille strong { font-family: var(--cp-police-titre); font-size: var(--cp-taille-l); line-height: 1; color: var(--cp-foret-texte); }
 
 /* Cinq actions rapides (avec « Toxique ? ») : cercles un peu plus petits et libellés resserrés sur petit téléphone */
 @media (max-width: 479px) {
   .ac-actions[style*="--ac-nb:5"] { gap: 4px; padding-inline: 6px; }
-  .ac-actions[style*="--ac-nb:5"] .ac-action__rond { width: 54px; height: 54px; }
+  .ac-actions[style*="--ac-nb:5"] .ac-action__rond { width: 56px; height: 56px; }
   .ac-actions[style*="--ac-nb:5"] .ac-action__texte { font-size: 12px; }
 }

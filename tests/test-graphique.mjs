@@ -116,7 +116,8 @@ verifier(await ev(`document.querySelectorAll('.ps-carte').length`) === 7, 'la li
 const dates = await ev(`[...document.querySelectorAll('.ps-graphique text')].filter(t => t.getAttribute('text-anchor') === 'start' || /\\d{4}$/.test(t.textContent)).map(t => t.textContent)`);
 verifier(dates.length === 2 && dates[0] !== dates[1], `axe du bas : début et fin de la période (${dates.join(' → ')})`);
 // choix conservé après l'ajout d'une pesée
-await ev(`(()=>{const f=document.querySelector('.ps-form');f.date.value=${JSON.stringify(iso(0))};f.poids.value='520';f.poids.dispatchEvent(new Event('input',{bubbles:true}));f.requestSubmit();})()`); await sleep(900);
+await ev(`document.querySelector('[data-ajouter-pesee]').click()`); await sleep(500);
+await ev(`(()=>{const f=document.querySelector('dialog[open] form');f.date.value=${JSON.stringify(iso(0))};f.poids.value='520';f.poids.dispatchEvent(new Event('input',{bubbles:true}));f.requestSubmit();})()`); await sleep(900);
 verifier(await pressees() === '3 mois* | 6 mois | 1 an | Tout' && await nbPoints() === 4, `après l'ajout d'une pesée : la période « 3 mois » est gardée, 4 points (${await pressees()})`);
 // période presque vide
 await importer(jeu([pes('q1', 'a', -400, 480), pes('q2', 'a', -300, 495), pes('q3', 'a', -200, 490), pes('q4', 'a', -100, 505), pes('q5', 'a', -5, 515)]));
@@ -130,10 +131,10 @@ await ev(`document.querySelector('[data-periode="tout"]').click()`);
 log('=== AXES DISCRETS, GRAPHIQUE MOINS HAUT, DESSIN À LA TAILLE RÉELLE ===');
 await importer(jeu(PESEES_A));
 const mesure = () => ev(`(() => { const s = document.querySelector('.ps-graphique'); const r = s.getBoundingClientRect(); const vb = s.viewBox.baseVal; const t = document.querySelector('.ps-texte'); return { h: r.height, echelle: r.width / vb.width, police: parseFloat(getComputedStyle(t).fontSize), effective: parseFloat(getComputedStyle(t).fontSize) * r.width / vb.width, enfants: s.querySelectorAll('text').length }; })()`);
-for (const [nom, w, h, hmax] of [['ordinateur', 1280, 900, 185], ['mobile', 390, 844, 160]]) {
+for (const [nom, w, h, hmax] of [['ordinateur', 1280, 900, 340], ['mobile', 390, 844, 260]]) {
   await taille(w, h); await ouvrirPoids('a'); await sleep(400);
   const m = await mesure();
-  verifier(m.h <= hmax && m.h >= 120, `${nom} : graphique de ${Math.round(m.h)} px de haut (au plus ${hmax} ; il en faisait plus de 400 sur ordinateur avant)`);
+  verifier(m.h <= hmax && m.h >= 220, `${nom} : grand graphique de ${Math.round(m.h)} px de haut (entre 220 et ${hmax})`);
   verifier(m.echelle > 0.97 && m.echelle < 1.03 && m.effective <= 11, `${nom} : dessiné à l'échelle 1:1 (${m.echelle.toFixed(2)}), chiffres des axes de ${m.effective.toFixed(1)} px (11 maximum, et lisibles)`);
 }
 // rotation / redimensionnement : le graphique est redessiné à la nouvelle largeur

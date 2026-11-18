@@ -102,7 +102,7 @@ export function courbe(pts) {
  */
 export function graphiqueSvg(pesees, { largeur = 600, periode = '' } = {}) {
   const L = Math.max(260, Math.round(largeur));
-  const H = L < 460 ? 150 : 172; // peu haut : la courbe se lit d'un coup d'œil
+  const H = L < 460 ? 230 : 300; // grand : la courbe est l'élément principal de l'onglet Poids
   const poids = pesees.map((p) => p.poidsKg);
   const pMin = Math.min(...poids);
   const pMax = Math.max(...poids);
@@ -180,20 +180,19 @@ function carteHtml(pesee, precedente) {
   if (precedente) {
     const diff = Math.round((pesee.poidsKg - precedente.poidsKg) * 10000) / 10000;
     variation = diff !== 0
-      ? `<span class="ps-ligne-info">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 16 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg</span></span>`
-      : `<span class="ps-ligne-info">${icone('minus', { taille: 16 })}<span>Poids inchangé</span></span>`;
+      ? `<span class="ps-ligne-info ps-carte__variation">${icone(diff > 0 ? 'arrow-up' : 'arrow-down', { taille: 16 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg</span></span>`
+      : `<span class="ps-ligne-info ps-carte__variation">${icone('minus', { taille: 16 })}<span>Poids inchangé</span></span>`;
   }
   const nom = `la pesée de ${formatPoids(pesee.poidsKg)} du ${formatDate(pesee.date)}`;
   return `
     <li class="cp-carte ps-carte" data-pesee="${echapper(pesee.id)}">
-      <span class="ps-carte__icone" aria-hidden="true">${icone('scale', { taille: 24 })}</span>
       <div class="ps-carte__corps">
+        <time class="ps-carte__date" datetime="${echapper(pesee.date)}">${formatDate(pesee.date)}</time>
         <strong class="ps-carte__poids">${formatPoids(pesee.poidsKg)}</strong>
-        <span class="ps-ligne-info">${icone('calendar', { taille: 16 })}<time datetime="${echapper(pesee.date)}">${formatDate(pesee.date)}</time></span>
         ${variation}
       </div>
       <div class="ps-carte__actions">
-        ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${nom}`, attrs: { 'data-supprimer': pesee.id } })}
+        ${bouton({ variante: 'discret', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${nom}`, attrs: { 'data-supprimer': pesee.id } })}
       </div>
     </li>`;
 }
@@ -270,22 +269,38 @@ export function rendre(zone, animal) {
     graphique = `<div class="cp-carte">${vide({ niveau: 3, icone: 'scale', titre: "Aucune pesée pour l'instant", texte: `Notez le poids de ${animal.nom} pour suivre son évolution.` })}</div>`;
   }
 
-  // Liste : la plus récente en premier, avec la variation par rapport à la précédente
+  // Liste compacte : la plus récente en premier, une ligne par pesée
   const liste = pesees.map((p, i) => carteHtml(p, pesees[i - 1])).reverse().join('');
 
+  // Poids actuel en grand, avec la variation depuis la pesée précédente
+  const derniere = pesees[pesees.length - 1];
+  const avant = pesees[pesees.length - 2];
+  let actuel = '';
+  if (derniere) {
+    const diff = avant ? Math.round((derniere.poidsKg - avant.poidsKg) * 10000) / 10000 : null;
+    const variation = diff === null
+      ? '<span class="ps-actuel__variation">Première pesée</span>'
+      : diff === 0
+        ? `<span class="ps-actuel__variation">${icone('minus', { taille: 18 })}<span>Poids inchangé depuis le ${formatDate(avant.date)}</span></span>`
+        : `<span class="ps-actuel__variation">${icone(diff > 0 ? 'trending-up' : 'trending-down', { taille: 18 })}<span>${diff > 0 ? '+' : '−'}${nombre(Math.abs(diff))} kg depuis le ${formatDate(avant.date)}</span></span>`;
+    actuel = `
+    <div class="cp-carte ps-actuel">
+      <span class="ps-actuel__etiquette">Poids actuel</span>
+      <strong class="ps-actuel__valeur">${formatPoids(derniere.poidsKg)}</strong>
+      ${variation}
+      <span class="ps-actuel__date">Pesé le <time datetime="${echapper(derniere.date)}">${formatDate(derniere.date)}</time></span>
+    </div>`;
+  }
+
   section.innerHTML = `
-    <div class="sn-entete"><h2 id="ps-titre" tabindex="-1">Poids</h2></div>
-    <form class="cp-carte cp-formulaire ps-form" novalidate aria-labelledby="ps-titre-form">
-      <h3 class="ps-form__titre" id="ps-titre-form">Ajouter une pesée</h3>
-      <div class="ps-form__champs">
-        ${champ({ id: 'pesee-date', label: 'Date', type: 'date', valeur: aujourdhui(), requis: true, attrs: { name: 'date', max: aujourdhui() } })}
-        ${champ({ id: 'pesee-poids', label: 'Poids (kg)', valeur: '', requis: true, placeholder: 'Ex. : 4,2', aide: 'Virgule ou point. Petit animal : 0,035 pour 35 g.',
-          attrs: { name: 'poids', inputmode: 'decimal', autocomplete: 'off' } })}
-      </div>
-      ${bouton({ texte: 'Ajouter la pesée', icone: 'plus', type: 'submit' })}
-    </form>
+    <div class="sn-entete ps-entete">
+      <h2 id="ps-titre" tabindex="-1">Poids</h2>
+      ${bouton({ texte: 'Ajouter une pesée', icone: 'plus', attrs: { 'data-ajouter-pesee': true } })}
+    </div>
+    ${actuel}
     ${graphique}
-    ${pesees.length ? `<ul class="sn-liste" aria-label="Pesées, de la plus récente à la plus ancienne">${liste}</ul>` : ''}`;
+    ${pesees.length ? `<h3 class="ps-liste-titre">Toutes les pesées</h3>
+    <ul class="sn-liste ps-liste" aria-label="Pesées, de la plus récente à la plus ancienne">${liste}</ul>` : ''}`;
 
   // Graphique : dessiné à la largeur réelle de sa zone, redessiné si cette largeur change (rotation du téléphone, fenêtre redimensionnée)
   // et quand on change de période. La courbe se trace à l'affichage (animation CSS, supprimée si « réduire les animations »).
@@ -347,23 +362,12 @@ export function rendre(zone, animal) {
     section.addEventListener('pointerdown', (e) => { const c = e.target.closest('.ps-cible'); if (c) montrer(c); else cacher(); });
   }
 
-  const form = section.querySelector('form');
-  form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    form.querySelectorAll('[aria-invalid]').forEach((c) => erreurChamp(c, ''));
-    const erreurDate = verifierDate(form.date.value);
-    const lu = lirePoids(form.poids.value);
-    if (erreurDate) erreurChamp(form.date, erreurDate);
-    if (lu.erreur) erreurChamp(form.poids, lu.erreur);
-    if (erreurDate || lu.erreur) { (erreurDate ? form.date : form.poids).focus(); return; }
-    storage.ajouter('pesees', { animalId: animal.id, date: form.date.value, poidsKg: lu.kg });
-    toast('Pesée ajoutée');
-    rerendre();
-    zone.querySelector('#pesee-poids')?.focus(); // prêt à saisir la suivante
-  });
-
   section.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-ajouter-pesee]')) {
+      // le formulaire s'ouvre dans une fenêtre ; une fois la pesée enregistrée, l'onglet se redessine
+      formulairePesee(animal, () => { rerendre(); zone.querySelector('#ps-titre')?.focus(); });
+      return;
+    }
     const declencheur = e.target.closest('[data-supprimer]');
     if (!declencheur) return;
     const pesee = storage.trouver('pesees', declencheur.dataset.supprimer);

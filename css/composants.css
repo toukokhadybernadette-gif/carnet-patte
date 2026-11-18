@@ -314,7 +314,7 @@ a.cp-carte:hover, .cp-carte--interactive:hover { box-shadow: var(--cp-ombre-m); 
   font-family: var(--cp-police-texte); font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m);
 }
 .cp-modale[open] { animation: cp-apparition var(--cp-duree) var(--cp-courbe); }
-.cp-modale::backdrop { background: rgba(46, 42, 24, .45); }
+.cp-modale::backdrop { background: rgba(var(--cp-ombre-rgb), .45); }
 .cp-modale[open]::backdrop { animation: cp-fondu var(--cp-duree) var(--cp-courbe); }
 .cp-modale * , .cp-modale *::before, .cp-modale *::after { box-sizing: border-box; }
 .cp-modale__tete { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-4); padding: var(--cp-espace-5) var(--cp-espace-5) var(--cp-espace-3); }
@@ -416,7 +416,7 @@ body:has(dialog[open]) { overflow: hidden; }
 }
 .cp .cp-nav-item { text-decoration: none; }
 .cp-nav-item .ic { color: var(--cp-texte-doux); }
-.cp-nav-item:hover { background: rgba(46, 42, 24, .06); }
+.cp-nav-item:hover { background: rgba(var(--cp-ombre-rgb), .06); }
 .cp-nav-item[aria-current="page"] { background: var(--cp-carte); box-shadow: inset 0 0 0 1px var(--cp-bordure), var(--cp-ombre-s); font-weight: 600; }
 .cp-nav-item[aria-current="page"] .ic { color: var(--cp-foret-texte); }
 .cp-nav-item[aria-disabled="true"] { color: var(--cp-desactive-texte); pointer-events: none; }

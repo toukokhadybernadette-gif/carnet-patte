@@ -6,6 +6,7 @@ import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
 import { echapper, formatDate, aujourdhui, lireISO } from '../../js/utils.js';
 import { vide, avatar, couleurAnimal, bouton } from '../../js/composants.js';
+import { illustration } from '../../js/illustrations.js';
 import { modale } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { conseilDuMois, PHRASE_VETERINAIRE } from '../../js/conseils.js';
@@ -75,11 +76,29 @@ function blocAFaire(urgent) {
       <span class="cp-liste__icone ${classeType(soin.type)}">${icone(infosType(soin.type).icone, { taille: 20 })}</span>
       <div class="ac-afaire__corps">
         <span class="ac-afaire__etiquette">À faire</span>
-        <span class="ac-afaire__titre">${echapper(nom)} · ${echapper(animal.nom)}</span>
+        <span class="ac-afaire__titre">${echapper(nom)}</span>
         <span class="ac-afaire__meta">${dateCourte(soin.rappel)} ${badgeEcheance(statut)}</span>
       </div>
       ${bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${nom}, ${animal.nom}` } })}
     </div>`;
+}
+
+/** Grande photo d'un animal (ou son illustration) avec son nom, puis la chose à faire pour LUI. Un toucher sur la photo ouvre sa fiche. */
+function slideAnimal(a, urgent, i, total) {
+  const photo = photoDe(a);
+  const image = photo
+    ? `<img class="ac-couv__img" src="${echapper(photo)}" alt="">`
+    : `<span class="ac-couv__illu">${illustration(infosEspece(a).icone)}</span>`;
+  return `
+    <li class="ac-couv__slide cp-an-${couleurAnimal(a)}" data-slide="${echapper(a.id)}">
+      <a class="ac-couv__photo${photo ? '' : ' ac-couv__photo--illu'}" href="#/animaux/${encodeURIComponent(a.id)}" aria-label="Ouvrir la fiche de ${echapper(a.nom)}">
+        ${image}
+        <span class="ac-couv__voile" aria-hidden="true"></span>
+        <span class="ac-couv__nom">${echapper(a.nom)}</span>
+        <span class="ac-couv__espece">${echapper(nomEspece(a))}</span>
+      </a>
+      ${blocAFaire(urgent)}
+    </li>`;
 }
 
 export function rendre(zone) {
@@ -99,22 +118,15 @@ export function rendre(zone) {
   const nbPesees = storage.lister('pesees').filter(dansLeMois).length;
 
   const conseil = conseilDuMois();
-  const urgent = rappels.find((r) => r.statut.classe !== 'plus-tard') ?? null;
+  // Un rappel « à faire maintenant » par animal ; l'animal le plus pressé passe en premier dans le défilement
+  const urgentDe = (a) => rappels.find((r) => r.animal.id === a.id && r.statut.classe !== 'plus-tard') ?? null;
+  const rang = (a) => { const u = urgentDe(a); return u ? rappels.indexOf(u) : 1e6; };
+  const ordreCouverture = [...animaux].sort((x, y) => rang(x) - rang(y) || x.nom.localeCompare(y.nom, 'fr'));
 
   const resume = animaux.length
     ? `<a class="ac-resume" href="#/animaux/rappels">${pluriel(animaux.length, 'animal', 'animaux')} · ${enRetard ? `<span class="ac-resume__retard">${pluriel(enRetard, 'rappel en retard', 'rappels en retard')}</span>` : 'aucun rappel en retard'}${icone('chevron-right', { taille: 14 })}</a>`
     : '<p class="ac-resume ac-resume--vide">Votre carnet est vide pour l\'instant.</p>';
 
-  const stories = animaux.length ? `
-      <section class="pg-section" aria-labelledby="ac-animaux">
-        <h2 id="ac-animaux">Mes animaux</h2>
-        <nav class="ac-stories" aria-label="Mes animaux">
-          <ul>
-            ${animaux.map((a) => `<li><a class="ac-story" href="#/animaux/${encodeURIComponent(a.id)}">${avatar({ icone: infosEspece(a).icone, photo: photoDe(a), nom: a.nom, id: a.id, couleur: couleurAnimal(a) })}<span class="ac-story__nom">${echapper(a.nom)}</span><span class="ac-story__espece">${echapper(nomEspece(a))}</span></a></li>`).join('')}
-            <li><button type="button" class="ac-story ac-story--ajout" data-act="animal"><span class="ac-story__plus" aria-hidden="true">${icone('plus', { taille: 22 })}</span><span class="ac-story__nom">Ajouter</span><span class="ac-story__espece">un animal</span></button></li>
-          </ul>
-        </nav>
-      </section>` : '';
 
   const actions = [
     animaux.length && action({ id: 'soin', texte: 'Soin', nom: 'Ajouter un soin', ic: 'stethoscope' }),
@@ -138,10 +150,15 @@ export function rendre(zone) {
         <p class="ac-hero__date">${dateDuJour()}</p>
         <h1>Bonjour${prenom ? ` ${echapper(prenom)}` : ''}</h1>
         ${resume}
-        ${animaux.length ? blocAFaire(urgent) : ''}
+        ${animaux.length ? `
+        <div class="ac-couv" role="region" aria-label="Photos de mes animaux">
+          <ul class="ac-couv__piste ac-couv__piste--multi" tabindex="0" data-piste>
+            ${ordreCouverture.map((a, i) => slideAnimal(a, urgentDe(a), i, ordreCouverture.length + 1)).join('')}
+            <li class="ac-couv__slide ac-couv__slide--ajout" data-slide="ajout"><button type="button" class="ac-couv__ajout" data-act="animal"><span class="ac-couv__plus" aria-hidden="true">${icone('plus', { taille: 28 })}</span><span class="ac-couv__ajout-texte">Ajouter un animal</span></button></li>
+          </ul>
+          <div class="ac-couv__points" aria-hidden="true">${[...ordreCouverture, null].map((_, i) => `<span class="ac-couv__point" data-point="${i}"></span>`).join('')}</div>
+        </div>` : ''}
       </header>
-
-      ${stories}
 
       <section class="pg-section" aria-labelledby="ac-actions">
         <h2 id="ac-actions">Actions rapides</h2>
@@ -176,6 +193,20 @@ export function rendre(zone) {
         <ul class="ac-mois" data-ce-mois>${pastilles}</ul>
       </section>` : `<div class="cp-carte">${vide({ niveau: 2, icone: 'paw-print', titre: "Aucun animal pour l'instant", texte: 'Ajoutez votre premier compagnon pour suivre ses soins, ses pesées et ses rappels.' })}</div>`}
     </div>`;
+
+  // Points sous le défilement : celui de la photo la plus visible est plein
+  const piste = zone.querySelector('[data-piste]');
+  if (piste) {
+    const points = [...zone.querySelectorAll('[data-point]')];
+    const majPoints = () => {
+      const centre = piste.scrollLeft + piste.clientWidth / 2;
+      let proche = 0; let ecart = Infinity;
+      [...piste.children].forEach((li, i) => { const d = Math.abs(li.offsetLeft - piste.offsetLeft + li.offsetWidth / 2 - centre); if (d < ecart) { ecart = d; proche = i; } });
+      points.forEach((p, i) => p.classList.toggle('is-actif', i === proche));
+    };
+    piste.addEventListener('scroll', () => requestAnimationFrame(majPoints), { passive: true });
+    majPoints();
+  }
 
   zone.addEventListener('click', (e) => {
     const fait = e.target.closest('[data-fait]');

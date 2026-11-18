@@ -8,8 +8,9 @@
 //
 // Les modules existants n'utilisent pas encore ce fichier : ils migreront un par un dans les prochaines étapes.
 
-import { echapper } from './utils.js';
+import { echapper, formatDateLongue } from './utils.js';
 import { icone } from './icons.js';
+import { illustration } from './illustrations.js';
 
 /** Transforme { a: 'x', b: true, c: false } en ' a="x" b'. Les valeurs sont échappées. */
 function attributs(objet = {}) {
@@ -57,13 +58,26 @@ export function compteur(nombre, libelle = '') {
   return `<span class="cp-compteur">${nombre}${libelle ? `<span class="cp-sr"> ${echapper(libelle)}</span>` : ''}</span>`;
 }
 
+/** Texte affiché sous un champ date : la date en français, ou « Aucune date choisie ». */
+const texteDateFr = (valeur) => formatDateLongue(valeur) || 'Aucune date choisie';
+
+// Safari sur iPhone affiche le champ date dans la langue de l'appareil : on écrit donc toujours la date en français à côté (« 18 novembre 2026 »)
+const majDateFr = (e) => {
+  const c = e.target;
+  if (c?.matches?.('input[type="date"]') && c.id) { const p = document.getElementById(`${c.id}-datefr`); if (p) p.textContent = texteDateFr(c.value); }
+};
+if (typeof document !== 'undefined') { // (le test des données charge ce fichier sans navigateur)
+  document.addEventListener('input', majDateFr);
+  document.addEventListener('change', majDateFr);
+}
+
 /**
  * Champ de formulaire complet : étiquette, champ, aide et message d'erreur reliés pour les lecteurs d'écran.
  * type : text | email | search | password | number | date | textarea.
  */
 export function champ({ id, label, type = 'text', valeur = '', placeholder = '', aide = '', erreur = '', icone: nomIcone,
   desactive = false, chargement = false, requis = false, attrs = {} }) {
-  const decrit = [aide && `${id}-aide`, erreur && `${id}-erreur`].filter(Boolean).join(' ');
+  const decrit = [aide && `${id}-aide`, type === 'date' && `${id}-datefr`, erreur && `${id}-erreur`].filter(Boolean).join(' ');
   const commun = {
     id, name: id, class: type === 'textarea' ? 'cp-textarea' : 'cp-input', placeholder, disabled: desactive, required: requis,
     'aria-invalid': erreur ? 'true' : false, 'aria-describedby': decrit || false, ...(type === 'date' ? { lang: 'fr' } : {}), ...attrs,
@@ -76,6 +90,7 @@ export function champ({ id, label, type = 'text', valeur = '', placeholder = '',
     <div class="cp-champ"${chargement ? ' aria-busy="true"' : ''}>
       <label class="cp-champ__label" for="${echapper(id)}">${echapper(label)}${requis ? ' <span aria-hidden="true">*</span>' : ''}</label>
       ${zone}
+      ${type === 'date' ? `<p class="cp-champ__datefr" id="${echapper(id)}-datefr" aria-live="polite">${echapper(texteDateFr(valeur))}</p>` : ''}
       ${aide ? `<p class="cp-champ__aide" id="${echapper(id)}-aide">${echapper(aide)}</p>` : ''}
       ${erreur ? `<p class="cp-champ__erreur" id="${echapper(id)}-erreur">${icone('circle-alert', { taille: 16 })}<span>${echapper(erreur)}</span></p>` : ''}
     </div>`;
@@ -135,13 +150,17 @@ export function initiales(nom = '') {
 }
 
 /**
- * Avatar rond : la photo si elle existe ; sinon les initiales sur une couleur propre à l'animal (`nom` et `id`) ;
+ * Avatar rond : la photo si elle existe ; sinon l'illustration de l'espèce (d'après `icone`) sur la couleur de l'animal ; sinon les initiales (`nom` et `id`) ;
  * sinon, sans nom, une icône. `taille` : petit | normal | grand.
  */
-export function avatar({ icone: nomIcone = 'paw-print', photo = '', grand = false, petit = false, nom = '', id = '', couleur = '' } = {}) {
+export function avatar({ icone: iconeDonnee, photo = '', grand = false, petit = false, nom = '', id = '', couleur = '' } = {}) {
+  const nomIcone = iconeDonnee ?? 'paw-print';
   const taille = grand ? ' cp-avatar--grand' : petit ? ' cp-avatar--petit' : '';
   const teinte = ` cp-an-${PALETTE_ANIMAUX.some((c) => c.id === couleur) ? couleur : PALETTE_ANIMAUX[couleurAvatar(id || nom) - 1].id}`;
   if (photo) return `<span class="cp-avatar${teinte}${taille}" aria-hidden="true"><img src="${echapper(photo)}" alt=""></span>`;
+  // Sans photo : l'illustration de l'espèce (js/illustrations.js) ; sans illustration (ex. le profil), les initiales
+  const dessin = iconeDonnee ? illustration(iconeDonnee) : '';
+  if (dessin) return `<span class="cp-avatar cp-avatar--illu${teinte}${taille}" aria-hidden="true">${dessin}</span>`;
   if (nom) return `<span class="cp-avatar${teinte}${taille}" aria-hidden="true">${echapper(initiales(nom))}</span>`;
   return `<span class="cp-avatar${taille}" aria-hidden="true">${icone(nomIcone, { taille: grand ? 32 : 20 })}</span>`;
 }

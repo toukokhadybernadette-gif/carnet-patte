@@ -12,7 +12,7 @@
   --cp-verre-fond-fort: rgba(246, 244, 240, .74);
   --cp-verre-bordure: rgba(255, 253, 250, .85);
   --cp-verre-flou: 28px;
-  --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(46, 42, 24, .06), 0 8px 24px rgba(46, 42, 24, .10);
+  --cp-verre-ombre: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(var(--cp-ombre-rgb), .06), 0 8px 24px rgba(var(--cp-ombre-rgb), .10);
   --cp-verre-barre-haut: rgba(236, 232, 225, .6);
   --cp-verre-barre-laterale: rgba(238, 234, 228, .5);
   --cp-verre-barre-bas: rgba(238, 234, 228, .65);
@@ -47,15 +47,17 @@ html { background: var(--cp-fond); }
 body { background: transparent; }
 .app { background: transparent; position: relative; z-index: 0; }
 
+/* Dégradé doux de la couleur du thème en haut de l'écran */
+.app-fond::before { content: ""; position: absolute; inset: 0 0 auto 0; height: min(62vh, 480px); background: linear-gradient(to bottom, var(--cp-degrade) 0%, transparent 100%); opacity: .85; }
 .app-fond { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .app-fond span {
   position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, var(--bulle) 0%, transparent 68%);
   will-change: transform; animation: app-bulle var(--duree) ease-in-out infinite alternate;
 }
-.app-fond span:nth-child(1) { --bulle: rgba(222, 214, 200, .62); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
-.app-fond span:nth-child(2) { --bulle: rgba(200, 208, 170, .6); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
-.app-fond span:nth-child(3) { --bulle: rgba(196, 184, 172, .58); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
+.app-fond span:nth-child(1) { --bulle: var(--cp-bulle-1); --duree: 104s; --dx: -14vw; --dy: 16vh;  top: -18vmax; right: -24vmax; }
+.app-fond span:nth-child(2) { --bulle: var(--cp-bulle-2); --duree: 94s;  --dx: 18vw;  --dy: -14vh; bottom: -24vmax; left: -16vmax; }
+.app-fond span:nth-child(3) { --bulle: var(--cp-bulle-3); --duree: 118s; --dx: -16vw; --dy: -12vh; bottom: -22vmax; right: -18vmax; }
 .bulles-figees .app-fond span { animation: none; } /* ajouté par js/fond.js si l'appareil peine à animer le décor */
 @keyframes app-bulle { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(var(--dx), var(--dy), 0) scale(1.14); } }
 
@@ -73,7 +75,7 @@ body { background: transparent; }
 /* Cartes d'animaux : plusieurs à l'écran, donc un flou plus léger ; aucun flou sur téléphone */
 .cp-carte.cp-carte-animal { -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); }
 @media (max-width: 599px) {
-  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(246, 244, 240, .78); }
+  .cp-carte.cp-carte-animal { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255, 255, 255, .78); }
 }
 a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88)); }
 
@@ -82,7 +84,7 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
   background: var(--cp-verre-barre-haut);
   -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
   border-bottom: 1px solid var(--cp-verre-bordure);
-  box-shadow: 0 1px 0 rgba(46, 42, 24, .05);
+  box-shadow: 0 1px 0 rgba(var(--cp-ombre-rgb), .05);
 }
 .app-lateral {
   background: var(--cp-verre-barre-laterale);
@@ -93,7 +95,7 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
   background: var(--cp-verre-barre-bas);
   -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
   border-top: 1px solid var(--cp-verre-bordure);
-  box-shadow: 0 -1px 0 rgba(46, 42, 24, .05);
+  box-shadow: 0 -1px 0 rgba(var(--cp-ombre-rgb), .05);
 }
 .app-recherche__liste {
   background: var(--cp-verre-menu);
@@ -106,9 +108,9 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
   background: var(--cp-verre-fenetre);
   -webkit-backdrop-filter: blur(34px) saturate(1.6); backdrop-filter: blur(34px) saturate(1.6);
   border: 1px solid var(--cp-verre-bordure); border-radius: 30px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(46, 42, 24, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(var(--cp-ombre-rgb), .22);
 }
-.cp-modale::backdrop { background: rgba(46, 42, 24, .30); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.cp-modale::backdrop { background: var(--cp-voile); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 
 /* Pastilles en verre teinté vert sauge : boutons de filtre, compteurs et puces neutres.
    Le rouge / ambre / vert de l'URGENCE (badges d'échéance, pastille rouge des retards) n'est pas touché. */
@@ -130,7 +132,7 @@ a.cp-carte:hover { background: var(--cp-verre-fond-fort, rgba(255, 255, 255, .88
 .cp-badge:not([class*="cp-badge--"]), .cp-badge--neutre { border: 1px solid var(--cp-sauge-verre-bord); }
 
 /* Les champs restent bien blancs : c'est là qu'on lit ce qu'on tape */
-.cp-input, .cp-select, .cp-textarea { background-color: rgba(252, 251, 248, .96); }
+.cp-input, .cp-select, .cp-textarea { background-color: var(--cp-champ-fond); }
 
 /* ---------- Mouvement ---------- */
 /* Apparition des pages : la page se fond, puis ses blocs montent doucement l'un après l'autre */
@@ -181,7 +183,7 @@ a.cp-carte:hover { transform: translateY(-2px); }
   --cc-flou: 30px;
   --cc-sat: 1.9;
   --cc-reflet: inset 0 1px 0 rgba(255, 255, 255, .32);   /* reflet léger à l'intérieur, en haut : jamais d'anneau */
-  --cc-ombre: 0 3px 7px rgba(60, 56, 30, .22);            /* ombre douce dessous, sans étalement autour */
+  --cc-ombre: 0 3px 7px rgba(var(--cp-ombre-rgb), .22);            /* ombre douce dessous, sans étalement autour */
   --cc-actif: #3C4220;
   --cc-icone: #FFFFFF;
 }
@@ -197,9 +199,9 @@ a.cp-carte:hover { transform: translateY(-2px); }
 .app-nav-bas {
   left: var(--cp-espace-4); right: var(--cp-espace-4); bottom: calc(var(--cp-espace-3) + env(safe-area-inset-bottom));
   max-width: 440px; margin-inline: auto; padding: 6px; border-radius: 999px;
-  background: rgba(91, 99, 52, .93);
+  background: var(--cp-nav-fond);
   -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), 0 6px 14px rgba(60, 56, 30, .26);
+  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), 0 6px 14px rgba(var(--cp-ombre-rgb), .26);
 }
 .contenu { padding-bottom: calc(132px + env(safe-area-inset-bottom)); } /* la capsule flotte : le contenu ne passe pas dessous */
 #toasts, .cp-notifs { bottom: calc(76px + var(--cp-espace-5) + env(safe-area-inset-bottom)); }
@@ -207,9 +209,9 @@ a.cp-carte:hover { transform: translateY(-2px); }
 .app-nav-bas .cp-nav-bas__item { color: #FFFFFF; min-height: 54px; border-radius: 999px; font-weight: 500; transition: background-color var(--cp-duree-rapide) var(--cp-courbe), color var(--cp-duree-rapide) var(--cp-courbe); }
 .app-nav-bas .cp-nav-bas__item:hover { color: #FFFFFF; background: rgba(255, 255, 255, .16); }
 /* page active : capsule blanche opaque, texte et icône foncés (ressort nettement sur le verre) */
-.app-nav-bas .cp-nav-bas__item[aria-current="page"] { background: #F5F3EF; color: var(--cp-foret-texte); font-weight: 600; box-shadow: 0 1px 3px rgba(46, 42, 24, .25); }
+.app-nav-bas .cp-nav-bas__item[aria-current="page"] { background: var(--cp-nav-actif); color: var(--cp-foret-texte); font-weight: 600; box-shadow: 0 1px 3px rgba(var(--cp-ombre-rgb), .25); }
 .app-nav-bas .cp-nav-bas__item[aria-current="page"]::before { display: none; }
-.app-nav-bas .cp-nav-bas__icone .ic { filter: drop-shadow(0 1px 1px rgba(46, 42, 24, .18)); }
+.app-nav-bas .cp-nav-bas__icone .ic { filter: drop-shadow(0 1px 1px rgba(var(--cp-ombre-rgb), .18)); }
 .app-nav-bas .cp-nav-bas__compteur { box-shadow: none; }
 @media (min-width: 600px) { .contenu { padding-bottom: var(--cp-espace-8); } #toasts, .cp-notifs { bottom: var(--cp-espace-5); } }
 
@@ -217,31 +219,31 @@ a.cp-carte:hover { transform: translateY(-2px); }
    une ombre douce dessous. Aucun anneau, aucun halo, aucun flou sur les petits éléments (le flou rendait le bord vague sur iPhone). ---------- */
 .cp-btn { border-radius: 999px; }
 .cp-btn--principal {
-  background: #5B6334; color: #FFFFFF; border-color: var(--cc-bord);
+  background: var(--cc-fond); color: #FFFFFF; border-color: var(--cc-bord);
   box-shadow: var(--cc-reflet), var(--cc-ombre);
 }
-.cp-btn--principal:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: #4B5229; }
-.cp-btn--principal:active:not(:disabled):not([aria-disabled="true"]) { background: #3C4220; }
+.cp-btn--principal:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: var(--cc-fond-survol); }
+.cp-btn--principal:active:not(:disabled):not([aria-disabled="true"]) { background: var(--cc-actif); }
 .cp-btn--secondaire {
-  background: #F3F0EB; color: var(--cp-foret-texte); border-color: #AFA79B;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(60, 56, 30, .12);
+  background: rgba(255, 255, 255, .6); color: var(--cp-foret-texte); border-color: var(--cp-contour);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(var(--cp-ombre-rgb), .12);
 }
-.cp-btn--secondaire:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: #E4DFD6; }
-.cp-btn--secondaire:active:not(:disabled):not([aria-disabled="true"]) { background: #D9D2C7; }
+.cp-btn--secondaire:is(:hover, .is-survol):not(:disabled):not([aria-disabled="true"]) { background: var(--cp-neutre-survol); }
+.cp-btn--secondaire:active:not(:disabled):not([aria-disabled="true"]) { background: var(--cp-neutre-actif); }
 .cp-btn--danger { border-color: #6F2D1F; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 3px 7px rgba(142, 61, 43, .25); }
 .cp-btn--discret { border-radius: 999px; box-shadow: none; }
 
 /* ---------- Pastilles et filtres : même règle ; l'actif est rempli de kaki ---------- */
 .cp-filtre:not([aria-pressed="true"]):not(:disabled), .rp-statuts .cp-choix__option span {
-  background: #EFEBE5; color: var(--cp-texte); border: 1px solid #AFA79B; border-radius: 999px;
+  background: var(--cp-pilule); color: var(--cp-texte); border: 1px solid var(--cp-contour); border-radius: 999px;
   -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(60, 56, 30, .1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(var(--cp-ombre-rgb), .1);
 }
 .cp-filtre[aria-pressed="true"], .rp-statuts .cp-choix__option input:checked + span {
   background: var(--cc-fond); color: #FFFFFF; border: 1px solid var(--cc-bord);
   box-shadow: var(--cc-reflet), var(--cc-ombre);
 }
-.cp-filtre[aria-pressed="true"]:hover:not(:disabled) { background: #4B5229; }
+.cp-filtre[aria-pressed="true"]:hover:not(:disabled) { background: var(--cc-fond-survol); }
 .rp-statuts input:checked + span .rp-nombre, .cp-filtre[aria-pressed="true"] .cp-filtre__nombre { background: transparent; color: #FFFFFF; opacity: 1; box-shadow: none; border: 0; }
 
 /* =========================================================

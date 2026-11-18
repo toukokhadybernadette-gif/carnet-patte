@@ -1,0 +1,167 @@
+/* ===== Refonte du style : photos au centre, typographie aérée, thèmes de couleur =====
+   Chargé après verre.css et avant themes.css (généré). N'utilise QUE des variables de couleur (--cp-…), jamais de couleur en dur,
+   sauf le blanc posé sur une photo ou une barre de couleur et les couleurs d'urgence (qui ne changent pas avec le thème). */
+
+/* ---------- Titres et textes plus grands, plus aérés ---------- */
+.cp h1 { letter-spacing: -0.025em; }
+.pg-entete { gap: var(--cp-espace-2); }
+.pg-entete p, .cp-doux { color: var(--cp-texte-doux); }
+.pg { gap: var(--cp-espace-6); }
+.pg-section { gap: var(--cp-espace-3); }
+.cp-carte { border-radius: var(--cp-rayon-carte); }
+@media (max-width: 599px) {
+  .pg { gap: var(--cp-espace-5); }
+  .pg-section { gap: var(--cp-espace-3); }
+}
+
+/* ---------- Illustrations d'espèces (à la place des initiales) ---------- */
+.cp-avatar--illu { background: var(--an-fond, var(--cp-vert-clair)); }
+.cp-avatar .cp-illu { display: block; width: 100%; height: 100%; }
+.cp-avatar--illu .cp-illu { transform: scale(1.08); transform-origin: 50% 60%; }
+
+/* ---------- Accueil : grande carte avec la photo de l'animal ---------- */
+.ac-hero { padding: var(--cp-espace-5); gap: var(--cp-espace-3); overflow: hidden; }
+.ac-hero h1 { font-size: var(--cp-taille-xxl); }
+.ac-couv { display: grid; gap: var(--cp-espace-3); margin-top: var(--cp-espace-2); }
+.ac-couv__piste { list-style: none; margin: 0 calc(var(--cp-espace-5) * -1); padding: 2px var(--cp-espace-5) 4px; display: flex; gap: var(--cp-espace-3); overflow-x: auto;
+  scroll-snap-type: x mandatory; scroll-padding-inline: var(--cp-espace-5); scrollbar-width: none; overscroll-behavior-x: contain; }
+.ac-couv__piste::-webkit-scrollbar { display: none; }
+.ac-couv__piste:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; border-radius: 28px; }
+.ac-couv__slide { flex: 0 0 100%; display: grid; align-content: start; gap: var(--cp-espace-2); min-width: 0; scroll-snap-align: start; }
+.ac-couv__piste--multi .ac-couv__slide { flex-basis: min(calc(100% - 28px), 520px); }
+.ac-couv__photo { position: relative; display: block; aspect-ratio: 5 / 4; border-radius: 28px; overflow: hidden; background: var(--an-fond, var(--cp-surface-2)); text-decoration: none; box-shadow: var(--cp-ombre-m); }
+.cp a.ac-couv__photo { text-decoration: none; }
+.ac-couv__photo:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+.ac-couv__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ac-couv__illu { position: absolute; inset: 0 0 14% 0; display: grid; place-items: center; }
+.ac-couv__illu .cp-illu { width: min(70%, 260px); height: auto; aspect-ratio: 1; }
+.ac-couv__photo--illu { background: linear-gradient(165deg, var(--an-fond) 0%, var(--cp-degrade) 100%); }
+.ac-couv__voile { position: absolute; inset: auto 0 0 0; height: 55%; background: linear-gradient(to top, rgba(var(--cp-ombre-rgb), .78), transparent); }
+.ac-couv__photo--illu .ac-couv__voile { display: none; }
+.ac-couv__nom { position: absolute; left: 20px; right: 20px; bottom: 36px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-h1); font-size: 28px; line-height: 1.15; letter-spacing: -0.02em; color: #FFFFFF; }
+.ac-couv__espece { position: absolute; left: 20px; right: 20px; bottom: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: rgba(255, 255, 255, .94); }
+.ac-couv__photo--illu .ac-couv__nom { color: var(--an-texte, var(--cp-foret-texte)); }
+.ac-couv__photo--illu .ac-couv__espece { color: var(--an-texte, var(--cp-foret-texte)); }
+.ac-couv__slide .ac-afaire { margin: 0; }
+.ac-couv__slide .ac-afaire--ok { padding: 6px 4px 0; font-size: var(--cp-taille-m); }
+.ac-couv__points { display: flex; justify-content: center; gap: 6px; }
+.ac-couv__point { width: 7px; height: 7px; border-radius: 99px; background: var(--cp-bordure-forte); transition: width var(--cp-duree) var(--cp-courbe), background-color var(--cp-duree) var(--cp-courbe); }
+.ac-couv__point.is-actif { width: 20px; background: var(--cp-foret); }
+@media (max-width: 599px) { .ac-hero { padding: var(--cp-espace-4); } .ac-couv__piste { margin-inline: calc(var(--cp-espace-4) * -1); padding-inline: var(--cp-espace-4); scroll-padding-inline: var(--cp-espace-4); } .ac-couv__nom { font-size: 26px; } }
+@media (min-width: 900px) { .ac-couv__photo { aspect-ratio: 16 / 10; } .ac-couv__piste--multi .ac-couv__slide { flex-basis: 480px; } }
+@media (prefers-reduced-motion: reduce) { .ac-couv__piste { scroll-behavior: auto; } .ac-couv__point { transition: none; } }
+
+/* ---------- Fiche d'un animal : grande photo en haut, sur un fond dégradé ---------- */
+.fi-entete { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: var(--cp-espace-4); padding: var(--cp-espace-5) var(--cp-espace-5) var(--cp-espace-5);
+  background-image: linear-gradient(180deg, var(--an-fond, var(--cp-degrade)) 0%, var(--cp-degrade) 38%, transparent 100%); }
+.fi-entete .fi-avatar-bouton { width: min(100%, 320px); border-radius: 36px; box-shadow: var(--cp-ombre-m); }
+.fi-entete .fi-avatar-bouton .fi-avatar { width: 100%; height: auto; aspect-ratio: 1; border-radius: 36px; }
+.fi-entete .fi-avatar-bouton .fi-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.fi-entete .fi-avatar-bouton__crayon { right: 12px; bottom: 12px; width: 36px; height: 36px; box-shadow: var(--cp-ombre-m); }
+.fi-entete__texte { justify-items: center; }
+.fi-entete h1 { font-size: var(--cp-taille-xxl); }
+.fi-entete__actions { justify-content: center; }
+@media (max-width: 599px) {
+  .fi-entete { padding: var(--cp-espace-4); }
+  .fi-entete__actions { width: 100%; }
+}
+@media (min-width: 900px) {
+  .fi-entete { grid-template-columns: 300px minmax(0, 1fr); justify-items: start; text-align: left; column-gap: var(--cp-espace-6); align-items: center; }
+  .fi-entete .fi-avatar-bouton { grid-row: 1 / span 2; width: 300px; }
+  .fi-entete__texte { justify-items: start; }
+  .fi-entete__actions { grid-column: 2; justify-content: flex-start; }
+}
+
+/* ---------- Formulaire d'ajout : « Ajouter une photo » mis en avant ---------- */
+.al-photo { display: grid; justify-items: center; gap: var(--cp-espace-3); padding: var(--cp-espace-4); border-radius: 28px; text-align: center;
+  background: linear-gradient(180deg, var(--cp-degrade) 0%, var(--cp-vert-clair) 100%); border: 1px dashed var(--cp-contour); }
+.al-photo__apercu .cp-avatar--grand { width: 120px; height: 120px; box-shadow: var(--cp-ombre-m); }
+.al-photo__actions { display: grid; justify-items: center; gap: var(--cp-espace-2); width: 100%; }
+.al-photo__ajout { width: 100%; max-width: 320px; }
+.al-photo__aide { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); max-width: 34ch; }
+.al-photo .cp-btn[hidden] { display: none; }
+
+/* ---------- Profil : choix de la couleur de l'appli ---------- */
+.pf-themes { display: grid; gap: var(--cp-espace-3); }
+.pf-themes__liste { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); border: 0; padding: 0; margin: 0; }
+@media (min-width: 600px) { .pf-themes__liste { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .pf-themes__liste { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.pf-theme { position: relative; display: block; }
+.pf-theme input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pf-theme__carte { display: grid; justify-items: start; align-content: end; gap: var(--cp-espace-2); min-height: 92px; padding: var(--cp-espace-3); border-radius: 22px; border: 2px solid transparent; box-shadow: var(--cp-ombre-s);
+  background: linear-gradient(180deg, var(--pf-degrade) 0%, var(--pf-fond) 70%); color: var(--cp-texte);
+  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)), border-color var(--cp-duree-rapide) var(--cp-courbe); }
+.pf-theme__pastille { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--pastille); color: #FFFFFF; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+.pf-theme__pastille .ic { opacity: 0; }
+.pf-theme__nom { font-weight: 600; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); }
+.pf-theme input:checked + .pf-theme__carte { border-color: var(--pastille); }
+.pf-theme input:checked + .pf-theme__carte .pf-theme__pastille .ic { opacity: 1; }
+.pf-theme input:focus-visible + .pf-theme__carte { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.pf-theme:active .pf-theme__carte { transform: scale(.95); transition-duration: 90ms; transition-timing-function: ease-out; }
+@media (prefers-reduced-motion: reduce) { .pf-theme__carte { transition-duration: 1ms; } .pf-theme:active .pf-theme__carte { transform: none; } }
+
+/* ---------- Pastilles de catégories (filtres avec icône) un peu plus généreuses ---------- */
+.cp-filtre { gap: 6px; padding-inline: 16px; }
+
+/* ---------- Liste des animaux : photo plus présente ---------- */
+.cp-carte-animal .cp-avatar { width: 60px; height: 60px; }
+
+/* ---------- Accueil : dernière diapositive « Ajouter un animal » ---------- */
+.ac-couv__ajout { display: grid; place-content: center; justify-items: center; gap: var(--cp-espace-3); width: 100%; aspect-ratio: 5 / 4; padding: var(--cp-espace-4); border: 2px dashed var(--cp-contour); border-radius: 28px;
+  background: var(--cp-verre-fond); color: var(--cp-foret-texte); font: inherit; text-align: center; cursor: pointer;
+  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)), background-color var(--cp-duree-rapide) var(--cp-courbe); }
+.ac-couv__ajout:active { transform: scale(.97); transition-duration: 90ms; transition-timing-function: ease-out; }
+.ac-couv__ajout:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+.ac-couv__plus { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background: var(--cc-fond); color: #FFFFFF; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), var(--cp-ombre-m); }
+.ac-couv__ajout-texte { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-l); line-height: var(--cp-interligne-l); }
+@media (min-width: 900px) { .ac-couv__ajout { aspect-ratio: 16 / 10; } }
+@media (prefers-reduced-motion: reduce) { .ac-couv__ajout { transition-duration: 1ms; } .ac-couv__ajout:active { transform: none; } }
+/* Les actions rapides ne passent jamais sous la barre du bas : même quand on les amène à l'écran (ancre, clavier), il reste de la place */
+.ac-actions { scroll-margin-bottom: calc(150px + env(safe-area-inset-bottom)); }
+
+/* ---------- Profil : couleur personnalisée (nuancier libre) ---------- */
+.pf-perso { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--cp-espace-2) var(--cp-espace-3); padding-top: var(--cp-espace-2); }
+.pf-perso__etiquette { grid-column: 1 / -1; font-weight: 500; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); }
+.pf-perso__nuancier { width: 72px; height: 48px; padding: 3px; border: 1px solid var(--cp-contour); border-radius: 14px; background: var(--cp-champ-fond); cursor: pointer; }
+.pf-perso__nuancier:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.pf-perso__info { margin: 0; }
+
+/* ---------- Champs date : la date en français à côté du champ ---------- */
+.cp-champ__datefr { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 600; color: var(--cp-foret-texte); }
+
+/* ---------- Onglet Poids : poids actuel en grand, graphique en grand, liste compacte ---------- */
+.ps { gap: var(--cp-espace-4); }
+.ps-entete .cp-btn { flex: none; }
+.ps-actuel { display: grid; gap: var(--cp-espace-1); justify-items: start; padding: var(--cp-espace-5); }
+.ps-actuel__etiquette { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 600; color: var(--cp-texte-doux); }
+.ps-actuel__valeur { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-h1); font-size: 48px; line-height: 1.05; letter-spacing: -0.03em; color: var(--cp-foret-texte); }
+.ps-actuel__variation { display: inline-flex; align-items: center; gap: var(--cp-espace-2); padding: 4px 12px 4px 10px; border-radius: 999px; background: var(--cp-sauge-verre); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); font-weight: 600; color: var(--cp-texte); }
+.ps-actuel__variation .ic { flex: none; color: var(--cp-foret-texte); }
+.ps-actuel__date { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.ps-graph { padding: var(--cp-espace-5) var(--cp-espace-4) var(--cp-espace-4); }
+.ps-graph__zone { min-height: 230px; }
+@media (min-width: 460px) { .ps-graph__zone { min-height: 300px; } }
+.ps-texte { font-size: 11px; }
+.ps-liste-titre { margin: var(--cp-espace-2) 0 0; font-size: var(--cp-taille-m); }
+.ps-liste { gap: 0; }
+.ps-carte { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-2); padding: 4px 8px 4px 16px; min-height: 48px; }
+.ps-carte__corps { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--cp-espace-3); }
+.ps-carte__date { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.ps-carte__poids { font-size: var(--cp-taille-m); text-align: right; }
+.ps-carte__variation { min-width: 84px; justify-content: flex-start; }
+.ps-carte__corps > .ps-carte__poids:last-child { grid-column: 2 / 4; }
+@media (max-width: 599px) { .ps-actuel { padding: var(--cp-espace-4); } .ps-actuel__valeur { font-size: 42px; } .ps-carte__variation { min-width: 76px; } }
+
+/* ---------- Rappels : badge en haut à droite, infos sur des lignes propres (sans « · » en début de ligne) ---------- */
+.rp-carte { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto 1fr; align-items: start; column-gap: var(--cp-espace-3); }
+.rp-carte__icone { grid-column: 1; grid-row: 1 / span 2; }
+.rp-carte__corps { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: start; row-gap: 2px; min-width: 0; }
+.rp-carte__etat { grid-column: 3; grid-row: 1; justify-self: end; align-self: start; }
+.rp-carte__actions { grid-column: 3; grid-row: 2; align-self: end; justify-content: flex-end; padding-top: var(--cp-espace-2); }
+.rp-ligne::before { content: none !important; }
+.rp-ligne--dernier { display: flex; }
+@media (max-width: 599px) {
+  .rp-carte__icone, .rp-carte__corps { grid-row: 1; }
+  .rp-carte__actions { grid-column: 2 / -1; grid-row: 2; align-self: start; justify-content: flex-start; }
+  .rp-ligne--dernier { display: none; }
+}

@@ -43,9 +43,11 @@ const fichier = (pesees, extra = {}) => JSON.stringify({ version: 1, exemplesAjo
   soins: [], pesees, ...extra });
 const charger = async (pesees, extra) => { await ev(`import('/js/storage.js').then(m=>m.importer(${JSON.stringify(fichier(pesees, extra))}))`); };
 const poidsOnglet = async (id) => { await aller2('#/animaux/' + id); await ev(`document.querySelector('[data-onglet="poids"]').click()`); await sleep(250); };
+const ouvrir = async () => { if (!(await ev(`!!document.querySelector('dialog[open] form')`))) { await ev(`document.querySelector('[data-ajouter-pesee]').click()`); await sleep(450); } };
 const remplir = async (date, poids) => {
-  await ev(`(()=>{const f=document.querySelector('.ps-form');f.date.value=${JSON.stringify(date)};const p=f.poids;p.value=${JSON.stringify(poids)};p.dispatchEvent(new Event('input',{bubbles:true}));f.requestSubmit();})()`); await sleep(300); };
-const erreur = () => ev(`document.querySelector('.ps-form .cp-champ__erreur')?.innerText.trim() ?? null`);
+  await ouvrir();
+  await ev(`(()=>{const f=document.querySelector('dialog[open] form');f.date.value=${JSON.stringify(date)};const p=f.poids;p.value=${JSON.stringify(poids)};p.dispatchEvent(new Event('input',{bubbles:true}));f.requestSubmit();})()`); await sleep(300); };
+const erreur = () => ev(`document.querySelector('dialog[open] .cp-champ__erreur')?.innerText.trim() ?? null`);
 const pesees = async () => (await donnees()).pesees;
 const chiffres = () => ev(`[...document.querySelectorAll('.cp-stat')].map(s=>s.innerText.replace(/\\s+/g,' ')).join(' | ')`);
 
@@ -58,18 +60,19 @@ log('=== VALIDATION (rien ne doit être enregistré en cas d\'erreur)');
 const cas = [['vide', jourN(0), ''], ['zéro', jourN(0), '0'], ['0,000', jourN(0), '0,000'], ['négatif', jourN(0), '-3'], ['texte', jourN(0), 'abc'], ['2000,001', jourN(0), '2000,001'], ['2001', jourN(0), '2001'], ['0,0004', jourN(0), '0,0004'], ['date future', jourN(1), '4,2'], ['date vide', '', '4,2']];
 for (const [nom, d, p] of cas) {
   await remplir(d, p);
-  log(`  ${nom} : erreur = ${await erreur()} | pesées = ${(await pesees()).length} | aria-invalid = ${await ev(`document.querySelectorAll('.ps-form [aria-invalid]').length`)}`);
+  log(`  ${nom} : erreur = ${await erreur()} | pesées = ${(await pesees()).length} | aria-invalid = ${await ev(`document.querySelectorAll('dialog[open] [aria-invalid]').length`)}`);
 }
-await taille(390, 844); await sleep(200); await clip('pesees-erreur-mobile', '.ps-form'); await taille(1280, 900);
+await taille(390, 844); await sleep(200); await clip('pesees-erreur-mobile', 'dialog[open] form'); await taille(1280, 900);
 await axe('.ps', 'pesées en erreur');
-await ev(`(()=>{const p=document.querySelector('#pesee-poids');p.value='4';p.dispatchEvent(new Event('input',{bubbles:true}));})()`);
-log('  l\'erreur du poids disparaît en corrigeant =', await ev(`!document.querySelector('#pesee-poids').getAttribute('aria-invalid')`));
+await ev(`(()=>{const p=document.querySelector('#mpesee-poids');p.value='4';p.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+log('  l\'erreur du poids disparaît en corrigeant =', await ev(`!document.querySelector('#mpesee-poids').getAttribute('aria-invalid')`));
 
 log('=== SAISIES VALIDES');
 const valides = [['4,2', 4.2], ['4.2', 4.2], ['0,035', 0.035], ['0.035', 0.035], ['0,001', 0.001], ['2000', 2000], [' 12,5 ', 12.5], ['7', 7], ['0,5', 0.5]];
 for (const [saisie, attendu] of valides) {
   const avant = (await pesees()).length;
-  await ev(`(()=>{const f=document.querySelector('.ps-form');f.date.value=${JSON.stringify(jourN(0))};f.poids.value=${JSON.stringify(saisie)};f.requestSubmit();})()`); await sleep(300);
+  await ouvrir();
+  await ev(`(()=>{const f=document.querySelector('dialog[open] form');f.date.value=${JSON.stringify(jourN(0))};f.poids.value=${JSON.stringify(saisie)};f.requestSubmit();})()`); await sleep(300);
   const ps = await pesees(); const der = ps[ps.length - 1];
   log(`  « ${saisie} » -> poidsKg = ${der?.poidsKg} (attendu ${attendu}) ok = ${der?.poidsKg === attendu && ps.length === avant + 1 && typeof der.poidsKg === 'number'} | clés = ${Object.keys(der).sort().join(',')}`);
 }
@@ -215,12 +218,12 @@ log('=== AJOUT : chiffres clés =', await chiffres());
 
 await ev(`import('/js/storage.js').then(m=>m.importer(${JSON.stringify(fichier([{ id: 'x"><img src=x onerror=alert(1)>', animalId: 'c', date: '2026-01-01"><b>', poidsKg: 3 }, { id: 'y', animalId: 'c', date: jourN(-2), poidsKg: 4 }]))}))`).catch(() => {});
 await poidsOnglet('c').catch(() => {});
-log('=== DONNÉES CORROMPUES : aucune balise injectée =', await ev(`!document.querySelector('.ps img, .ps b')`), '| aucune ligne Invalid =', await ev(`!document.querySelector('.ps').innerText.includes('Invalid')`), '| page affichée =', await ev(`!!document.querySelector('.ps-form')`));
+log('=== DONNÉES CORROMPUES : aucune balise injectée =', await ev(`!document.querySelector('.ps img, .ps b')`), '| aucune ligne Invalid =', await ev(`!document.querySelector('.ps').innerText.includes('Invalid')`), '| page affichée =', await ev(`!!document.querySelector('[data-ajouter-pesee]')`));
 
 await charger([{ id: 'k1', animalId: 'c', date: jourN(-2), poidsKg: 5 }]); await poidsOnglet('c');
-await ev(`document.querySelector('#pesee-date').focus()`); await touche('Tab', 'Tab', 9);
+await ouvrir(); await ev(`document.querySelector('#mpesee-date').focus()`); await touche('Tab', 'Tab', 9);
 log('=== CLAVIER : Tab après la date ->', await ev(`document.activeElement.id`));
-await ev(`document.querySelector('#pesee-poids').value='5,5'; document.querySelector('#pesee-poids').focus()`); await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' }); await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }); await sleep(400);
+await ev(`document.querySelector('#mpesee-poids').value='5,5'; document.querySelector('#mpesee-poids').focus()`); await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' }); await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }); await sleep(400);
 log('  Entrée dans le poids : pesée ajoutée =', (await pesees()).some((p) => p.poidsKg === 5.5));
 
 for (const [nom, w, h] of [['ordinateur', 1280, 900], ['tablette', 820, 1100], ['mobile', 390, 844]]) {

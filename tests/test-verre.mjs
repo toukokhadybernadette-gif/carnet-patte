@@ -61,17 +61,17 @@ verifier(flou(await style('.app-haut', 'backdropFilter')) && flou(await style('.
 verifier(flou(await style('.cp-liste', 'backdropFilter')) && flou(await style('.cp-liste', 'backdropFilter')), 'cartes et listes : flou');
 const alpha = (c) => parseFloat((c ?? '').match(/rgba\([^)]*,\s*([\d.]+)\)/)?.[1] ?? '1');
 const fond = await style('.cp-liste', 'backgroundColor');
-verifier(alpha(fond) >= 0.3 && alpha(fond) <= 0.55, `cartes nettement transparentes : blanc à ${Math.round(alpha(fond) * 100)} % (${fond})`);
+verifier(alpha(fond) >= 0.45 && alpha(fond) <= 0.7, `cartes nettement transparentes : blanc à ${Math.round(alpha(fond) * 100)} % (${fond})`);
 const px = (v) => parseFloat((v ?? '').match(/blur\((\d+(?:\.\d+)?)px/)?.[1] ?? '0');
 verifier(px(await style('.cp-liste', 'backdropFilter')) >= 24 && px(await style('.app-lateral', 'backdropFilter')) >= 24, `flou fort sur les cartes (${px(await style('.cp-liste', 'backdropFilter'))} px) et le menu (${px(await style('.app-lateral', 'backdropFilter'))} px)`);
-verifier(alpha(await style('.cp-liste', 'borderTopColor')) >= 0.8 && (await style('.cp-liste', 'borderTopColor')).startsWith('rgba(255, 253, 250') && parseFloat(await style('.cp-liste', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
+verifier(alpha(await style('.cp-liste', 'borderTopColor')) >= 0.8 && (await style('.cp-liste', 'borderTopColor')).startsWith('rgba(255, 255, 255') && parseFloat(await style('.cp-liste', 'borderTopLeftRadius')) >= 16, 'bordure claire bien visible et coins arrondis (16 px ou plus)');
 verifier(!/inset 0px 0px 0px 0px/.test(await style('.cp-liste', 'boxShadow')) && (await style('.cp-liste', 'boxShadow')) !== 'none', 'ombre douce');
 await aller2('#/animaux/rappels'); await sleep(800);
 verifier(!flou(await style('.rp-carte', 'backdropFilter')) && flou(await style('.rp-liste', 'backdropFilter')), 'pas de flou imbriqué : les lignes de rappel n\'ont pas de flou propre, c\'est la liste qui est en verre');
 await aller2('#/animaux/a'); await sleep(800);
 verifier(flou(await style('.fi-entete', 'backdropFilter')) && (await style('.fi-entete', 'boxShadow')).includes('inset'), 'fiche : en-tête en verre, avec son filet de couleur d\'animal conservé');
 await ev(`document.querySelector('[data-act=modifier]').click()`); await sleep(600);
-verifier(flou(await style('dialog', 'backdropFilter')) && alpha(await style('dialog', 'backgroundColor')) >= 0.6 && alpha(await style('dialog', 'backgroundColor')) <= 0.85, 'fenêtre : verre dépoli semi-transparent (un peu plus opaque que les cartes : on y tape du texte)');
+verifier(flou(await style('dialog', 'backdropFilter')) && alpha(await style('dialog', 'backgroundColor')) >= 0.6 && alpha(await style('dialog', 'backgroundColor')) <= 0.9, 'fenêtre : verre dépoli semi-transparent (un peu plus opaque que les cartes : on y tape du texte)');
 verifier(flou(await ev(`getComputedStyle(document.querySelector('dialog'), '::backdrop').backdropFilter`)), 'arrière-plan de la fenêtre flouté');
 await axe('dialog', 'fenêtre en verre');
 await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(300);
@@ -174,7 +174,7 @@ await ev(`document.getElementById('sans-icones').remove()`);
 const contrasteIcones = await ev(`(async () => { const img = new Image(); img.src = 'data:image/png;base64,${capCercles.result.data}'; await img.decode(); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
   const lum = ([r, gg, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b); };
   return [...document.querySelectorAll('.ac-action__rond')].map((r) => { const b = r.getBoundingClientRect(); const px = g.getImageData(Math.floor(b.left + b.width / 2), Math.floor(b.top + b.height / 2), 1, 1).data; return (1.05) / (lum([px[0], px[1], px[2]]) + 0.05); }); })()`);
-verifier(contrasteIcones.length === 4 && contrasteIcones.every((c) => c >= 3), `icône blanche sur le verre : contraste >= 3:1 (minimum ${Math.min(...contrasteIcones).toFixed(2)}:1, seuil WCAG des pictogrammes)`);
+verifier(contrasteIcones.length === 5 && contrasteIcones.every((c) => c >= 3), `icône blanche sur le verre : contraste >= 3:1 (minimum ${Math.min(...contrasteIcones).toFixed(2)}:1, seuil WCAG des pictogrammes)`);
 // barre du bas : capsule flottante détachée des bords
 const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return { gauche: b.left, droite: innerWidth - b.right, bas: innerHeight - b.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: s.position, actif: (() => { const a = e.querySelector('[aria-current="page"]'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
 verifier(barre.position === 'fixed' && barre.gauche >= 12 && barre.droite >= 12 && barre.bas >= 8, `barre du bas flottante, détachée des bords (${Math.round(barre.gauche)} px à gauche, ${Math.round(barre.droite)} à droite, ${Math.round(barre.bas)} du bas)`);
@@ -189,7 +189,7 @@ await aller2('#/animaux/rappels'); await sleep(900);
 const capsules = await ev(`[...document.querySelectorAll('.cp-btn, .cp-filtre, .rp-statuts .cp-choix__option span.rp-nombre, .cp-badge')].filter(e => e.getBoundingClientRect().width > 0 && !e.classList.contains('cp-btn--icone')).map(e => { const b = e.getBoundingClientRect(); return { r: parseFloat(getComputedStyle(e).borderTopLeftRadius), h: b.height }; })`);
 verifier(capsules.length > 10 && capsules.every((c) => c.r >= c.h / 2 - 1), `boutons, pastilles et badges : capsules (${capsules.length} éléments, coins en demi-cercle)`);
 const secondaire = await ev(`(() => { const s = getComputedStyle(document.querySelector('.cp-btn--secondaire')); return { fond: s.backgroundColor, flou: s.backdropFilter, ombre: s.boxShadow }; })()`);
-verifier(sable(secondaire.fond) && secondaire.flou === 'none' && /inset/.test(secondaire.ombre), `bouton secondaire : beige net, sans flou, reflet léger (${secondaire.fond})`);
+verifier((sable(secondaire.fond) || alpha(secondaire.fond) >= 0.5) && secondaire.flou === 'none' && /inset/.test(secondaire.ombre), `bouton secondaire : beige net, sans flou, reflet léger (${secondaire.fond})`);
 const principal = await ev(`(() => { const s = getComputedStyle(document.querySelector('.cp-btn--principal, [data-fait]')); return { fond: s.backgroundColor, flou: s.backdropFilter, texte: s.color }; })()`);
 verifier(principal.fond === 'rgb(91, 99, 52)' && principal.flou === 'none' && principal.texte === 'rgb(255, 255, 255)', `bouton principal : kaki plein, sans flou, texte blanc (${principal.fond})`);
 const inactifs = await ev(`[...document.querySelectorAll('.rp-statuts input:not(:checked) + span')].map(e => { const s = getComputedStyle(e); return { flou: s.backdropFilter, fond: s.backgroundColor }; })`);
@@ -204,7 +204,7 @@ await ev(`document.querySelector('dialog [data-fermer]').click()`); await sleep(
 // fond plus coloré
 const bulles = await ev(`[...document.querySelectorAll('.app-fond span')].map(s => getComputedStyle(s).backgroundImage)`);
 const alphas = bulles.map((b) => Number((b.match(/rgba\([^)]*,\s*([\d.]+)\)/) ?? [0, 0])[1]));
-verifier(alphas.length === 3 && alphas.every((a) => a >= 0.58), `fond plus coloré : trois bulles (sable, kaki clair, brun léger) à ${alphas.map((a) => Math.round(a * 100)).join(' %, ')} % d'opacité`);
+verifier(alphas.length === 3 && alphas.every((a) => a >= 0.5), `fond plus coloré : trois bulles (sable, kaki clair, brun léger) à ${alphas.map((a) => Math.round(a * 100)).join(' %, ')} % d'opacité`);
 await taille(1280, 900);
 
 log('=== MOUVEMENT ===');

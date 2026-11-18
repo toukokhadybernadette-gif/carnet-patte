@@ -21,7 +21,11 @@ import { rendre as rendreDonnees } from './donnees.js';
 import { rendre as rendreBientot } from './bientot.js';
 import { afficherSecours } from './secours.js';
 import { mesurerEtAdapter } from './fond.js';
+import { initialiserTheme } from './theme.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
+
+// ----- Thème de couleur (mémorisé sur l'appareil) -----
+initialiserTheme();
 
 // ----- Routes -----
 route('accueil', rendreAccueil);

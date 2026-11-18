@@ -8,6 +8,8 @@ import { toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { NAV } from '../../js/navigation.js';
 import { echapper } from '../../js/utils.js';
+import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso } from '../../js/theme.js';
+import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
   <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">
@@ -29,8 +31,12 @@ function ligneBientot() {
     </section>`;
 }
 
+/** Variables de la pastille d'un thème dans Profil (carte « Couleur personnalisée »). */
+const styleApercu = (couleur) => { const a = variablesTheme(themeDepuisCouleur(couleur).theme).apercu; return `--pastille: ${a.pastille}; --pf-degrade: ${a.degrade}; --pf-fond: ${a.fond};`; };
+
 export function rendre(zone) {
   zone.classList.add('page-large');
+  const perso = couleurPerso();
   const { prenom } = storage.lireProfil();
   zone.innerHTML = `
     <div class="cp pg">
@@ -47,6 +53,26 @@ export function rendre(zone) {
             attrs: { name: 'prenom', maxlength: 40, autocomplete: 'given-name' } })}
           <div class="pf-form__actions">${bouton({ texte: 'Enregistrer', type: 'submit', icone: 'check' })}</div>
         </form>
+      </section>
+
+      <section class="pg-section" aria-labelledby="pf-theme">
+        <div class="pg-section__tete"><h2 id="pf-theme">Couleur de l'appli</h2></div>
+        <div class="cp-carte pf-themes">
+          <fieldset class="pf-themes__liste" data-themes>
+            <legend class="cp-sr">Couleur de l'appli</legend>
+            ${THEMES.map((t) => `
+              <label class="pf-theme pf-theme--${t.id}"><input type="radio" name="theme" value="${t.id}"${t.id === themeActuel() ? ' checked' : ''}>
+                <span class="pf-theme__carte"><span class="pf-theme__pastille">${icone('check', { taille: 18 })}</span><span class="pf-theme__nom">${echapper(t.nom)}</span></span></label>`).join('')}
+            <label class="pf-theme pf-theme--perso" data-perso-carte style="${styleApercu(perso)}"><input type="radio" name="theme" value="${PERSO}"${themeActuel() === PERSO ? ' checked' : ''}>
+              <span class="pf-theme__carte"><span class="pf-theme__pastille">${icone('check', { taille: 18 })}</span><span class="pf-theme__nom">Couleur personnalisée</span></span></label>
+          </fieldset>
+          <div class="pf-perso">
+            <label class="pf-perso__etiquette" for="pf-couleur">Nuancier : choisissez n'importe quelle couleur</label>
+            <input type="color" class="pf-perso__nuancier" id="pf-couleur" value="${perso.toLowerCase()}" aria-describedby="pf-perso-info">
+            <p class="cp-doux pf-perso__info" id="pf-perso-info" role="status" data-perso-info>La couleur est ajustée automatiquement si besoin, pour que le texte reste lisible (contraste d'au moins 4,5:1).</p>
+          </div>
+          <p class="cp-doux">Le changement est immédiat. Votre choix est gardé sur cet appareil.</p>
+        </div>
       </section>
 
       ${alerte({ type: 'info', titre: 'Pas encore de compte', texte: 'Les comptes arriveront plus tard. Pour l\'instant, vos animaux, soins et pesées sont enregistrés sur cet appareil : pensez à faire une sauvegarde de temps en temps.' })}
@@ -67,6 +93,25 @@ export function rendre(zone) {
 
       ${ligneBientot()}
     </div>`;
+
+  // Couleur de l'appli : aperçu immédiat, puis mémorisé sur l'appareil
+  zone.querySelector('[data-themes]').addEventListener('change', (e) => {
+    if (e.target.name !== 'theme') return;
+    if (e.target.value === PERSO) { majPerso(appliquerPerso(couleurPerso())); toast('Couleur personnalisée appliquée'); return; }
+    appliquerTheme(e.target.value);
+    toast(`Couleur « ${THEMES.find((t) => t.id === e.target.value)?.nom ?? ''} » appliquée`);
+  });
+  // Nuancier libre : la couleur est appliquée en direct, ajustée si besoin, et le message sous le nuancier le dit
+  const info = zone.querySelector('[data-perso-info]');
+  const majPerso = ({ choisie, utilisee, ajustee, apercu }) => {
+    const carte = zone.querySelector('[data-perso-carte]');
+    carte.style.cssText = `--pastille: ${apercu.pastille}; --pf-degrade: ${apercu.degrade}; --pf-fond: ${apercu.fond};`;
+    carte.querySelector('input').checked = true;
+    info.textContent = ajustee
+      ? `Couleur assombrie automatiquement (${utilisee}) pour que le texte reste lisible : contraste d'au moins 4,5:1.`
+      : `Couleur ${choisie} appliquée : le texte reste lisible (contraste d'au moins 4,5:1).`;
+  };
+  zone.querySelector('#pf-couleur').addEventListener('input', (e) => majPerso(appliquerPerso(e.target.value)));
 
   zone.querySelector('.pf-form').addEventListener('submit', (e) => {
     e.preventDefault();
