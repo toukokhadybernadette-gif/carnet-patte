@@ -303,10 +303,10 @@ export function cercleCouvert(index, centre, rayonKm) {
     .every((a) => dansFrance(index, { lat: centre.lat + dLat * Math.sin(a), lon: centre.lon + dLon * Math.cos(a) }));
 }
 
-/** Une ligne de fichier [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue] devient un lieu ; null si elle est invalide. */
+/** Une ligne de fichier [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue, source de l'adresse] devient un lieu ; null si elle est invalide. */
 export function lieuDepuisLigne(ligne) {
   if (!Array.isArray(ligne)) return null;
-  const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = '', rue = ''] = ligne;
+  const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = '', rue = '', src = ''] = ligne;
   const cat = CODES_CATEGORIES[c];
   if (typeof id !== 'string' || !/^[nwr]\d+$/.test(id) || !cat || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   return {
@@ -314,6 +314,7 @@ export function lieuDepuisLigne(ligne) {
     nom: nettoyer(nom, 160), adresse: nettoyer(adr), tel: telephone({ phone: nettoyer(tel, 60) }), horaires: nettoyer(hor, 300),
     site: /^https?:\/\/[^\s<>"']+$/i.test(site) ? String(site).slice(0, 200) : '',
     rue: nom ? '' : nettoyer(rue, 80),
+    ban: src === 'b',   // adresse venue de la Base Adresse Nationale (adresse officielle la plus proche), pas d'OpenStreetMap
   };
 }
 

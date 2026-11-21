@@ -7,6 +7,7 @@ La Carte Patte affiche les lieux utiles aux animaux (vétérinaires, parcs à ch
 - `donnees/lieux/<code>.json` : un par département. Une ligne par lieu : `[id, catégorie, lat, lon, nom, adresse, téléphone, horaires, site web, rue]` (champs vides de fin omis). La « rue » n'existe que pour les lieux sans nom : la leur si OpenStreetMap la connaît, sinon celle du point d'adresse le plus proche à moins de 150 m (environ les deux tiers des lieux sans nom en ont une).
 - `donnees/lieux/LICENCE.txt` : licence **ODbL 1.0**, attribution, source et modifications.
 - Jamais de courriel ni de nom de personne (RGPD) ; le script les supprime.
+- **Adresses manquantes** : OpenStreetMap n'a pas l'adresse de beaucoup de lieux. Pendant l'extraction, le script demande à la **Base Adresse Nationale** (Licence Ouverte 2.0), par le géocodage inverse de la Géoplateforme (`https://data.geopf.fr/geocodage/reverse/csv/`, adresse officielle actuelle : l'ancienne `api-adresse.data.gouv.fr` est dépréciée), l'adresse du numéro de rue le plus proche **à moins de 50 m**. Ces adresses sont marquées « b » (colonne 11) et l'appli les présente comme « adresse officielle la plus proche » (jamais comme l'adresse exacte). Les lieux sont envoyés par lots de 1 000 avec 3 s de pause, et les résultats du mois précédent sont réutilisés (un lieu qui n'a pas bougé n'est pas redemandé) : l'API est très peu sollicitée. Si elle est indisponible, l'extraction continue sans ces adresses (`--sans-ban` pour la désactiver). Aucune autre source (jamais Google Maps ni les Pages Jaunes).
 
 ## Mise à jour mensuelle (automatique)
 `.github/workflows/lieux-mensuel.yml` tourne le 2 de chaque mois (et à la demande : onglet **Actions**, « Lieux : mise à jour mensuelle », **Run workflow**) :
@@ -25,10 +26,10 @@ pip install osmium shapely
 curl -L -o france.osm.pbf https://download.geofabrik.de/europe/france-latest.osm.pbf
 python outils/extraire-lieux.py --pbf france.osm.pbf --sortie donnees/lieux
 ```
-Durée mesurée sur un PC de bureau : environ 3 min 30 s (le téléchargement de 5 Go prend davantage). Les contours des départements (IGN Admin Express via Etalab, Licence Ouverte) sont téléchargés automatiquement ; l'adresse est dans le script (`URL_CONTOURS`, année à avancer de temps en temps).
+Durée mesurée sur un PC de bureau : environ 3 min 30 s, plus une quinzaine de secondes pour les requêtes BAN (le téléchargement de 5 Go prend davantage). Les contours des départements (IGN Admin Express via Etalab, Licence Ouverte) sont téléchargés automatiquement ; l'adresse est dans le script (`URL_CONTOURS`, année à avancer de temps en temps).
 
 ## Tests
-`python outils/test_extraire_lieux.py` (12 contrôles, sans réseau) ; ils sont aussi lancés par `node tests/lancer.mjs carte`, qui vérifie en plus les vrais fichiers de `donnees/lieux/` (structure, tailles, aucun courriel, contour de la France).
+`python outils/test_extraire_lieux.py` (28 contrôles, sans réseau : l'API est simulée) ; ils sont aussi lancés par `node tests/lancer.mjs carte`, qui vérifie en plus les vrais fichiers de `donnees/lieux/` (structure, tailles, aucun courriel, contour de la France).
 
 ## Ajouter ou changer une catégorie
 Modifier `CATEGORIES` dans `extraire-lieux.py` **et** dans `modules/carte/carte-donnees.js` (mêmes étiquettes OpenStreetMap), puis refaire l'extraction.

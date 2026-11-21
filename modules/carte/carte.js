@@ -112,6 +112,7 @@ export function rendre(zone) {
         <div class="ca-plus" id="ca-plus" hidden>${bouton({ texte: 'Afficher plus de lieux', variante: 'secondaire', attrs: { id: 'ca-plus-bouton', class: 'cp-btn cp-btn--secondaire' } })}</div>
         <footer class="ca-licence" id="ca-licence">
           <p>Lieux et fond de carte : © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">contributeurs d'OpenStreetMap</a>, données sous <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">licence ODbL</a>. Les fichiers de lieux préparés à l'avance sont publiés sous la même licence : <a href="donnees/lieux/LICENCE.txt" target="_blank" rel="noopener noreferrer">voir la licence et la source</a>.</p>
+          <p>Quand OpenStreetMap n'a pas l'adresse d'un lieu, l'adresse officielle la plus proche (à moins de 50 m) vient de la <a href="https://adresse.data.gouv.fr" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>, sous <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a>.</p>
         </footer>
       </section>
     </div>`;
@@ -183,7 +184,7 @@ export function rendre(zone) {
         <span class="ca-lieu__corps">
           <span class="ca-lieu__nom">${echapper(nomLieu(l))}</span>
           <span class="ca-lieu__meta">${echapper(c.un)} · ${D.formaterDistance(l.d)}</span>
-          ${l.adresse && !(l.rue && l.adresse === l.rue) ? `<span class="ca-lieu__adresse">${echapper(l.adresse)}</span>` : ''}
+          ${l.adresse && !(l.rue && l.adresse === l.rue) ? `<span class="ca-lieu__adresse">${l.ban ? 'Près de : ' : ''}${echapper(l.adresse)}</span>` : ''}
         </span>
         <span class="ca-lieu__fleche" aria-hidden="true">${icone('chevron-right', { taille: 18 })}</span>
       </button></li>`;
@@ -208,7 +209,7 @@ export function rendre(zone) {
         ${bouton({ seul: true, variante: 'discret', icone: 'x', titre: 'Fermer la fiche', attrs: { id: 'ca-fermer', class: 'cp-btn cp-btn--discret cp-btn--icone', 'aria-label': 'Fermer la fiche' } })}
       </header>
       <ul class="ca-fiche__infos">
-        <li>${icone('map-pin', { taille: 18 })}<span>${l.adresse ? echapper(l.adresse) : l.rue ? `Près de : ${echapper(l.rue)}<span class="ca-note"> (rue la plus proche d'après OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Adresse non indiquée</span>'}</span></li>
+        <li>${icone('map-pin', { taille: 18 })}<span>${l.adresse && l.ban ? `Adresse officielle la plus proche : ${echapper(l.adresse)}<span class="ca-note"> (Base Adresse Nationale, à confirmer)</span>` : l.adresse ? echapper(l.adresse) : l.rue ? `Près de : ${echapper(l.rue)}<span class="ca-note"> (rue la plus proche d'après OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Adresse non indiquée</span>'}</span></li>
         <li>${icone('phone', { taille: 18 })}<span>${l.tel ? echapper(l.tel.affiche) : '<span class="ca-absent">Téléphone non indiqué</span>'}</span></li>
         ${l.site ? `<li>${icone('globe', { taille: 18 })}<span><a href="${echapper(l.site)}" target="_blank" rel="noopener noreferrer">Site web<span class="ca-note"> (${echapper(hoteSite(l.site))})</span><span class="cp-sr"> — s'ouvre dans un nouvel onglet</span></a></span></li>` : ''}
         <li>${icone('clock', { taille: 18 })}<span>${h ? `${echapper(h.texte)}<span class="ca-note"> (horaires indiqués dans OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Horaires non indiqués</span>'}</span></li>
