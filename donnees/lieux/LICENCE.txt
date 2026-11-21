@@ -7,6 +7,15 @@ France métropolitaine) forment une BASE DE DONNÉES DÉRIVÉE d'OpenStreetMap.
   © Contributeurs d'OpenStreetMap
   https://www.openstreetmap.org/copyright
 
+ADRESSES COMPLÉTÉES : BASE ADRESSE NATIONALE (BAN)
+  Quand OpenStreetMap n'a pas l'adresse d'un lieu, l'adresse du numéro de rue officiel le plus proche (à moins de 50 m) a été ajoutée. Ces adresses sont
+  reconnaissables dans les fichiers (« b » en 11e colonne) et dans l'appli (« adresse officielle la plus proche ») : ce sont des adresses proches du lieu, pas
+  forcément la sienne ; elles sont à confirmer sur place.
+  Source : Base Adresse Nationale (https://adresse.data.gouv.fr), obtenue par le service public de géocodage inverse de la Géoplateforme (IGN) :
+  https://data.geopf.fr/geocodage/ ; date de l'extraction : champ « genere » de index.json.
+  Licence : Licence Ouverte 2.0 (Etalab) : https://www.etalab.gouv.fr/licence-ouverte-open-licence/ : réutilisation libre, y compris commerciale, à condition de
+  citer la source et la date. Aucune autre source d'adresses n'est utilisée.
+
 LICENCE : Open Database License (ODbL) 1.0
   https://opendatacommons.org/licenses/odbl/1-0/
 
@@ -35,6 +44,7 @@ MODIFICATIONS APPORTÉES AUX DONNÉES D'ORIGINE
   - Les objets marqués abandonnés ou désaffectés sont ignorés ; un même lieu saisi deux fois (point et bâtiment,
     même nom, moins de 80 m) n'est gardé qu'une fois.
   - Les relations OpenStreetMap (rares) ne sont pas reprises.
+  - Adresses manquantes : complétées avec la Base Adresse Nationale (voir plus haut).
 
 RECONSTRUIRE CES FICHIERS
   Le script outils/extraire-lieux.py du dépôt refait exactement cette base à partir d'un extrait OpenStreetMap.
@@ -58,4 +68,5 @@ ENGLISH SUMMARY
   You must attribute OpenStreetMap, share any adapted database under the same licence (ODbL), and keep it
   open. Source: Geofabrik France extract (date in index.json). Modifications: 5 categories selected, one
   point per object, only name/address/phone/opening hours/website kept (e-mail addresses removed), duplicates
-  merged, split by département. The build script is in outils/extraire-lieux.py.
+  merged, split by département. Missing addresses are completed with the French Base Adresse Nationale (Licence Ouverte 2.0,
+  https://www.etalab.gouv.fr/licence-ouverte-open-licence/), flagged "b" in column 11. The build script is in outils/extraire-lieux.py.

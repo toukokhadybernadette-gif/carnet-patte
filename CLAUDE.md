@@ -16,7 +16,8 @@
 
 ## Données de la Carte (lieux préparés à l'avance)
 
-- `donnees/lieux/` est une base dérivée d'OpenStreetMap sous licence **ODbL** : ne jamais y mélanger d'autres données, toujours garder `LICENCE.txt` et la mention « © contributeurs d'OpenStreetMap » dans l'appli. Pas de courriel ni de nom de personne dans ces fichiers (RGPD).
+- `donnees/lieux/` est une base dérivée d'OpenStreetMap sous licence **ODbL**. Seule autre donnée admise : les adresses manquantes complétées par la **Base Adresse Nationale** (Licence Ouverte 2.0, via le géocodage inverse de la Géoplateforme `https://data.geopf.fr/geocodage/` ; l'ancienne adresse `api-adresse.data.gouv.fr` est dépréciée), marquées « b » dans les fichiers. Toujours garder `LICENCE.txt` et les mentions « © contributeurs d'OpenStreetMap » et « Base Adresse Nationale, Licence Ouverte 2.0 » dans l'appli.
+- **Sources d'adresses : OpenStreetMap et la BAN, rien d'autre.** JAMAIS Google Maps ni les Pages Jaunes (ni aucun service dont les conditions interdisent de stocker ses résultats) : testé par `outils/test_extraire_lieux.py`. Pas de courriel ni de nom de personne dans ces fichiers (RGPD).
 - On ne modifie pas ces fichiers à la main : `python outils/extraire-lieux.py` les refait, et l'Action mensuelle `lieux-mensuel.yml` ouvre une Pull Request à valider (jamais de publication automatique).
 - Aucun serveur hébergé hors d'Europe dans `SERVEURS_OVERPASS` (vie privée, RGPD).
 

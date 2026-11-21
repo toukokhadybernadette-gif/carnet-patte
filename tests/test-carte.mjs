@@ -49,7 +49,7 @@ const ELEMENTS = [
   { type: 'node', id: 12, lat: nord(-700), lon: C.lon, tags: { amenity: 'veterinary', name: NOM_LONG, 'addr:full': '1 avenue du Professeur Docteur Jean-Baptiste de la Fontaine-Saint-Martin, 35000 Rennes' } },
   { type: 'node', id: 2, lat: C.lat, lon: est(1500), tags: { amenity: 'veterinary', name: 'Urgences Vétérinaires Rennes', opening_hours: '24/7', phone: '02 99 00 00 02' } },
   { type: 'way', id: 3, center: { lat: nord(2600), lon: C.lon }, tags: { leisure: 'dog_park', name: 'Parc canin de la Prévalaye' } },
-  { type: 'node', id: 4, lat: nord(-3500), lon: C.lon, tags: { shop: 'pet', name: 'Au Royaume des Animaux' } },
+  { type: 'node', id: 4, lat: nord(-3500), lon: C.lon, tags: { shop: 'pet', name: 'Au Royaume des Animaux', 'x-ban': '7 Rue Test, 35000 Rennes' } },
   { type: 'node', id: 5, lat: C.lat, lon: est(-4500), tags: { shop: 'pet_grooming', name: 'Toilettage Doudou', phone: 'pas un numéro', opening_hours: 'Mo-Sa 10:00-19:00' } },
   { type: 'node', id: 7, lat: nord(6000), lon: C.lon, tags: { amenity: 'veterinary', 'x-rue-proche': 'avenue de la Gare' } },
   { type: 'node', id: 13, lat: nord(900), lon: C.lon, tags: { amenity: 'veterinary', 'addr:street': 'rue Anonyme' } },
@@ -72,7 +72,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 
 // ----- Lieux préparés à l'avance (donnees/lieux/) : fichiers SIMULÉS pour le navigateur -----
 const CODE_CAT = { veto: 'v', parc: 'p', animalerie: 'a', toiletteur: 't', refuge: 'r' };
-const ligneDe = (e) => { const t = e.tags; const c = coord(e); const adr = t['addr:full'] ?? [[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), [t['addr:postcode'], t['addr:city']].filter(Boolean).join(' ')].filter(Boolean).join(', '); return [`${e.type[0]}${e.id}`, CODE_CAT[CAT(t)], c.lat, c.lon, t.name ?? '', adr, t.phone ?? '', t.opening_hours ?? '', t.website ?? '', t.name ? '' : (t['addr:street'] ?? t['x-rue-proche'] ?? '')]; };
+const ligneDe = (e) => { const t = e.tags; const c = coord(e); const adr = t['x-ban'] ?? t['addr:full'] ?? [[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), [t['addr:postcode'], t['addr:city']].filter(Boolean).join(' ')].filter(Boolean).join(', '); return [`${e.type[0]}${e.id}`, CODE_CAT[CAT(t)], c.lat, c.lon, t.name ?? '', adr, t.phone ?? '', t.opening_hours ?? '', t.website ?? '', t.name ? '' : (t['addr:street'] ?? t['x-rue-proche'] ?? ''), t['x-ban'] ? 'b' : '']; };
 const LIGNES_35 = ELEMENTS.filter((e) => e.id % 2 === 1).map(ligneDe);   // deux « départements » qui se partagent la zone de Rennes
 const LIGNES_53 = ELEMENTS.filter((e) => e.id % 2 === 0).map(ligneDe);
 const LIGNES_29 = [                                                       // Brest : de bonnes lignes et des lignes piégées
@@ -104,6 +104,7 @@ verifier(idxReel?.v === 1 && /^\d{4}-\d{2}-\d{2}T/.test(idxReel.extrait ?? '') &
 if (idxReel) {
   const fichiersReels = fs.readdirSync(DOSSIER_LIEUX).filter((f) => /^[0-9AB]{2}\.json$/.test(f));
   verifier(fichiersReels.length === Object.keys(idxReel.departements).length && fichiersReels.every((f) => idxReel.departements[f.slice(0, 2)]), `un fichier par département de l'index (${fichiersReels.length})`);
+  let nAdr = 0, nBan = 0, banSansAdresse = 0, banMalFormees = 0, srcInconnue = 0;
   let total = 0, octets = 0, plusGros = 0, nomPlusGros = '', mauvaises = [], vusIds = new Set(), doublons = 0, courriels = 0, sitesMauvais = 0, tels = 0, horsBoite = 0, nonTries = 0;
   const parCat = {};
   for (const f of fichiersReels) {
@@ -116,7 +117,9 @@ if (idxReel) {
     let precedent = '';
     for (const l of d.lieux) {
       total++;
-      const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = ''] = l;
+      const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = '', rue = '', src = ''] = l;
+      if (adr) nAdr++;
+      if (src === 'b') { nBan++; if (!adr) banSansAdresse++; else if (!/^\d+.*, \d{5} \S/.test(adr)) banMalFormees++; } else if (src !== '') srcInconnue++;
       if (!/^[nwr]\d+$/.test(id) || !'vpatr'.includes(c) || !Number.isFinite(lat) || !Number.isFinite(lon)) mauvaises.push(`${code} : ${JSON.stringify(l).slice(0, 80)}`);
       if (lat < s0 - 1e-9 || lat > n0 + 1e-9 || lon < w0 - 1e-9 || lon > e0 + 1e-9) horsBoite++;
       if (vusIds.has(id)) doublons++; vusIds.add(id);
@@ -131,6 +134,10 @@ if (idxReel) {
   verifier(total === idxReel.total && total >= 5000, `${total} lieux au total (index : ${idxReel.total}) : au moins 5 000 pour la France métropolitaine`);
   verifier(['v', 'p', 'a', 't', 'r'].every((c) => parCat[c] >= 50) && parCat.v >= 1000, `les 5 catégories sont bien présentes : ${Object.entries(parCat).map(([c, n]) => `${c}=${n}`).join(' ')}`);
   verifier(doublons === 0 && horsBoite === 0 && nonTries === 0, `identifiants uniques (${doublons} doublons), tous dans la zone de leur département (${horsBoite} dehors), fichiers triés (${nonTries} désordres)`);
+  const pourcent = (n) => Math.round((n * 100) / total);
+  verifier(pourcent(nAdr) >= 70 && pourcent(tels) >= 30, `adresse dans ${pourcent(nAdr)} % des lieux (${nAdr} sur ${total} : au moins 70 % avec la Base Adresse Nationale), téléphone dans ${pourcent(tels)} % (au moins 30 %)`);
+  verifier(nBan > 1000 && banSansAdresse === 0 && banMalFormees === 0 && srcInconnue === 0, `${nBan} adresses de la Base Adresse Nationale (colonne 11 = « b »), toutes complètes (numéro, rue, code postal, commune) ; ${nAdr - nBan} adresses venues d'OpenStreetMap`);
+  verifier(idxReel.adresses_ban?.n === nBan && /Licence Ouverte 2\.0/.test(idxReel.adresses_ban?.licence ?? '') && idxReel.adresses_ban?.rayon_m === 50 && /Géoplateforme/.test(idxReel.adresses_ban?.source ?? '') && /Base Adresse Nationale/.test(idxReel.adresses_ban?.source ?? ''), 'index.json : source (BAN via la Géoplateforme), Licence Ouverte 2.0, rayon de 50 m, nombre d\'adresses BAN');
   verifier(courriels === 0 && sitesMauvais === 0, `aucun courriel (${courriels}), tous les sites sont des adresses http(s) (${sitesMauvais} mauvais)`);
   const tailleIndex = fs.statSync(path.join(DOSSIER_LIEUX, 'index.json')).size;
   log(`  TAILLE RÉELLE : ${(octets / 1048576).toFixed(2)} Mo de départements (${fichiersReels.length} fichiers, moyenne ${Math.round(octets / fichiersReels.length / 1024)} Ko, plus gros : ${nomPlusGros} = ${Math.round(plusGros / 1024)} Ko) + index ${Math.round(tailleIndex / 1024)} Ko ; ${total} lieux, ${tels} avec téléphone`);
@@ -145,6 +152,7 @@ if (idxReel) {
 }
 const licence = fs.existsSync(path.join(DOSSIER_LIEUX, 'LICENCE.txt')) ? fs.readFileSync(path.join(DOSSIER_LIEUX, 'LICENCE.txt'), 'utf8') : '';
 verifier(/ODbL/.test(licence) && /openstreetmap\.org\/copyright/.test(licence) && /opendatacommons\.org\/licenses\/odbl\/1-0/.test(licence) && /COURRIELS/.test(licence) && /Geofabrik/.test(licence), 'LICENCE.txt : ODbL 1.0, attribution OpenStreetMap, source Geofabrik, modifications (courriels supprimés)');
+verifier(/Base Adresse Nationale/.test(licence) && /Licence Ouverte 2\.0/.test(licence) && /data\.geopf\.fr/.test(licence) && /Aucune autre source d'adresses/.test(licence), 'LICENCE.txt : source (Base Adresse Nationale, Géoplateforme) et Licence Ouverte 2.0 des adresses complétées');
 const wfMensuel = fs.readFileSync(path.join(RACINE, '.github/workflows/lieux-mensuel.yml'), 'utf8');
 const wfPages = fs.readFileSync(path.join(RACINE, '.github/workflows/pages.yml'), 'utf8');
 verifier(/cron: '0 4 2 \* \*'/.test(wfMensuel) && /workflow_dispatch/.test(wfMensuel) && /gh pr create/.test(wfMensuel) && /pull-requests: write/.test(wfMensuel) && !/push[^\n]*origin main|--base main --head main/.test(wfMensuel), 'GitHub Action mensuelle : planifiée, lancement manuel possible, ouvre une Pull Request, ne pousse jamais sur main');
@@ -477,12 +485,18 @@ verifier(JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(att
 const lsource = await texte('#ca-source');
 verifier(/extrait d'OpenStreetMap du .*2026/.test(lsource) && /préparé à l'avance/.test(lsource) && !/frontière/.test(lsource), `la source est indiquée : « ${lsource} »`);
 verifier(await ev(`(() => { const a = [...document.querySelectorAll('.ca-licence a')]; return a.some((x) => x.href === 'https://www.openstreetmap.org/copyright') && a.some((x) => x.href === 'https://opendatacommons.org/licenses/odbl/1-0/') && a.some((x) => x.href.endsWith('donnees/lieux/LICENCE.txt')) && /© contributeurs d'OpenStreetMap/.test(document.querySelector('.ca-licence').textContent) && a.every((x) => /noopener/.test(x.rel)); })()`), 'pied de page : « © contributeurs d\'OpenStreetMap », licence ODbL et lien vers la licence des fichiers');
+verifier(await ev(`(() => { const a = [...document.querySelectorAll('.ca-licence a')]; return a.some((x) => x.href === 'https://adresse.data.gouv.fr/') && a.some((x) => x.href === 'https://www.etalab.gouv.fr/licence-ouverte-open-licence/') && /Base Adresse Nationale/.test(document.querySelector('.ca-licence').textContent) && /Licence Ouverte 2\\.0/.test(document.querySelector('.ca-licence').textContent); })()`), 'pied de page : la source (Base Adresse Nationale) et sa Licence Ouverte 2.0 sont citées, avec leurs liens');
 verifier(await ev(`fetch('donnees/lieux/LICENCE.txt').then(async (r) => r.status === 200 && /ODbL/.test(await r.text()))`), 'le lien « licence et source » ouvre bien LICENCE.txt (ODbL)');
 await ouvrir('node/1');
 const lfSite = await ev(`(() => { const a = [...document.querySelectorAll('#ca-fiche a')].find((x) => /^Site web/.test(x.textContent.trim())); return a ? { href: a.href, rel: a.rel, cible: a.target, hote: a.textContent } : null; })()`);
 verifier(lfSite && lfSite.href === 'https://clinique-du-parc.example/rdv' && /noopener/.test(lfSite.rel) && lfSite.cible === '_blank' && /clinique-du-parc\.example/.test(lfSite.hote), `fiche : lien « Site web » vers ${lfSite?.href} (nouvel onglet, noopener)`);
 await ouvrir('node/4');
 verifier(await ev(`![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Site web/.test(x.textContent.trim()))`), 'sans site web dans les données : pas de ligne « Site web »');
+const f4ban = await texte('#ca-fiche');
+verifier(/Adresse officielle la plus proche : 7 Rue Test, 35000 Rennes/.test(f4ban) && /Base Adresse Nationale, à confirmer/.test(f4ban) && !/Adresse non indiquée/.test(f4ban), `adresse de la BAN : la fiche dit « adresse officielle la plus proche » et cite la source (${f4ban.slice(0, 110)}…)`);
+verifier(await ev(`document.querySelector('.ca-lieu[data-id="node/4"] .ca-lieu__adresse')?.textContent`) === 'Près de : 7 Rue Test, 35000 Rennes', 'liste : « Près de : 7 Rue Test, 35000 Rennes » (une adresse BAN n\'est jamais présentée comme l\'adresse exacte)');
+await ouvrir('node/1');
+verifier(!/Adresse officielle la plus proche|Base Adresse Nationale/.test(await texte('#ca-fiche')) && /12 rue des Lilas, 35000 Rennes/.test(await texte('#ca-fiche')) && await ev(`!/Près de/.test(document.querySelector('.ca-lieu[data-id="node/1"]').textContent)`), 'une adresse d\'OpenStreetMap reste affichée telle quelle, sans la mention BAN');
 await cliquer('#ca-fermer'); await sleep(200);
 await cliquer('input[name=ca-rayon][value="10"]'); await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`);
 verifier(donneesAppels.slice(lf0).filter((f) => f.endsWith('.json')).length === 3 && nbOverpass() === lo0, 'autre rayon : lecture en mémoire, aucun nouveau fichier ni requête');
@@ -605,6 +619,32 @@ await ecran('paris-375-zoom');
 await send('Emulation.setCPUThrottlingRate', { rate: 1 });
 await send('Page.navigate', { url: URL }); await sleep(1800); await aller2('#/carte'); await ev(axeSrc); await poserEspion();
 await taille(1280, 900);
+
+log('=== VRAIS FICHIERS : la fiche affiche exactement ce que contient le fichier (adresse, téléphone, adresse BAN) ===');
+await chercherVille('Toulouse');
+verifier(await attendre(`/autour de Toulouse/.test(document.querySelector('#ca-statut').textContent)`, 60000), `recherche « Toulouse » dans les vrais fichiers : « ${await statut()} »`);
+const reels31 = new Map(lireLieux('31.json').lieux.map((l) => [l[0], l]));
+for (let i = 0; i < 6 && await ev(`!document.querySelector('#ca-plus').hidden`); i++) { await cliquer('#ca-plus-bouton'); await sleep(200); }   // « Afficher plus de lieux » : toute la liste
+const idsFichesT = await ev(`[...document.querySelectorAll('.ca-lieu')].map((b) => b.dataset.id)`);
+const ecartsFiches = []; let nAdrFiche = 0, nTelFiche = 0, nBanFiche = 0;
+for (const idl of idsFichesT) {
+  await ev(`document.querySelector('.ca-lieu[data-id="${idl}"]').click()`); await sleep(300);
+  const f = await ev(`(() => { const t = document.querySelector('#ca-fiche').innerText; return { adr: !/Adresse non indiquée/.test(t), tel: !!document.querySelector('#ca-fiche a[href^="tel:"]'), ban: /Adresse officielle la plus proche/.test(t) }; })()`);
+  const [type, num] = idl.split('/');
+  const ligne = reels31.get(`${type[0]}${num}`);
+  if (!ligne) { ecartsFiches.push(`${idl} : absent du fichier 31.json`); continue; }
+  const [, , , , nomL = '', adrL = '', telL = '', , , rueL = '', srcL = ''] = ligne;
+  const attAdr = !!(adrL || (!nomL && rueL));
+  const attTel = /^\+?\d{6,15}$/.test(String(telL).split(/[;,/]/)[0].replace(/[\s.()-]/g, ''));
+  if (f.adr !== attAdr) ecartsFiches.push(`${idl} : adresse ${f.adr ? 'affichée' : 'absente'} mais fichier ${attAdr ? 'en a une' : 'sans adresse'}`);
+  if (f.tel !== attTel) ecartsFiches.push(`${idl} : téléphone ${f.tel ? 'affiché' : 'absent'} mais fichier ${attTel ? 'en a un' : 'sans téléphone'}`);
+  if (f.ban !== (srcL === 'b' && !!adrL)) ecartsFiches.push(`${idl} : mention BAN ${f.ban ? 'affichée' : 'absente'} (fichier : ${srcL || 'OpenStreetMap'})`);
+  if (f.adr) nAdrFiche++; if (f.tel) nTelFiche++; if (f.ban) nBanFiche++;
+}
+log(`  TOUTES les fiches de Toulouse (${idsFichesT.length} lieux à 5 km) ouvertes : adresse affichée ${nAdrFiche}, téléphone ${nTelFiche}, adresse officielle la plus proche (BAN) ${nBanFiche}`);
+verifier(idsFichesT.length >= 40 && ecartsFiches.length === 0, `les ${idsFichesT.length} fiches de Toulouse affichent exactement ce que contient le fichier : adresse, téléphone et mention BAN (${ecartsFiches.slice(0, 3).join(' | ') || 'aucun écart'})`);
+verifier(nAdrFiche * 100 >= 25 * idsFichesT.length && nTelFiche * 100 >= 25 * idsFichesT.length, `fiches de Toulouse : ${Math.round(nAdrFiche * 100 / idsFichesT.length)} % affichent une adresse (au moins 25 %) et ${Math.round(nTelFiche * 100 / idsFichesT.length)} % un téléphone (au moins 25 % ici : les parcs à chiens n'en ont pas ; 30 % sur l'ensemble des fichiers, vérifié plus haut)`);
+await cliquer('#ca-fermer'); await sleep(200);
 modeLocal = 'indisponible';
 
 log('=== AFFICHAGE SUR 375 px (iPhone), PAGE RECHARGÉE ===');

@@ -7,6 +7,9 @@ Entrée : l'extrait « France » de Geofabrik (https://download.geofabrik.de/eur
 Catégories : vétérinaires, parcs à chiens, animaleries, toiletteurs, refuges (mêmes étiquettes OpenStreetMap que modules/carte/carte-donnees.js).
 Sortie  : donnees/lieux/<code>.json (un par département) et donnees/lieux/index.json (zones couvertes, contour de la France, date de l'extrait).
 Champs gardés : nom, adresse, téléphone, horaires, site web, et pour les lieux sans nom la rue la plus proche. JAMAIS de courriel ni de nom de personne (RGPD).
+Adresses manquantes : complétées avec la Base Adresse Nationale (BAN, Licence Ouverte 2.0) par le service public de géocodage inverse de la Géoplateforme (IGN),
+  par lots, au numéro de rue le plus proche à moins de 50 m ; ces adresses sont marquées « b » (colonne 11) pour que l'appli les distingue de celles d'OpenStreetMap.
+  Aucune autre source d'adresses n'est utilisée : jamais Google Maps, jamais les Pages Jaunes.
 Contours des départements : IGN Admin Express via Etalab (Licence Ouverte 2.0), téléchargés au besoin ; ils ne servent qu'à ranger chaque lieu dans un fichier.
 Données : © contributeurs d'OpenStreetMap, licence ODbL 1.0 (voir donnees/lieux/LICENCE.txt).
 
@@ -14,12 +17,17 @@ Dépendances : pip install osmium shapely
 """
 import argparse
 import datetime
+import csv
+import io
 import json
 import math
 import os
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
+import uuid
 from collections import defaultdict
 
 URL_CONTOURS = 'https://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2025/geojson/departements-100m.geojson'
@@ -36,6 +44,14 @@ PAIRES = [p for _, (_, paires) in CATEGORIES.items() for p in paires]
 VERSION = 1
 DECIMALES = 5            # environ 1 m
 RAYON_DEDOUBLONNAGE_M = 80
+# Géoplateforme (IGN) : l'ancienne adresse api-adresse.data.gouv.fr est dépréciée (arrêt annoncé le 2026-01-31, redirection permanente vers celle-ci).
+# Le point d'accès « csv » traite des lots entiers en une requête (limite du service : 50 requêtes par seconde ; ici une requête toutes les 3 secondes).
+URL_BAN = 'https://data.geopf.fr/geocodage/reverse/csv/'
+SOURCE_BAN = 'Base Adresse Nationale (BAN), Licence Ouverte 2.0, par le géocodage inverse de la Géoplateforme (IGN)'
+RAYON_BAN_M = 50                          # une adresse officielle n'est retenue que si le numéro de rue est à moins de 50 m du lieu
+LOT_BAN = 1000                            # lieux par requête
+PAUSE_BAN_S = 3.0                         # pause entre deux requêtes
+AGENT = 'CarnetPatte-extraction/1.0 (+https://github.com/toukokhadybernadette-gif/carnet-patte)'
 RAYON_RUE_M = 150                         # une rue n'est attribuée à un lieu sans nom que si un point d'adresse est à moins de 150 m
 PAS_GRILLE = 0.0025                       # cases d'environ 200 m pour chercher les adresses voisines
 DISTANCE_MAX_HORS_DEPARTEMENT_DEG = 0.1   # un lieu hors de tout contour (bord de mer, frontière) est rangé dans le département le plus proche s'il est à moins d'environ 10 km
@@ -87,12 +103,13 @@ def lieu_depuis(identifiant, tags, lat, lon):
         'horaires': nettoyer(tags.get('opening_hours'), 300), 'site': site_web(tags),
         # lieu sans nom : sa propre rue si elle est connue (sinon complétée par attribuer_rues)
         'rue': '' if nom else nettoyer(tags.get('addr:street'), 80),
+        'ban': False,   # vrai si l'adresse vient de la Base Adresse Nationale (voir completer_adresses_ban)
     }
 
 
 def en_ligne(l):
-    """Une ligne de fichier : [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue], sans les champs vides de fin."""
-    ligne = [l['id'], l['cat'], l['lat'], l['lon'], l['nom'], l['adresse'], l['tel'], l['horaires'], l['site'], l['rue']]
+    """Une ligne de fichier : [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue, source de l'adresse (« b » = BAN)], sans les champs vides de fin."""
+    ligne = [l['id'], l['cat'], l['lat'], l['lon'], l['nom'], l['adresse'], l['tel'], l['horaires'], l['site'], l['rue'], 'b' if l.get('ban') else '']
     while len(ligne) > 4 and ligne[-1] == '':
         ligne.pop()
     return ligne
@@ -134,6 +151,108 @@ def attribuer_rues(cibles, adresses, rayon_m=RAYON_RUE_M):
         if l['id'] in meilleur:
             l['rue'] = nettoyer(meilleur[l['id']][1], 80)
     return len(meilleur)
+
+
+# ===== Adresses manquantes : Base Adresse Nationale =====
+
+def corps_multipart(champs, nom_fichier, contenu):
+    """Corps d'une requête multipart/form-data (le module standard de Python n'en fournit pas) : renvoie (octets, type de contenu)."""
+    frontiere = uuid.uuid4().hex
+    corps = b''
+    for cle, valeur in champs:
+        corps += f'--{frontiere}\r\nContent-Disposition: form-data; name="{cle}"\r\n\r\n{valeur}\r\n'.encode('utf-8')
+    corps += f'--{frontiere}\r\nContent-Disposition: form-data; name="data"; filename="{nom_fichier}"\r\nContent-Type: text/csv\r\n\r\n'.encode('utf-8')
+    corps += contenu + f'\r\n--{frontiere}--\r\n'.encode('utf-8')
+    return corps, f'multipart/form-data; boundary={frontiere}'
+
+
+def interroger_ban(points, ouvrir=urllib.request.urlopen, dormir=time.sleep, essais=4):
+    """Géocodage inverse d'un lot : `points` = suite de (id, lat, lon) ; renvoie les lignes de résultat (dictionnaires).
+    Une colonne « genre » = housenumber demande des numéros de rue (pas de simples rues). Réessaie avec une attente croissante si le service est occupé (429, 5xx)."""
+    tampon = io.StringIO(newline='')
+    ecrivain = csv.writer(tampon)
+    ecrivain.writerow(['id', 'lat', 'lon', 'genre'])
+    for identifiant, lat, lon in points:
+        ecrivain.writerow([identifiant, lat, lon, 'housenumber'])
+    corps, type_contenu = corps_multipart([('columns', 'lat'), ('columns', 'lon'), ('type', 'genre')], 'lieux.csv', tampon.getvalue().encode('utf-8'))
+    derniere = None
+    for essai in range(essais):
+        try:
+            requete = urllib.request.Request(URL_BAN, data=corps, headers={'User-Agent': AGENT, 'Content-Type': type_contenu})
+            with ouvrir(requete, timeout=300) as reponse:
+                texte = reponse.read().decode('utf-8')
+            return list(csv.DictReader(io.StringIO(texte)))
+        except urllib.error.HTTPError as e:
+            derniere = e
+            if e.code not in (429, 500, 502, 503, 504):
+                raise
+            try:
+                demande = int((e.headers or {}).get('Retry-After', 0) or 0)
+            except (TypeError, ValueError):
+                demande = 0
+            dormir(max(demande, 10 * (essai + 1)))
+        except (urllib.error.URLError, TimeoutError) as e:
+            derniere = e
+            dormir(10 * (essai + 1))
+    raise RuntimeError(f"service de géocodage inverse injoignable après {essais} essais : {derniere}")
+
+
+def adresse_ban(ligne, rayon_m=RAYON_BAN_M):
+    """Une ligne de résultat → (adresse, rue, distance en m), ou None si ce n'est pas un numéro de rue trouvé à moins de `rayon_m` mètres."""
+    try:
+        if ligne.get('result_status') != 'ok' or ligne.get('result_type') != 'housenumber':
+            return None
+        distance = float(ligne['result_distance'])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if distance > rayon_m:
+        return None
+    numero_rue = nettoyer(ligne.get('result_name'), 120)          # « 11 Boulevard Lazare Carnot »
+    commune = nettoyer(ligne.get('result_city'), 80)
+    ville = ' '.join(x for x in (nettoyer(ligne.get('result_postcode'), 10), commune) if x)
+    if not numero_rue or not commune:
+        return None
+    return f'{numero_rue}, {ville}', nettoyer(ligne.get('result_street'), 80), distance
+
+
+def completer_adresses_ban(lieux, anciens_ban, interroger=interroger_ban, dormir=time.sleep, taille_lot=LOT_BAN, pause=PAUSE_BAN_S):
+    """Donne une adresse officielle aux lieux qui n'en ont pas (OpenStreetMap n'en a pas), marquée `ban`.
+    `anciens_ban` : les résultats du mois précédent {id: {lat, lon, adresse, rue}} : un lieu qui n'a pas bougé n'est pas re-demandé (l'API est sollicitée au minimum).
+    Si le service est indisponible, les lieux concernés restent sans adresse (l'extraction continue). Renvoie des statistiques."""
+    cibles = [l for l in lieux if not l['adresse']]
+    stats = {'cibles': len(cibles), 'reutilises': 0, 'trouves': 0, 'requetes': 0, 'indisponibles': 0}
+
+    def appliquer(l, adresse, rue):
+        l['adresse'], l['ban'] = adresse, True
+        if not l['nom'] and rue:
+            l['rue'] = rue   # sans nom : la rue officielle remplace la rue déduite des points d'adresse voisins
+
+    a_demander = []
+    for l in cibles:
+        ancien = anciens_ban.get(l['id'])
+        if ancien and ancien['lat'] == l['lat'] and ancien['lon'] == l['lon']:
+            appliquer(l, ancien['adresse'], ancien['rue'])
+            stats['reutilises'] += 1
+        else:
+            a_demander.append(l)
+    for debut in range(0, len(a_demander), taille_lot):
+        lot = a_demander[debut:debut + taille_lot]
+        try:
+            lignes = interroger([(l['id'], l['lat'], l['lon']) for l in lot])
+        except RuntimeError as e:
+            print(f'ATTENTION : {e} ; {len(lot)} lieux restent sans adresse officielle.', file=sys.stderr)
+            stats['indisponibles'] += len(lot)
+            continue
+        stats['requetes'] += 1
+        par_id = {x.get('id'): x for x in lignes}
+        for l in lot:
+            trouve = adresse_ban(par_id.get(l['id'], {}))
+            if trouve:
+                appliquer(l, trouve[0], trouve[1])
+                stats['trouves'] += 1
+        if debut + taille_lot < len(a_demander):
+            dormir(pause)   # une requête toutes les `pause` secondes, très en dessous de la limite du service
+    return stats
 
 
 def dedoublonner(lieux):
@@ -291,6 +410,22 @@ def lire_anciens(sortie):
     return anciens
 
 
+def lire_anciens_ban(sortie):
+    """Les adresses BAN déjà obtenues (colonne 11 = « b ») dans les fichiers actuels : {id: {lat, lon, adresse, rue}}."""
+    anciens = {}
+    if os.path.isdir(sortie):
+        for nom in os.listdir(sortie):
+            if re.fullmatch(r'[0-9AB]{2}\.json', nom):
+                try:
+                    with open(os.path.join(sortie, nom), encoding='utf-8') as f:
+                        for ligne in json.load(f)['lieux']:
+                            if len(ligne) > 10 and ligne[10] == 'b':
+                                anciens[ligne[0]] = {'lat': ligne[2], 'lon': ligne[3], 'adresse': ligne[5], 'rue': ligne[9]}
+                except Exception:
+                    pass
+    return anciens
+
+
 def principal():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')  # la console Windows (cp1252) ne sait pas écrire « − »
@@ -300,6 +435,7 @@ def principal():
     ap.add_argument('--sortie', default='donnees/lieux')
     ap.add_argument('--contours', default=os.path.join(os.environ.get('TEMP', '.'), 'departements-100m.geojson'), help='contours des départements (téléchargés si absents)')
     ap.add_argument('--extrait', default='', help="date de l'extrait (ISO) si le fichier ne la contient pas")
+    ap.add_argument('--sans-ban', action='store_true', help="ne complète pas les adresses manquantes avec la Base Adresse Nationale")
     ap.add_argument('--sans-rues', action='store_true', help="ne cherche pas la rue la plus proche des lieux sans nom")
     ap.add_argument('--minimum-absolu', type=int, default=5000, help='refuse d\'écrire sous ce nombre de lieux (extrait tronqué ?)')
     ap.add_argument('--minimum-relatif', type=float, default=0.8, help='refuse d\'écrire si le total tombe sous cette part du total précédent')
@@ -309,6 +445,7 @@ def principal():
     deps = charger_contours(a.contours)
     print(f'{len(deps)} départements')
     anciens = lire_anciens(a.sortie)
+    anciens_ban = lire_anciens_ban(a.sortie)
     bruts, relations = lire_pbf(a.pbf)
     print(f'{len(bruts)} lieux bruts, {relations} relations ignorées')
     lieux = dedoublonner(bruts)
@@ -320,6 +457,11 @@ def principal():
         cibles = [l for l in sans_nom if not l['rue']]
         rues_proches = attribuer_rues(cibles, adresses_osm(a.pbf, cases_voisines(cibles)))
     print(f"{len(sans_nom)} lieux sans nom : {rue_propre} avec leur propre rue, {rues_proches} avec la rue d'une adresse voisine (moins de {RAYON_RUE_M} m)")
+    avant_ban = sum(1 for l in lieux if l['adresse'])
+    stats_ban = {'cibles': 0, 'reutilises': 0, 'trouves': 0, 'requetes': 0, 'indisponibles': 0}
+    if not a.sans_ban:
+        stats_ban = completer_adresses_ban(lieux, anciens_ban)
+        print(f"{avant_ban} lieux avec une adresse OpenStreetMap ; {stats_ban['cibles']} sans adresse : {stats_ban['trouves']} complétés par la BAN + {stats_ban['reutilises']} repris du mois précédent ({stats_ban['requetes']} requêtes, {stats_ban['indisponibles']} lieux sans réponse)")
     rangement, hors = ranger_par_departement(lieux, deps)
 
     # Garde-fou : un extrait tronqué ou une erreur de lecture ne doit jamais écraser de bonnes données
@@ -339,7 +481,8 @@ def principal():
         'source': 'Geofabrik, extrait « France » d\'OpenStreetMap',
         'licence': "Données © contributeurs d'OpenStreetMap, base de données sous licence ODbL 1.0 : https://www.openstreetmap.org/copyright",
         'categories': {c: n for c, (n, _) in CATEGORIES.items()},
-        'format': ['id', 'catégorie', 'lat', 'lon', 'nom', 'adresse', 'téléphone', 'horaires', 'site'],
+        'format': ['id', 'catégorie', 'lat', 'lon', 'nom', 'adresse', 'téléphone', 'horaires', 'site', 'rue', 'source de l\'adresse (b = Base Adresse Nationale)'],
+        'adresses_ban': {'source': SOURCE_BAN, 'licence': 'Licence Ouverte 2.0 : https://www.etalab.gouv.fr/licence-ouverte-open-licence/', 'site': 'https://adresse.data.gouv.fr', 'rayon_m': RAYON_BAN_M, 'n': 0},
         'total': 0, 'departements': {}, 'france': contour_france(deps),
     }
     nouveaux = {}
@@ -352,6 +495,7 @@ def principal():
         }
         nouveaux[code] = {l['id'] for l in liste}
         index['total'] += len(liste)
+    index['adresses_ban']['n'] = sum(1 for liste in rangement.values() for l in liste if l.get('ban'))
     ecrire_json(os.path.join(a.sortie, 'index.json'), index)
 
     # Résumé
@@ -362,12 +506,15 @@ def principal():
     ajoutes = sum(len(nouveaux[c] - anciens.get(c, set())) for c in nouveaux)
     retires = sum(len(anciens[c] - nouveaux.get(c, set())) for c in anciens)
     taille = sum(os.path.getsize(os.path.join(a.sortie, n)) for n in os.listdir(a.sortie) if n.endswith('.json'))
+    avec_adresse = sum(1 for liste in rangement.values() for l in liste if l['adresse'])
+    nb_ban = index['adresses_ban']['n']
     lignes = [
         f"Extrait OpenStreetMap du **{extrait or 'date inconnue'}**.",
         '',
         f"- **{index['total']}** lieux dans **{len(index['departements'])}** départements ({taille / 1024 / 1024:.2f} Mo de JSON)",
         *[f"- {CATEGORIES[c][0]} : {par_cat[c]}" for c in CATEGORIES],
         f"- Depuis la version précédente : **+{ajoutes}** / **−{retires}** lieux" + ('' if anciens else ' (première extraction)'),
+        f"- Lieux avec une adresse : **{avec_adresse}** ({avec_adresse * 100 // max(index['total'], 1)} %), dont {nb_ban} complétées par la Base Adresse Nationale (adresse officielle la plus proche, à moins de {RAYON_BAN_M} m) et {avec_adresse - nb_ban} venant d'OpenStreetMap",
         f"- Lieux sans nom : {len(sans_nom)}, dont {rue_propre + rues_proches} avec une rue connue ({rues_proches} déduites d'une adresse voisine à moins de {RAYON_RUE_M} m)",
         f"- Ignorés : {relations} relations OpenStreetMap, {hors} lieux hors des départements métropolitains",
     ]
