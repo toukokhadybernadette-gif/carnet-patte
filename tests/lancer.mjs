@@ -1,6 +1,6 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
 // Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]
-//   sans argument : tous les tests, 4 à la fois (--jobs=N change le nombre de tests simultanés)
+//   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
 
@@ -71,7 +71,7 @@ function testsLiesAuxModifications() {
 
 const args = process.argv.slice(2);
 const rapide = args.includes('--rapide');
-const jobs = Math.max(1, Number((args.find((a) => a.startsWith('--jobs=')) ?? '').slice(7)) || 4);
+const jobs = Math.max(1, Number((args.find((a) => a.startsWith('--jobs=')) ?? '').slice(7)) || 2);
 const choisis = args.filter((a) => !a.startsWith('--'));
 const aLancer = choisis.length ? choisis : rapide ? testsLiesAuxModifications() : Object.keys(TESTS);
 const inconnus = aLancer.filter((t) => !TESTS[t]);
