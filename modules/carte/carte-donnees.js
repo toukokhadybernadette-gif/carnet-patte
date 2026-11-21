@@ -11,13 +11,12 @@
  * Serveurs Overpass, essayés dans l'ordre : on passe au suivant à la moindre erreur (502 « at capacity », 403, coupure, délai dépassé…).
  * Le serveur principal est souvent saturé : quand il accepte la requête il peut mettre 30 à 45 s, d'où son long délai.
  * `overpass.openstreetmap.fr` n'est PAS dans la liste : il répond « service réservé à des usages autorisés » (403 sans en-tête CORS).
- * `maps.mail.ru` est en dernier recours (serveur public hébergé par VK) : retirer cette ligne pour ne jamais lui envoyer de recherche.
+ * Pas de serveur hébergé hors d'Europe (vie privée, RGPD) : la zone de recherche et l'adresse IP ne doivent partir que vers des serveurs OpenStreetMap ou européens.
  */
 export const SERVEURS_OVERPASS = [
   { nom: 'overpass-api.de', url: 'https://overpass-api.de/api/interpreter', delaiMs: 55000 },
   { nom: 'overpass.kumi.systems', url: 'https://overpass.kumi.systems/api/interpreter', delaiMs: 15000 },
   { nom: 'overpass.private.coffee', url: 'https://overpass.private.coffee/api/interpreter', delaiMs: 15000 },
-  { nom: 'maps.mail.ru', url: 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', delaiMs: 30000 },
 ];
 export const ADRESSE_NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 export const RAYONS_KM = [2, 5, 10];

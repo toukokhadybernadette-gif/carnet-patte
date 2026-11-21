@@ -69,7 +69,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 
 const appels = [];                 // chaque requête vers Overpass ou Nominatim : { t, type, ... }
 let tuiles = 0, enCours = 0, maxEnCours = 0, mode = 'ok';
-await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*overpass.kumi.systems*' }, { urlPattern: '*overpass.private.coffee*' }, { urlPattern: '*maps.mail.ru*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
+await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*overpass.kumi.systems*' }, { urlPattern: '*overpass.private.coffee*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
 const repondre = (requestId, { status = 200, type = 'application/json', corps = '' }) => send('Fetch.fulfillRequest', { requestId, responseCode: status, responseHeaders: [{ name: 'Content-Type', value: type }, { name: 'Access-Control-Allow-Origin', value: '*' }], body: Buffer.from(corps).toString('base64') });
 ws.addEventListener('message', async (m) => {
   const d = JSON.parse(m.data);
@@ -118,7 +118,7 @@ const donnees = () => ev(`import('/js/storage.js').then(m => m.exporter())`);
 const sansHorodatage = (t) => { const o = JSON.parse(t); delete o.exporteLe; return JSON.stringify(o); };
 const importer = (t) => ev(`import('/js/storage.js').then(m => m.importer(${JSON.stringify(t)}))`);
 const A = (id, nom, espece, extra = {}) => ({ id, nom, espece, especeAutre: '', race: '', naissance: '', photo: '', ...extra });
-const erreursAttendues = (avant) => { const n = erreurs.length - avant; const dernieres = erreurs.slice(avant); const ok = dernieres.every((e) => /overpass|maps\.mail\.ru|Failed to load resource|ERR_|50[24]|\[Carte Patte\]/.test(e)); erreurs.splice(avant); return ok ? n : -1; };
+const erreursAttendues = (avant) => { const n = erreurs.length - avant; const dernieres = erreurs.slice(avant); const ok = dernieres.every((e) => /overpass|Failed to load resource|ERR_|50[24]|\[Carte Patte\]/.test(e)); erreurs.splice(avant); return ok ? n : -1; };
 
 await send('Page.navigate', { url: URL }); await sleep(1800); await taille(1280, 900); await aller2('#/accueil'); await ev(axeSrc);
 await importer(JSON.stringify({ version: 1, exemplesAjoutes: true, animaux: [A('c', 'Moka', 'chien'), A('b', 'Mimi', 'chat')], soins: [], pesees: [] }));
@@ -305,8 +305,8 @@ mode = 'serveur';
 await chercherVille('Marseille');
 verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent)`, 40000) && await ev(`!!document.querySelector('#ca-reessayer')`), 'serveur en erreur (504) : message clair + « Réessayer »');
 const detailsTech = await ev(`document.querySelector('.ca-details').textContent.replace(/\\s+/g, ' ').trim()`);
-verifier(/overpass-api\.de/.test(detailsTech) && /overpass\.kumi\.systems/.test(detailsTech) && /overpass\.private\.coffee/.test(detailsTech) && /maps\.mail\.ru/.test(detailsTech) && (detailsTech.match(/HTTP 504/g) ?? []).length === 4, `erreur : « Détails techniques » avec la vraie raison de CHAQUE serveur essayé (${detailsTech})`);
-verifier(erreurs.some((e) => /\[Carte Patte\] overpass-api\.de : HTTP 504/.test(e)) && erreurs.some((e) => /\[Carte Patte\] maps\.mail\.ru : HTTP 504/.test(e)), 'la vraie raison est écrite dans la console (« [Carte Patte] serveur : HTTP 504 … »)');
+verifier(/overpass-api\.de/.test(detailsTech) && /overpass\.kumi\.systems/.test(detailsTech) && /overpass\.private\.coffee/.test(detailsTech) && !/mail\.ru/.test(detailsTech) && (detailsTech.match(/HTTP 504/g) ?? []).length === 3, `erreur : « Détails techniques » avec la vraie raison de CHAQUE serveur essayé (${detailsTech})`);
+verifier(erreurs.some((e) => /\[Carte Patte\] overpass-api\.de : HTTP 504/.test(e)) && erreurs.some((e) => /\[Carte Patte\] overpass\.private\.coffee : HTTP 504/.test(e)), 'la vraie raison est écrite dans la console (« [Carte Patte] serveur : HTTP 504 … »)');
 mode = 'remarque';
 await cliquer('#ca-reessayer');
 verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent) && !document.querySelector('#ca-statut').textContent.includes('Recherche en cours')`, 25000), 'réponse « Query timed out » d\'Overpass : traitée comme une erreur, pas comme « aucun lieu »');
