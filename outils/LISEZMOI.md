@@ -4,7 +4,7 @@ La Carte Patte affiche les lieux utiles aux animaux (vétérinaires, parcs à ch
 
 ## Ce que contiennent les fichiers
 - `donnees/lieux/index.json` : date de l'extrait, nombre de lieux par département, zone couverte par chaque fichier, contour simplifié de la France.
-- `donnees/lieux/<code>.json` : un par département. Une ligne par lieu : `[id, catégorie, lat, lon, nom, adresse, téléphone, horaires, site web]` (champs vides de fin omis).
+- `donnees/lieux/<code>.json` : un par département. Une ligne par lieu : `[id, catégorie, lat, lon, nom, adresse, téléphone, horaires, site web, rue]` (champs vides de fin omis). La « rue » n'existe que pour les lieux sans nom : la leur si OpenStreetMap la connaît, sinon celle du point d'adresse le plus proche à moins de 150 m (environ les deux tiers des lieux sans nom en ont une).
 - `donnees/lieux/LICENCE.txt` : licence **ODbL 1.0**, attribution, source et modifications.
 - Jamais de courriel ni de nom de personne (RGPD) ; le script les supprime.
 
@@ -25,7 +25,7 @@ pip install osmium shapely
 curl -L -o france.osm.pbf https://download.geofabrik.de/europe/france-latest.osm.pbf
 python outils/extraire-lieux.py --pbf france.osm.pbf --sortie donnees/lieux
 ```
-Durée mesurée sur un PC de bureau : environ 3 minutes (le téléchargement de 5 Go prend davantage). Les contours des départements (IGN Admin Express via Etalab, Licence Ouverte) sont téléchargés automatiquement ; l'adresse est dans le script (`URL_CONTOURS`, année à avancer de temps en temps).
+Durée mesurée sur un PC de bureau : environ 3 min 30 s (le téléchargement de 5 Go prend davantage). Les contours des départements (IGN Admin Express via Etalab, Licence Ouverte) sont téléchargés automatiquement ; l'adresse est dans le script (`URL_CONTOURS`, année à avancer de temps en temps).
 
 ## Tests
 `python outils/test_extraire_lieux.py` (12 contrôles, sans réseau) ; ils sont aussi lancés par `node tests/lancer.mjs carte`, qui vérifie en plus les vrais fichiers de `donnees/lieux/` (structure, tailles, aucun courriel, contour de la France).

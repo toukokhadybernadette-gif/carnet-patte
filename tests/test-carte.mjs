@@ -51,7 +51,8 @@ const ELEMENTS = [
   { type: 'way', id: 3, center: { lat: nord(2600), lon: C.lon }, tags: { leisure: 'dog_park', name: 'Parc canin de la Prévalaye' } },
   { type: 'node', id: 4, lat: nord(-3500), lon: C.lon, tags: { shop: 'pet', name: 'Au Royaume des Animaux' } },
   { type: 'node', id: 5, lat: C.lat, lon: est(-4500), tags: { shop: 'pet_grooming', name: 'Toilettage Doudou', phone: 'pas un numéro', opening_hours: 'Mo-Sa 10:00-19:00' } },
-  { type: 'node', id: 7, lat: nord(6000), lon: C.lon, tags: { amenity: 'veterinary' } },
+  { type: 'node', id: 7, lat: nord(6000), lon: C.lon, tags: { amenity: 'veterinary', 'x-rue-proche': 'avenue de la Gare' } },
+  { type: 'node', id: 13, lat: nord(900), lon: C.lon, tags: { amenity: 'veterinary', 'addr:street': 'rue Anonyme' } },
   { type: 'node', id: 6, lat: C.lat, lon: est(8000), tags: { amenity: 'animal_shelter', name: 'Refuge de la SPA', phone: '+33 2 99 00 00 06' } },
   { type: 'node', id: 8, lat: nord(-9500), lon: C.lon, tags: { shop: 'pet_supply', name: 'Pet Zone' } },
   { type: 'node', id: 9, lat: nord(14000), lon: C.lon, tags: { amenity: 'veterinary', name: 'Vétérinaire lointain' } },
@@ -64,13 +65,14 @@ const VILLES = { rennes: { lat: C.lat, lon: C.lon, display_name: 'Rennes, Ille-e
   brest: { lat: 48.39, lon: -4.486, display_name: 'Brest, Finistère, Bretagne, France' }, nantes: { lat: 47.2184, lon: -1.5536, display_name: 'Nantes, Loire-Atlantique, Pays de la Loire, France' },
   toulouse: { lat: 43.6045, lon: 1.4442, display_name: 'Toulouse, Haute-Garonne, Occitanie, France' },
   bruxelles: { lat: 50.8503, lon: 4.3517, display_name: 'Bruxelles, Région de Bruxelles-Capitale, Belgique' }, frontiere: { lat: 50.45, lon: 1.0, display_name: 'Ville-Frontière, Pas-de-Calais, France' },
+  metropolis: { lat: 47.0, lon: 2.0, display_name: 'Metropolis, Cher, Centre-Val de Loire, France' }, dense: { lat: 46.0, lon: 3.0, display_name: 'Denseville, Allier, Auvergne, France' },
   paris: { lat: 48.8566, lon: 2.3522, display_name: 'Paris, Île-de-France, France' }, lille: { lat: 50.6292, lon: 3.0573, display_name: 'Lille, Nord, Hauts-de-France, France' },
   lyon: { lat: 45.764, lon: 4.8357, display_name: 'Lyon, Métropole de Lyon, Rhône, France' }, marseille: { lat: 43.2965, lon: 5.3698, display_name: 'Marseille, Bouches-du-Rhône, France' } };
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
 
 // ----- Lieux préparés à l'avance (donnees/lieux/) : fichiers SIMULÉS pour le navigateur -----
 const CODE_CAT = { veto: 'v', parc: 'p', animalerie: 'a', toiletteur: 't', refuge: 'r' };
-const ligneDe = (e) => { const t = e.tags; const c = coord(e); return [`${e.type[0]}${e.id}`, CODE_CAT[CAT(t)], c.lat, c.lon, t.name ?? '', t['addr:full'] ?? (t['addr:street'] ? `${t['addr:housenumber']} ${t['addr:street']}, ${t['addr:postcode']} ${t['addr:city']}` : ''), t.phone ?? '', t.opening_hours ?? '', t.website ?? '']; };
+const ligneDe = (e) => { const t = e.tags; const c = coord(e); const adr = t['addr:full'] ?? [[t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), [t['addr:postcode'], t['addr:city']].filter(Boolean).join(' ')].filter(Boolean).join(', '); return [`${e.type[0]}${e.id}`, CODE_CAT[CAT(t)], c.lat, c.lon, t.name ?? '', adr, t.phone ?? '', t.opening_hours ?? '', t.website ?? '', t.name ? '' : (t['addr:street'] ?? t['x-rue-proche'] ?? '')]; };
 const LIGNES_35 = ELEMENTS.filter((e) => e.id % 2 === 1).map(ligneDe);   // deux « départements » qui se partagent la zone de Rennes
 const LIGNES_53 = ELEMENTS.filter((e) => e.id % 2 === 0).map(ligneDe);
 const LIGNES_29 = [                                                       // Brest : de bonnes lignes et des lignes piégées
@@ -81,11 +83,15 @@ const LIGNES_29 = [                                                       // Bre
   ['n505', 'a', 48.392, -4.485, 'Animalerie piégée', '', '+33 2 98 00 00 05', '', 'javascript:alert(1)'],
   'pas une ligne',
 ];
+// 350 lieux répartis régulièrement (spirale) : combien il y en a dans chaque rayon est connu d'avance (350 × (r / rayon max)²)
+const spirale = (centre, rayonMax, n, depart) => Array.from({ length: n }, (_, i) => { const r = rayonMax * Math.sqrt((i + 0.5) / n); const a = i * 2.399963; return [`n${depart + i}`, 'vpatr'[i % 5], +(centre.lat + (r * Math.cos(a)) / 111320).toFixed(5), +(centre.lon + (r * Math.sin(a)) / (111320 * Math.cos(centre.lat * Math.PI / 180))).toFixed(5), `Lieu ${depart + i}`]; });
+const LIGNES_18 = spirale(VILLES.metropolis, 9000, 350, 7000);   // 350 lieux sur 9 km : 108 dans 5 km, 17 dans 2 km
+const LIGNES_03 = spirale(VILLES.dense, 1900, 350, 8000);        // 350 lieux sur 1,9 km : tous dans 2 km
 const bornes = (l) => [Math.min(...l.filter((x) => Number.isFinite(x[2])).map((x) => x[2])), Math.min(...l.map((x) => x[3])), Math.max(...l.filter((x) => Number.isFinite(x[2])).map((x) => x[2])), Math.max(...l.map((x) => x[3]))];
 const INDEX_SIMULE = { v: 1, extrait: '2026-11-20T21:21:21Z', genere: '2026-11-21', total: LIGNES_35.length + LIGNES_53.length + 2,
-  departements: { '35': { n: LIGNES_35.length, bbox: bornes(LIGNES_35) }, '53': { n: LIGNES_53.length, bbox: bornes(LIGNES_53) }, '29': { n: 2, bbox: [48.39, -4.49, 48.392, -4.485] } },
+  departements: { '35': { n: LIGNES_35.length, bbox: bornes(LIGNES_35) }, '53': { n: LIGNES_53.length, bbox: bornes(LIGNES_53) }, '29': { n: 2, bbox: [48.39, -4.49, 48.392, -4.485] }, '18': { n: 350, bbox: bornes(LIGNES_18) }, '03': { n: 350, bbox: bornes(LIGNES_03) } },
   france: [[[-5, 42], [8, 42], [8, 50.5], [-5, 50.5], [-5, 42]]] };   // un grand rectangle : Bruxelles (50,85° N) est hors couverture
-const FICHIERS_SIMULES = { 'index.json': INDEX_SIMULE, '35.json': { v: 1, dep: '35', lieux: LIGNES_35 }, '53.json': { v: 1, dep: '53', lieux: LIGNES_53 }, '29.json': { v: 1, dep: '29', lieux: LIGNES_29 } };
+const FICHIERS_SIMULES = { 'index.json': INDEX_SIMULE, '35.json': { v: 1, dep: '35', lieux: LIGNES_35 }, '53.json': { v: 1, dep: '53', lieux: LIGNES_53 }, '29.json': { v: 1, dep: '29', lieux: LIGNES_29 }, '18.json': { v: 1, dep: '18', lieux: LIGNES_18 }, '03.json': { v: 1, dep: '03', lieux: LIGNES_03 } };
 let modeLocal = 'indisponible';    // 'indisponible' (réponse inutilisable : l'appli passe à Overpass) | 'mock' (fichiers simulés) | 'erreur-500'
 const donneesAppels = [];          // les fichiers de donnees/lieux/ demandés par l'appli
 
@@ -162,6 +168,7 @@ ws.addEventListener('message', async (m) => {
     const fichier = u.pathname.split('/').pop();
     donneesAppels.push(fichier);
     if (!/\.json$/.test(fichier)) { await send('Fetch.continueRequest', { requestId }); return; }   // LICENCE.txt : le vrai fichier du dépôt
+    if (modeLocal === 'reel') { await send('Fetch.continueRequest', { requestId }); return; }   // les VRAIS fichiers de donnees/lieux/
     if (modeLocal === 'erreur-500') await repondre(requestId, { status: 500, type: 'text/plain', corps: 'Erreur du serveur' });
     else if (modeLocal === 'mock' && FICHIERS_SIMULES[fichier]) await repondre(requestId, { corps: JSON.stringify(FICHIERS_SIMULES[fichier]) });
     else await repondre(requestId, { corps: JSON.stringify({ v: 0 }) });
@@ -201,6 +208,9 @@ await send('Emulation.setGeolocationOverride', { latitude: POS.lat, longitude: P
 const poserEspion = () => ev(`(() => { window.__geo = 0; window.__geoMode = 'reel'; const o = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
   navigator.geolocation.getCurrentPosition = (ok, err, opt) => { window.__geo++; if (window.__geoMode === 'refus') return setTimeout(() => err({ code: 1, message: 'denied' }), 40); return o(ok, err, opt); }; return true; })()`);
 const statut = () => texte('#ca-statut');
+// La carte regroupe les marqueurs proches en bulles : le total des lieux = marqueurs isolés + nombres écrits dans les bulles
+const marqueurs = () => ev(`(() => { const iso = document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length; const bulles = [...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].map((g) => +g.querySelector('.ca-groupe__n').textContent); return { iso, bulles, total: iso + bulles.reduce((a, b) => a + b, 0) }; })()`);
+const attendreMarqueurs = async (n, ms = 20000) => { const fin = Date.now() + ms; let m; while (Date.now() < fin) { m = await marqueurs(); if (m.total === n) return m; await sleep(150); } return m; };
 const liste = () => ev(`[...document.querySelectorAll('.ca-lieu')].map((b) => ({ id: b.dataset.id, nom: b.querySelector('.ca-lieu__nom').textContent, meta: b.querySelector('.ca-lieu__meta').textContent }))`);
 const cliquer = (sel) => ev(`document.querySelector(${JSON.stringify(sel)}).click()`);
 const chercherVille = async (v) => { await ev(`(() => { const i = document.querySelector('#ca-ville'); i.value = ${JSON.stringify(v)}; i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('#ca-form').requestSubmit(); })()`); };
@@ -262,7 +272,8 @@ verifier(['veterinary', 'dog_park', 'pet', 'pet_supply', 'pet_grooming', 'animal
 verifier(!o1[0].requete.includes('48.1175') && !o1[0].requete.includes('1.6775'), 'la position exacte n\'est pas envoyée à Overpass');
 
 log('=== LA CARTE (Leaflet, OpenStreetMap) ===');
-verifier(await attendre(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length === ${attendu.length}`), `${attendu.length} marqueurs sur la carte`);
+const m0 = await attendreMarqueurs(attendu.length);
+verifier(m0.total === attendu.length && m0.bulles.length >= 1, `${attendu.length} lieux sur la carte : ${m0.iso} marqueurs isolés + ${m0.bulles.length} bulle(s) de regroupement (${m0.bulles.join(', ')})`);
 verifier(await ev(`L.version`) === '1.9.4', 'Leaflet 1.9.4 (version fixe, hébergée dans l\'appli)');
 verifier(await ev(`!!document.querySelector('script[src="assets/leaflet/leaflet.js"]') && !document.querySelector('script[src*="unpkg"], script[src*="cdn"]')`), 'Leaflet vient de l\'appli, pas d\'un serveur tiers');
 const attrib = await ev(`(() => { const a = document.querySelector('.leaflet-control-attribution'); const r = a.getBoundingClientRect(); const c = document.querySelector('#ca-carte').getBoundingClientRect(); const lien = [...a.querySelectorAll('a')].find((x) => /OpenStreetMap/.test(x.textContent)); return { texte: a.textContent, href: lien?.href, visible: r.width > 50 && r.height > 8 && r.right <= c.right + 1 && r.bottom <= c.bottom + 1 && getComputedStyle(a).visibility === 'visible' && getComputedStyle(a).display !== 'none', taille: parseFloat(getComputedStyle(a).fontSize) }; })()`);
@@ -270,9 +281,10 @@ verifier(/© OpenStreetMap contributors/.test(attrib.texte) && attrib.href === '
 for (let i = 0; i < 40 && tuiles === 0; i++) await sleep(250); // les tuiles partent juste après l'affichage de la carte : on leur laisse le temps sous charge
 verifier(tuiles > 0, `les tuiles viennent de tile.openstreetmap.org (${tuiles} demandées, simulées)`);
 verifier(await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-marqueur')].every((m) => m.getAttribute('title') && m.getAttribute('tabindex') === '0')`), 'chaque marqueur a un nom (title) et se atteint au clavier (tabindex 0)');
+verifier(await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].every((g) => g.getAttribute('tabindex') === '0' && /lieux regroupés/.test(g.textContent) && getComputedStyle(g.querySelector('.ca-groupe__n')).color === 'rgb(255, 255, 255)')`), 'chaque bulle : nombre de lieux en blanc, atteignable au clavier, nommée pour les lecteurs d\'écran (« N lieux regroupés »)');
 verifier(await ev(`document.querySelector('#ca-carte').getAttribute('role') === 'region' && !!document.querySelector('#ca-carte').getAttribute('aria-label')`), 'la carte est une région nommée');
 const couleurs = await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-marqueur span')].map((s) => s.style.background + '|' + !!s.querySelector('svg'))`);
-verifier(couleurs.length === attendu.length && couleurs.every((c) => c.endsWith('|true')), 'chaque marqueur a son icône');
+verifier(couleurs.length === m0.iso && couleurs.every((c) => c.endsWith('|true')), 'chaque marqueur isolé a son icône');
 await cliquer('.leaflet-control-zoom-in'); await sleep(300);
 verifier(await ev(`location.hash`) === '#/carte', 'les boutons + / − de la carte ne changent pas la page (pas de « # » dans l\'adresse)');
 await sleep(700);
@@ -288,9 +300,15 @@ const pastilles = await ev(`[...document.querySelectorAll('.ca-filtre')].map((b)
 verifier(pastilles.length === 5 && pastilles.every((p) => p.presse === 'true' && p.icone && /^#[0-9A-F]{6}$/i.test(p.couleur)), `5 pastilles actives, chacune avec son icône et sa couleur : ${pastilles.map((p) => `${p.nom}`).join(' | ')}`);
 verifier(new Set(pastilles.map((p) => p.couleur)).size === 5, 'cinq couleurs différentes');
 verifier(pastilles.every((p) => +p.n === attendu.filter((x) => x.cat === p.cat).length), `nombre par catégorie juste (${pastilles.map((p) => `${p.cat}=${p.n}`).join(', ')})`);
+const rangee = await ev(`(() => { const f = [...document.querySelectorAll('.ca-filtre')]; const c = document.querySelector('#ca-filtres'); return { lignes: new Set(f.map((b) => Math.round(b.getBoundingClientRect().top))).size, haut: Math.round(f[0].getBoundingClientRect().height), defile: getComputedStyle(c).overflowX, enrobage: getComputedStyle(c).flexWrap, fond: getComputedStyle(f[0]).backgroundColor, bord: getComputedStyle(f[0]).borderTopStyle, nombre: getComputedStyle(f[0].querySelector('.cp-filtre__nombre')).fontSize }; })()`);
+verifier(rangee.lignes === 1 && rangee.haut <= 34 && rangee.defile === 'auto' && rangee.enrobage === 'nowrap', `filtres : une seule rangée de petites pastilles (${rangee.haut} px de haut) qui défile horizontalement`);
+const fondActif = rangee.fond.match(/[\d.]+/g).map(Number);
+verifier(fondActif[0] >= 250 && fondActif[1] >= 250 && fondActif[2] >= 250 && (fondActif[3] ?? 1) >= 0.85 && rangee.bord === 'solid', `filtre actif : fond clair (${rangee.fond}), bord plein à la couleur de la catégorie, plus de gros bloc foncé`);
 await cliquer('.ca-filtre[data-cat=veto]'); await sleep(300);
+const inactif = await ev(`(() => { const b = document.querySelector('.ca-filtre[data-cat=veto]'); const st = getComputedStyle(b); return { fond: st.backgroundColor, bord: st.borderTopStyle }; })()`);
+verifier(inactif.bord === 'dashed' && /rgba\(0, 0, 0, 0\)|transparent/.test(inactif.fond), `filtre inactif : transparent à bord pointillé (${inactif.fond}, ${inactif.bord}) : on le distingue de l'actif sans la couleur seule`);
 let vis = attendu.filter((x) => x.cat !== 'veto');
-verifier((await liste()).length === vis.length && await ev(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length`) === vis.length && await ev(`document.querySelector('.ca-filtre[data-cat=veto]').getAttribute('aria-pressed')`) === 'false', `sans les vétérinaires : ${vis.length} lieux dans la liste ET sur la carte`);
+verifier((await liste()).length === vis.length && (await attendreMarqueurs(vis.length, 8000)).total === vis.length && await ev(`document.querySelector('.ca-filtre[data-cat=veto]').getAttribute('aria-pressed')`) === 'false', `sans les vétérinaires : ${vis.length} lieux dans la liste ET sur la carte`);
 verifier((await liste()).every((x) => !/Vétérinaire ·/.test(x.meta)) && /^\d+ lieux? dans 5 km/.test(await statut()), 'plus aucun vétérinaire dans la liste ; le statut se met à jour');
 for (const c of ['parc', 'animalerie', 'toiletteur', 'refuge']) await cliquer(`.ca-filtre[data-cat=${c}]`);
 await sleep(300);
@@ -311,7 +329,7 @@ verifier(new RegExp(`^https://(www.google.com/maps/dir/\\?api=1&destination=${no
 verifier(b1.ap === 'tel:+33299000001' && /^Appeler/.test(b1.apNom), `bouton « Appeler » : ${b1.ap}`);
 verifier(b1.osm === 'https://www.openstreetmap.org/node/1', 'lien pour corriger le lieu sur OpenStreetMap');
 verifier(await ev(`document.activeElement.id`) === 'ca-fiche', 'le focus passe sur la fiche (lecteurs d\'écran)');
-verifier(await ev(`document.querySelector('.ca-lieu[data-id="node/1"]').getAttribute('aria-current')`) === 'true' && await ev(`document.querySelector('.leaflet-marker-icon.is-selection')?.getAttribute('title')`) === 'Clinique Vétérinaire du Parc', 'lieu choisi : repéré dans la liste ET sur la carte');
+verifier(await ev(`document.querySelector('.ca-lieu[data-id="node/1"]').getAttribute('aria-current')`) === 'true' && await attendre(`document.querySelector('.leaflet-marker-icon.is-selection')?.getAttribute('title') === 'Clinique Vétérinaire du Parc'`, 8000), 'lieu choisi : repéré dans la liste ET sur la carte (le marqueur sort de sa bulle)');
 await axe('#ca-fiche', 'fiche d\'un lieu');
 await ouvrir('node/2');
 verifier(/Ouvert 24h\/24, 7 j\/7/.test(await texte('#ca-fiche')), '« Ouvert 24h/24 » seulement parce que la donnée dit 24/7');
@@ -320,7 +338,10 @@ const f4 = await texte('#ca-fiche');
 verifier(/Horaires non indiqués/.test(f4) && /Téléphone non indiqué/.test(f4) && /Adresse non indiquée/.test(f4) && !/24\s?h/i.test(f4) && await ev(`![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Appeler/.test(x.textContent.trim()))`), 'sans horaires ni téléphone dans les données : rien d\'inventé, jamais « 24h/24 », pas de bouton « Appeler »');
 await ouvrir('node/5');
 verifier(/Téléphone non indiqué/.test(await texte('#ca-fiche')) && /lun-sam 10:00-19:00/.test(await texte('#ca-fiche')), 'un « téléphone » qui n\'en est pas un est ignoré');
-await ev(`document.querySelector('.leaflet-marker-icon[title="Parc canin de la Prévalaye"]').click()`); await sleep(400);
+await ouvrir('way/3');   // choisir un lieu dans la liste le fait sortir de sa bulle : la carte zoome sur lui
+verifier(await attendre(`!!document.querySelector('.leaflet-marker-icon[title="Parc canin de la Prévalaye"]')`, 8000), 'choisir un lieu dans la liste fait apparaître son marqueur (la carte zoome jusqu\'à le sortir de sa bulle)');
+await cliquer('#ca-fermer'); await sleep(300);
+await ev(`document.querySelector('.leaflet-marker-icon[title="Parc canin de la Prévalaye"]').click()`); await sleep(500);
 verifier(await texte('#ca-fiche h3') === 'Parc canin de la Prévalaye' && await ev(`document.activeElement.id`) === 'ca-fiche', 'toucher un marqueur ouvre aussi la fiche');
 await cliquer('#ca-fermer'); await sleep(300);
 verifier(await ev(`document.querySelector('#ca-fiche').hidden`) && await ev(`document.activeElement.classList.contains('ca-lieu')`), 'fermer la fiche : le focus revient dans la liste');
@@ -341,7 +362,7 @@ attendu = attendus(POS, 10);
 l = await liste();
 verifier(nbOverpass() === avantR + 1 && appels.filter((a) => a.type === 'overpass').at(-1).rayon === 11000, 'rayon plus grand : une seule nouvelle requête (11 km avec la marge)');
 verifier(JSON.stringify(l.map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)) && !l.some((x) => x.id === 'node/9'), `10 km : ${attendu.length} lieux triés ; le vétérinaire à 14 km est exclu`);
-verifier(l.some((x) => x.nom === 'Vétérinaire (sans nom)'), 'un lieu sans nom est affiché « Vétérinaire (sans nom) »');
+verifier(l.some((x) => x.nom === 'Vétérinaire (sans nom)') && l.some((x) => x.nom === 'Vétérinaire · rue Anonyme'), `lieu sans nom : « Vétérinaire (sans nom) » sans rue connue, « Vétérinaire · rue Anonyme » avec sa rue (${l.filter((x) => /Vétérinaire (\(|·)/.test(x.nom)).map((x) => x.nom).join(' | ')})`);
 await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
 verifier(nbOverpass() === avantR + 1, 'retour à 5 km : toujours depuis le cache');
 
@@ -462,6 +483,45 @@ verifier(await ev(`document.querySelectorAll('a[href^="javascript"]').length ===
 verifier(await ev(`[...document.querySelectorAll('#ca-fiche a')].some((x) => x.href === 'tel:+33298000005')`), 'le téléphone valide de la même fiche reste utilisable');
 await cliquer('#ca-fermer'); await sleep(200);
 
+log('--- lieu sans nom : la catégorie et la rue la plus proche (fichiers du site) ---');
+await cliquer('input[name=ca-rayon][value="10"]'); await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`);
+await chercherVille('Rennes');
+await attendre(`/autour de Rennes/.test(document.querySelector('#ca-statut').textContent)`, 20000);
+const sansNom = await liste();
+verifier(sansNom.some((x) => x.nom === 'Vétérinaire · avenue de la Gare') && sansNom.some((x) => x.nom === 'Vétérinaire · rue Anonyme') && !sansNom.some((x) => /sans nom/.test(x.nom)), `sans nom : « ${sansNom.filter((x) => /^Vétérinaire ·/.test(x.nom)).map((x) => x.nom).join(' | ')} » (rue la plus proche venant du fichier)`);
+await ouvrir('node/7');
+verifier(/Près de : avenue de la Gare/.test(await texte('#ca-fiche')) && /à confirmer/.test(await texte('#ca-fiche')), 'fiche : « Près de : avenue de la Gare (rue la plus proche d\'après OpenStreetMap, à confirmer) »');
+await cliquer('#ca-fermer'); await sleep(200);
+
+log('--- grande ville : bulles de regroupement et suggestion « passer à N km » ---');
+await ev(`window.__t = 0`);
+await chercherVille('Metropolis');
+verifier(await attendre(`/350 lieux dans 10 km autour de Metropolis/.test(document.querySelector('#ca-statut').textContent)`, 20000), `350 lieux dans 10 km : « ${await statut()} »`);
+const sug1 = await texte('#ca-suggestion');
+verifier(/Beaucoup de lieux ici \(350\) : passer à 5 km \?/.test(sug1) && await ev(`document.querySelector('#ca-suggestion-bouton')?.textContent.trim()`) === 'Passer à 5 km', `plus de 300 lieux : « ${sug1.replace(/\s+/g, ' ').slice(0, 90)} » (5 km garde 108 lieux)`);
+const mm = await attendreMarqueurs(350, 30000);
+verifier(mm.total === 350 && mm.bulles.length >= 5 && mm.iso < 350, `350 lieux regroupés : ${mm.iso} marqueurs isolés + ${mm.bulles.length} bulles (${mm.bulles.slice(0, 8).join(', ')}…), aucun lieu perdu`);
+const niveauZoom = () => ev(`Math.max(...[...document.querySelectorAll('.leaflet-tile')].map((t) => +(t.src.split('/').slice(-3)[0] || 0)))`);
+const zoomAvant = await niveauZoom();
+const grosse = Math.max(...mm.bulles);
+await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].sort((a, b) => +b.querySelector('.ca-groupe__n').textContent - +a.querySelector('.ca-groupe__n').textContent)[0].click()`); await sleep(600);
+const apresZoom = await marqueurs();
+log(`  zoom de la carte : ${zoomAvant} -> ${await niveauZoom()}`);
+verifier(apresZoom.bulles.length === 0 || Math.max(...apresZoom.bulles) < grosse, `toucher la plus grosse bulle (${grosse} lieux) zoome : elle se défait, les lieux deviennent assez espacés pour s'afficher un à un (${apresZoom.iso} isolés, bulles ${apresZoom.bulles.join(', ') || 'aucune'})`);
+await cliquer('#ca-suggestion-bouton');
+verifier(await attendre(`/dans 5 km autour de Metropolis/.test(document.querySelector('#ca-statut').textContent)`, 20000), `« Passer à 5 km » : « ${await statut()} »`);
+verifier(await ev(`document.querySelector('input[name=ca-rayon]:checked').value`) === '5' && await ev(`document.querySelector('#ca-suggestion').hidden`) && (await attendreMarqueurs(108, 20000)).total === 108, 'rayon 5 km choisi, 108 lieux, plus de suggestion (moins de 300)');
+await cliquer('input[name=ca-rayon][value="10"]'); await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`);
+await chercherVille('Dense');
+await attendre(`/autour de Denseville/.test(document.querySelector('#ca-statut').textContent)`, 20000);
+verifier(/Beaucoup de lieux ici \(350\) : passer à 2 km \?/.test(await texte('#ca-suggestion')), `même à 5 km il y en aurait plus de 300 : on propose 2 km (« ${(await texte('#ca-suggestion')).replace(/\s+/g, ' ').slice(0, 70)} »)`);
+await axe('#contenu', 'Carte, grande ville avec bulles et suggestion (1280 px)');
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+verifier(/Beaucoup de lieux ici \(350\) : passer à 2 km \?/.test(await texte('#ca-suggestion')), 'à 5 km, toujours 350 lieux : la suggestion reste (2 km)');
+await cliquer('input[name=ca-rayon][value="2"]'); await attendre(`/dans 2 km/.test(document.querySelector('#ca-statut').textContent)`);
+verifier(await ev(`document.querySelector('#ca-suggestion').hidden`), 'à 2 km (le plus petit rayon) : plus de suggestion, rien de plus petit à proposer');
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+
 log('--- hors de la France métropolitaine (Bruxelles) : Overpass en secours ---');
 const lo1 = nbOverpass(), lf1 = donneesAppels.length;
 await chercherVille('Bruxelles');
@@ -486,6 +546,47 @@ verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut')
 verifier(nbOverpass() === lo2 + 1 && JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(attendus(POS, 5).map((x) => x.id)), 'les lieux viennent bien d\'Overpass (une requête) et sont triés');
 verifier(erreurs.slice(avantL500).every((e) => /Failed to load resource|500/.test(e)) && erreurs.slice(avantL500).length >= 1, 'seule l\'erreur réseau simulée apparaît dans la console (retirée du compte)');
 erreurs.splice(avantL500);
+
+log('=== PARIS, RAYON 10 km, VRAIS FICHIERS, iPhone simulé (processeur 4 fois plus lent) ===');
+await send('Page.navigate', { url: URL }); await sleep(1800); await aller2('#/carte'); await ev(axeSrc); await poserEspion();
+modeLocal = 'reel';
+await taille(375, 812);
+await send('Emulation.setCPUThrottlingRate', { rate: 4 });
+await send('Performance.enable');
+const tachesAvant = (await send('Performance.getMetrics')).result.metrics.find((m) => m.name === 'TaskDuration').value;
+await cliquer('input[name=ca-rayon][value="10"]');
+const tp = Date.now();
+await chercherVille('Paris');
+verifier(await attendre(`/lieux? dans 10 km autour de Paris/.test(document.querySelector('#ca-statut').textContent)`, 60000), `Paris : « ${await statut()} »`);
+const nParis = +(await statut()).match(/^(\d+) lieu/)[1];
+const mp = await attendreMarqueurs(nParis, 60000);
+const dureeParis = Date.now() - tp;
+const tachesApres = (await send('Performance.getMetrics')).result.metrics.find((m) => m.name === 'TaskDuration').value;
+log(`  Paris 10 km : ${nParis} lieux, ${mp.iso} marqueurs isolés + ${mp.bulles.length} bulles, ${dureeParis} ms de la saisie à l'affichage complet, ${(tachesApres - tachesAvant).toFixed(2)} s de travail du processeur (ralenti 4 fois)`);
+verifier(nParis >= 100, `plusieurs centaines de vrais lieux autour de Paris (${nParis})`);
+verifier(mp.total === nParis && mp.bulles.length >= 3 && mp.iso < nParis / 2, `la carte reste lisible : ${nParis} lieux = ${mp.iso} marqueurs isolés + ${mp.bulles.length} bulles (${mp.bulles.slice(0, 6).join(', ')}…)`);
+verifier(dureeParis < 8000 && tachesApres - tachesAvant < 6, `fluide même sur un processeur 4 fois plus lent : ${dureeParis} ms, ${(tachesApres - tachesAvant).toFixed(2)} s de calcul`);
+verifier(/extrait d'OpenStreetMap/.test(await texte('#ca-source')) && await sansDebord(), 'lieux venant des fichiers (instantané) et aucun défilement horizontal à 375 px');
+const rangee375 = await ev(`(() => { const c = document.querySelector('#ca-filtres'); const f = [...c.querySelectorAll('.ca-filtre')]; return { lignes: new Set(f.map((b) => Math.round(b.getBoundingClientRect().top))).size, defile: c.scrollWidth > c.clientWidth, haut: Math.round(f[0].getBoundingClientRect().height) }; })()`);
+verifier(rangee375.lignes === 1 && rangee375.defile && rangee375.haut <= 34, `à 375 px : les 5 pastilles tiennent sur UNE rangée qui défile (${rangee375.haut} px de haut)`);
+if (nParis > 300) {
+  const sugParis = await texte('#ca-suggestion');
+  verifier(/Beaucoup de lieux ici \(\d+\) : passer à \d km \?/.test(sugParis), `plus de 300 lieux à Paris : « ${sugParis.replace(/\s+/g, ' ').slice(0, 80)} »`);
+} else {
+  log(`  (Paris 10 km : ${nParis} lieux, moins de 300 : pas de suggestion de rayon)`);
+  verifier(await ev(`document.querySelector('#ca-suggestion').hidden`), 'moins de 300 lieux : pas de suggestion');
+}
+await ev(`document.querySelector('#ca-carte').scrollIntoView({ block: 'center' })`); await sleep(400);
+await ecran('paris-375');
+const tz = Date.now();
+await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].sort((a, b) => +b.querySelector('.ca-groupe__n').textContent - +a.querySelector('.ca-groupe__n').textContent)[0].click()`); await sleep(1500);
+log(`  toucher la plus grosse bulle : ${Date.now() - tz} ms jusqu'à la fin du zoom (compris 1,5 s d'attente)`);
+const zoomParis = await marqueurs();
+log(`  après le zoom : ${zoomParis.iso} marqueurs isolés + ${zoomParis.bulles.length} bulles (${zoomParis.bulles.join(', ')})`);
+await ecran('paris-375-zoom');
+await send('Emulation.setCPUThrottlingRate', { rate: 1 });
+await send('Page.navigate', { url: URL }); await sleep(1800); await aller2('#/carte'); await ev(axeSrc); await poserEspion();
+await taille(1280, 900);
 modeLocal = 'indisponible';
 
 log('=== AFFICHAGE SUR 375 px (iPhone), PAGE RECHARGÉE ===');
@@ -501,13 +602,13 @@ verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut')
 await sleep(800);
 attendu = attendus(POS, 5);
 verifier(await sansDebord(), 'aucun défilement horizontal à 375 px');
-const mesures = await ev(`(() => { const v = innerWidth; const trop = [...document.querySelectorAll('.pg--carte *')].filter((e) => !e.closest('.leaflet-container') && !e.closest('.cp-sr') && getComputedStyle(e).position !== 'fixed').filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.right > v + 1 || r.left < -1); }).map((e) => e.className || e.tagName).slice(0, 5);
+const mesures = await ev(`(() => { const v = innerWidth; const trop = [...document.querySelectorAll('.pg--carte *')].filter((e) => !e.closest('.leaflet-container') && !e.closest('.ca-filtres') && !e.closest('.cp-sr') && getComputedStyle(e).position !== 'fixed').filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.right > v + 1 || r.left < -1); }).map((e) => e.className || e.tagName).slice(0, 5);
   const cible = (sel) => [...document.querySelectorAll(sel)].map((e) => Math.round(e.getBoundingClientRect().height));
   const carte = document.querySelector('#ca-carte').getBoundingClientRect();
   return { trop, carteL: Math.round(carte.width), carteH: Math.round(carte.height), carteG: Math.round(carte.left), carteD: Math.round(v - carte.right), boutons: [...cible('#ca-loc'), ...cible('#ca-chercher')], pastilles: cible('.ca-filtre'), lignes: cible('.ca-lieu'), rayons: [...document.querySelectorAll('.ca-rayons .cp-choix__option span')].map((e) => Math.round(e.getBoundingClientRect().height)) }; })()`);
 verifier(mesures.trop.length === 0, `rien ne dépasse de l'écran (${mesures.trop.join(', ') || 'rien'})`);
 verifier(mesures.carteL >= 300 && mesures.carteH >= 260 && mesures.carteG >= 8 && mesures.carteD >= 8, `la carte occupe la largeur avec une marge (${mesures.carteL} × ${mesures.carteH} px, marges ${mesures.carteG}/${mesures.carteD})`);
-verifier(mesures.boutons.every((h) => h >= 40) && mesures.lignes.every((h) => h >= 48) && mesures.pastilles.every((h) => h >= 36), `boutons et lignes assez grands pour le doigt (boutons ${mesures.boutons}, pastilles ${mesures.pastilles}, lignes ${mesures.lignes})`);
+verifier(mesures.boutons.every((h) => h >= 40) && mesures.lignes.every((h) => h >= 48) && mesures.pastilles.every((h) => h >= 30), `boutons et lignes assez grands pour le doigt (boutons ${mesures.boutons}, pastilles ${mesures.pastilles}, lignes ${mesures.lignes})`);
 await ecran('375-liste', true);
 await ouvrir('node/12');
 verifier(await sansDebord() && await ev(`(() => { const f = document.querySelector('#ca-fiche').getBoundingClientRect(); return f.left >= 0 && f.right <= innerWidth && [...document.querySelectorAll('#ca-fiche *')].every((e) => e.getBoundingClientRect().right <= innerWidth + 1); })()`), 'fiche avec un nom de 120 caractères : tout reste dans l\'écran');

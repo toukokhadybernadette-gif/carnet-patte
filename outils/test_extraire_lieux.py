@@ -42,7 +42,7 @@ class Nettoyage(unittest.TestCase):
     def test_aucun_courriel_ni_champ_personnel_dans_un_lieu(self):
         tags = {'amenity': 'veterinary', 'name': 'Clinique', 'email': 'a@b.fr', 'contact:email': 'a@b.fr', 'operator:website': 'x', 'addr:street': 'Rue', 'phone': '+33299000001'}
         l = x.lieu_depuis('n1', tags, 43.60446789, 1.44424111)
-        self.assertEqual(set(l), {'id', 'cat', 'lat', 'lon', 'nom', 'adresse', 'tel', 'horaires', 'site'})
+        self.assertEqual(set(l), {'id', 'cat', 'lat', 'lon', 'nom', 'adresse', 'tel', 'horaires', 'site', 'rue'})
         self.assertNotIn('@', ' '.join(str(v) for v in l.values()))
         self.assertEqual((l['lat'], l['lon']), (43.60447, 1.44424))
 
@@ -55,6 +55,8 @@ class Nettoyage(unittest.TestCase):
         self.assertEqual(x.en_ligne(l), ['n7', 'v', 43.1, 1.2, 'V'])
         l2 = x.lieu_depuis('n8', {'amenity': 'veterinary', 'name': 'V', 'website': 'https://a.fr'}, 43.1, 1.2)
         self.assertEqual(x.en_ligne(l2), ['n8', 'v', 43.1, 1.2, 'V', '', '', '', 'https://a.fr'])
+        l3 = x.lieu_depuis('n9', {'amenity': 'veterinary', 'addr:street': 'rue des Lilas'}, 43.1, 1.2)
+        self.assertEqual(x.en_ligne(l3), ['n9', 'v', 43.1, 1.2, '', 'rue des Lilas', '', '', '', 'rue des Lilas'])
 
 
 class Doublons(unittest.TestCase):
@@ -75,6 +77,41 @@ class Doublons(unittest.TestCase):
         a = x.lieu_depuis('n1', {'amenity': 'veterinary'}, 43.6000, 1.4400)
         b = x.lieu_depuis('n2', {'amenity': 'veterinary'}, 43.6000, 1.4400)
         self.assertEqual(len(x.dedoublonner([a, b])), 2)
+
+
+class Rues(unittest.TestCase):
+    def lieu(self, ident, lat, lon, **tags):
+        return x.lieu_depuis(ident, {'amenity': 'veterinary', **tags}, lat, lon)
+
+    def test_rue_la_plus_proche_pour_un_lieu_sans_nom(self):
+        sans_nom = self.lieu('n1', 43.6000, 1.4400)
+        adresses = [
+            (43.60054, 1.4400, 'Rue Proche'),     # environ 60 m
+            (43.60108, 1.4400, 'Rue Moyenne'),    # environ 120 m
+            (43.6036, 1.4400, 'Rue Lointaine'),   # environ 400 m : trop loin
+        ]
+        self.assertEqual(x.attribuer_rues([sans_nom], iter(adresses)), 1)
+        self.assertEqual(sans_nom['rue'], 'Rue Proche')
+
+    def test_aucune_adresse_assez_proche(self):
+        l = self.lieu('n2', 43.6000, 1.4400)
+        self.assertEqual(x.attribuer_rues([l], iter([(43.6036, 1.4400, 'Rue Lointaine')])), 0)
+        self.assertEqual(l['rue'], '')
+
+    def test_un_lieu_nomme_ou_avec_sa_rue_n_est_pas_touche(self):
+        nomme = self.lieu('n3', 43.6000, 1.4400, name='Clinique')
+        propre = self.lieu('n4', 43.6000, 1.4400, **{'addr:street': 'Rue Propre'})
+        x.attribuer_rues([nomme, propre], iter([(43.60005, 1.4400, 'Rue Voisine')]))
+        self.assertEqual(nomme['rue'], '')
+        self.assertEqual(propre['rue'], 'Rue Propre')
+
+    def test_les_cases_voisines_couvrent_le_rayon(self):
+        l = self.lieu('n5', 43.6000, 1.4400)
+        cases = x.cases_voisines([l])
+        # une adresse à 140 m à l'est ou à l'ouest doit se trouver dans une case à examiner
+        for dlon in (-0.0017, 0.0017):
+            self.assertIn(x.case_de(43.6000, 1.4400 + dlon), cases)
+        self.assertNotIn(x.case_de(43.6000, 1.4400 + 0.01), cases)
 
 
 class Departements(unittest.TestCase):

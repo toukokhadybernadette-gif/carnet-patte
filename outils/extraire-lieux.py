@@ -6,7 +6,7 @@
 Entrée : l'extrait « France » de Geofabrik (https://download.geofabrik.de/europe/france-latest.osm.pbf), mis à jour chaque nuit.
 Catégories : vétérinaires, parcs à chiens, animaleries, toiletteurs, refuges (mêmes étiquettes OpenStreetMap que modules/carte/carte-donnees.js).
 Sortie  : donnees/lieux/<code>.json (un par département) et donnees/lieux/index.json (zones couvertes, contour de la France, date de l'extrait).
-Champs gardés : nom, adresse, téléphone, horaires, site web. JAMAIS de courriel ni de nom de personne (RGPD).
+Champs gardés : nom, adresse, téléphone, horaires, site web, et pour les lieux sans nom la rue la plus proche. JAMAIS de courriel ni de nom de personne (RGPD).
 Contours des départements : IGN Admin Express via Etalab (Licence Ouverte 2.0), téléchargés au besoin ; ils ne servent qu'à ranger chaque lieu dans un fichier.
 Données : © contributeurs d'OpenStreetMap, licence ODbL 1.0 (voir donnees/lieux/LICENCE.txt).
 
@@ -15,6 +15,7 @@ Dépendances : pip install osmium shapely
 import argparse
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -35,6 +36,8 @@ PAIRES = [p for _, (_, paires) in CATEGORIES.items() for p in paires]
 VERSION = 1
 DECIMALES = 5            # environ 1 m
 RAYON_DEDOUBLONNAGE_M = 80
+RAYON_RUE_M = 150                         # une rue n'est attribuée à un lieu sans nom que si un point d'adresse est à moins de 150 m
+PAS_GRILLE = 0.0025                       # cases d'environ 200 m pour chercher les adresses voisines
 DISTANCE_MAX_HORS_DEPARTEMENT_DEG = 0.1   # un lieu hors de tout contour (bord de mer, frontière) est rangé dans le département le plus proche s'il est à moins d'environ 10 km
 
 
@@ -82,12 +85,14 @@ def lieu_depuis(identifiant, tags, lat, lon):
         'id': identifiant, 'cat': code, 'lat': round(lat, DECIMALES), 'lon': round(lon, DECIMALES),
         'nom': nom, 'adresse': adresse(tags), 'tel': telephone(tags),
         'horaires': nettoyer(tags.get('opening_hours'), 300), 'site': site_web(tags),
+        # lieu sans nom : sa propre rue si elle est connue (sinon complétée par attribuer_rues)
+        'rue': '' if nom else nettoyer(tags.get('addr:street'), 80),
     }
 
 
 def en_ligne(l):
-    """Une ligne de fichier : [id, catégorie, lat, lon, nom, adresse, tél., horaires, site], sans les champs vides de fin."""
-    ligne = [l['id'], l['cat'], l['lat'], l['lon'], l['nom'], l['adresse'], l['tel'], l['horaires'], l['site']]
+    """Une ligne de fichier : [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue], sans les champs vides de fin."""
+    ligne = [l['id'], l['cat'], l['lat'], l['lon'], l['nom'], l['adresse'], l['tel'], l['horaires'], l['site'], l['rue']]
     while len(ligne) > 4 and ligne[-1] == '':
         ligne.pop()
     return ligne
@@ -98,6 +103,37 @@ def distance_m(a, b):
     dl, dn = radians(b['lat'] - a['lat']), radians(b['lon'] - a['lon'])
     h = sin(dl / 2) ** 2 + cos(radians(a['lat'])) * cos(radians(b['lat'])) * sin(dn / 2) ** 2
     return 2 * 6371000 * asin(sqrt(h))
+
+
+def case_de(lat, lon):
+    return (math.floor(lat / PAS_GRILLE), math.floor(lon / PAS_GRILLE))
+
+
+def cases_voisines(cibles):
+    """Les cases (et leurs voisines) où il faut chercher des adresses : environ 18 000 cases pour 2 000 lieux sans nom."""
+    return {(i + di, j + dj) for (i, j) in (case_de(l['lat'], l['lon']) for l in cibles) for di in (-1, 0, 1) for dj in (-1, 0, 1)}
+
+
+def attribuer_rues(cibles, adresses, rayon_m=RAYON_RUE_M):
+    """Donne à chaque lieu sans nom la rue du point d'adresse le plus proche, à moins de `rayon_m` mètres.
+    `adresses` : suite de (lat, lon, rue). Renvoie le nombre de lieux complétés."""
+    grille = defaultdict(list)
+    for l in cibles:
+        if not l['nom'] and not l['rue']:
+            grille[case_de(l['lat'], l['lon'])].append(l)
+    meilleur = {}
+    for lat, lon, rue in adresses:
+        i, j = case_de(lat, lon)
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                for l in grille.get((i + di, j + dj), ()):
+                    d = distance_m(l, {'lat': lat, 'lon': lon})
+                    if d <= rayon_m and (l['id'] not in meilleur or d < meilleur[l['id']][0]):
+                        meilleur[l['id']] = (d, rue)
+    for l in cibles:
+        if l['id'] in meilleur:
+            l['rue'] = nettoyer(meilleur[l['id']][1], 80)
+    return len(meilleur)
 
 
 def dedoublonner(lieux):
@@ -155,6 +191,17 @@ def lire_pbf(chemin):
         if l:
             bruts.append(l)
     return bruts, relations
+
+
+def adresses_osm(chemin, cases):
+    """Les points d'adresse d'OpenStreetMap (nœuds avec « addr:street ») situés dans l'une des `cases` : (lat, lon, rue)."""
+    import osmium
+    for n in osmium.FileProcessor(chemin, osmium.osm.NODE).with_filter(osmium.filter.KeyFilter('addr:street')):
+        if not n.location.valid() or case_de(n.location.lat, n.location.lon) not in cases:
+            continue
+        rue = n.tags.get('addr:street')
+        if rue:
+            yield n.location.lat, n.location.lon, rue
 
 
 def date_extrait(chemin):
@@ -253,6 +300,7 @@ def principal():
     ap.add_argument('--sortie', default='donnees/lieux')
     ap.add_argument('--contours', default=os.path.join(os.environ.get('TEMP', '.'), 'departements-100m.geojson'), help='contours des départements (téléchargés si absents)')
     ap.add_argument('--extrait', default='', help="date de l'extrait (ISO) si le fichier ne la contient pas")
+    ap.add_argument('--sans-rues', action='store_true', help="ne cherche pas la rue la plus proche des lieux sans nom")
     ap.add_argument('--minimum-absolu', type=int, default=5000, help='refuse d\'écrire sous ce nombre de lieux (extrait tronqué ?)')
     ap.add_argument('--minimum-relatif', type=float, default=0.8, help='refuse d\'écrire si le total tombe sous cette part du total précédent')
     ap.add_argument('--resume', default='', help='écrit un résumé Markdown (corps de la Pull Request)')
@@ -265,6 +313,13 @@ def principal():
     print(f'{len(bruts)} lieux bruts, {relations} relations ignorées')
     lieux = dedoublonner(bruts)
     print(f'{len(lieux)} lieux après dédoublonnage')
+    sans_nom = [l for l in lieux if not l['nom']]
+    rue_propre = sum(1 for l in sans_nom if l['rue'])
+    rues_proches = 0
+    if not a.sans_rues:
+        cibles = [l for l in sans_nom if not l['rue']]
+        rues_proches = attribuer_rues(cibles, adresses_osm(a.pbf, cases_voisines(cibles)))
+    print(f"{len(sans_nom)} lieux sans nom : {rue_propre} avec leur propre rue, {rues_proches} avec la rue d'une adresse voisine (moins de {RAYON_RUE_M} m)")
     rangement, hors = ranger_par_departement(lieux, deps)
 
     # Garde-fou : un extrait tronqué ou une erreur de lecture ne doit jamais écraser de bonnes données
@@ -313,6 +368,7 @@ def principal():
         f"- **{index['total']}** lieux dans **{len(index['departements'])}** départements ({taille / 1024 / 1024:.2f} Mo de JSON)",
         *[f"- {CATEGORIES[c][0]} : {par_cat[c]}" for c in CATEGORIES],
         f"- Depuis la version précédente : **+{ajoutes}** / **−{retires}** lieux" + ('' if anciens else ' (première extraction)'),
+        f"- Lieux sans nom : {len(sans_nom)}, dont {rue_propre + rues_proches} avec une rue connue ({rues_proches} déduites d'une adresse voisine à moins de {RAYON_RUE_M} m)",
         f"- Ignorés : {relations} relations OpenStreetMap, {hors} lieux hors des départements métropolitains",
     ]
     texte = '\n'.join(lignes) + '\n'

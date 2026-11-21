@@ -171,16 +171,36 @@
 .app-ajout-haut { display: none; }
 @media (min-width: 600px) { .app-ajout-haut { display: inline-flex; } }
 
-/* ---------- Barre du bas : bouton rond « + » au centre, À PLAT : même hauteur que les autres onglets, rond blanc de la taille des icônes, sans texte ---------- */
+/* ---------- Barre du bas façon iOS 26 : une capsule d'icônes seules + un bouton « + » rond séparé, tous deux en verre de la couleur du thème ----------
+   .app-bas        : l'ensemble, posé en bas de l'écran (téléphone), la capsule et le « + » côte à côte, à la même hauteur
+   .app-nav-bas    : la capsule de verre (les 4 onglets), qui se raccourcit pour laisser la place au « + »
+   .app-plus       : le bouton « + », rond, de la hauteur de la capsule, jamais surélevé
+   Les onglets n'ont plus de texte : leur nom est dans aria-label (js/navigation.js). L'onglet actif a une pastille claire derrière son icône. */
+:root { --cp-hauteur-bas: 68px; }
+.app-bas { position: fixed; left: var(--cp-espace-4); right: var(--cp-espace-4); bottom: calc(var(--cp-espace-3) + env(safe-area-inset-bottom)); max-width: 440px; margin-inline: auto; z-index: 40;
+  display: flex; align-items: stretch; gap: 10px; }
+.app-bas .app-nav-bas { position: static; flex: 1 1 0; min-width: 0; max-width: none; margin: 0; min-height: var(--cp-hauteur-bas); display: flex; align-items: center; }
+.app-bas .app-nav-bas .cp-nav-bas { flex: 1 1 auto; min-width: 0; }
 .app-nav-bas .cp-nav-bas > * { flex: 1 1 0; min-width: 0; }
-.app-plus { position: relative; display: flex; align-items: flex-start; justify-content: center; min-height: 54px; padding: 5px 0 0; /* le rond est sur la même ligne que les icônes des autres onglets */ border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.app-plus__rond { flex: none; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; color: var(--cc-fond); border: 0; box-shadow: none;
+.app-nav-bas .cp-nav-bas__item { background: none !important; box-shadow: none !important; }
+.app-nav-bas .cp-nav-bas__icone { width: 54px; height: 40px; max-width: none; border-radius: 999px; color: #FFFFFF;
+  transition: background-color var(--cp-duree-rapide) var(--cp-courbe), color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
+.app-nav-bas .cp-nav-bas__item:hover .cp-nav-bas__icone { background: rgba(255, 255, 255, .16); }
+.app-nav-bas .cp-nav-bas__item[aria-current="page"] .cp-nav-bas__icone { background: var(--cp-nav-actif); color: var(--cp-foret-texte); box-shadow: 0 1px 3px rgba(var(--cp-ombre-rgb), .25); }
+.app-nav-bas .cp-nav-bas__item:focus-visible { outline: none; }
+.app-nav-bas .cp-nav-bas__item:focus-visible .cp-nav-bas__icone { outline: 2px solid #FFFFFF; outline-offset: 2px; }
+
+.app-plus { flex: none; position: relative; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: var(--cp-hauteur-bas); height: var(--cp-hauteur-bas); padding: 0; border-radius: 50%; cursor: pointer; color: #FFFFFF;
+  background: var(--cp-nav-fond); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--cc-bord); box-shadow: var(--cc-reflet), 0 6px 14px rgba(var(--cp-ombre-rgb), .26); -webkit-tap-highlight-color: transparent;
   transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)), background-color var(--cp-duree-rapide) var(--cp-courbe); }
-.app-plus:hover .app-plus__rond { background: var(--cp-surface-2); }
-.app-plus:active .app-plus__rond { background: var(--cp-surface-2); transform: scale(.88); transition-duration: 90ms; transition-timing-function: ease-out; }
-.app-plus:focus-visible { outline: none; }
-.app-plus:focus-visible .app-plus__rond { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .app-plus__rond { transition-duration: 1ms; } .app-plus:active .app-plus__rond { transform: none; } }
+.app-plus__rond { display: inline-flex; align-items: center; justify-content: center; color: #FFFFFF; filter: drop-shadow(0 1px 1px rgba(var(--cp-ombre-rgb), .3)); }
+.app-plus__rond svg { stroke-width: 2.4; }
+.app-plus:hover { background: var(--cc-fond-survol); }
+.app-plus:active { transform: scale(.9); transition-duration: 90ms; transition-timing-function: ease-out; }
+.app-plus:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; }
+@media (min-width: 600px) { .app-bas, .app-bas .app-nav-bas { display: none; } }
+@media (prefers-reduced-motion: reduce) { .app-plus, .app-nav-bas .cp-nav-bas__icone { transition-duration: 1ms; } .app-plus:active { transform: none; } }
 
 /* ---------- Petite fenêtre d'ajout ---------- */
 .ar-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-2); }

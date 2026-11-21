@@ -194,15 +194,28 @@ await ev(`document.querySelector('#menu-bouton').click()`); await sleep(400);
 await ev(`(() => { const d = document.querySelector('dialog.app-menu'); d.dispatchEvent(new MouseEvent('click', { bubbles: true })); })()`); await sleep(600);
 verifier(await ev(`!document.querySelector('dialog.app-menu')`), 'un toucher à côté du panneau le referme');
 
-log('=== BOUTON ROND « + » AU CENTRE DE LA BARRE DU BAS ===');
+log('=== BARRE DU BAS : ICÔNES SEULES + BOUTON « + » SÉPARÉ À DROITE ===');
 await aller2('#/accueil'); await ev(`window.scrollTo(0, 0)`);
-const plus = await ev(`(() => { const b = document.querySelector('#ajout-bouton'); const r = b.querySelector('.app-plus__rond').getBoundingClientRect(); const items = [...document.querySelectorAll('.app-nav-bas .cp-nav-bas__item')].map((a) => a.getBoundingClientRect()); const bar = document.querySelector('.app-nav-bas').getBoundingClientRect(); const fond = getComputedStyle(b.querySelector('.app-plus__rond')).backgroundColor; const theme = getComputedStyle(document.documentElement).getPropertyValue('--cc-fond').trim(); return { centre: Math.round(r.left + r.width / 2), ecran: innerWidth / 2, taille: Math.round(r.width), nb: items.length, gauche: items.filter((i) => i.right <= r.left + 1).length, droite: items.filter((i) => i.left >= r.right - 1).length, dedans: r.left >= bar.left && r.right <= bar.right, fond, theme, texte: b.textContent.trim(), nom: b.getAttribute('aria-label'), ombre: getComputedStyle(b.querySelector('.app-plus__rond')).boxShadow, centreY: Math.round(r.top + r.height / 2), iconesY: [...document.querySelectorAll('.app-nav-bas .cp-nav-bas__icone')].map((i) => Math.round(i.getBoundingClientRect().top + i.getBoundingClientRect().height / 2)), haut: Math.round(b.getBoundingClientRect().height), hautItem: Math.round(items[0].height) }; })()`);
-verifier(Math.abs(plus.centre - plus.ecran) <= 2 && plus.taille >= 24 && plus.taille <= 28 && plus.nb === 4 && plus.gauche === 2 && plus.droite === 2 && plus.dedans, `« + » rond au centre (${plus.taille} px, centre ${plus.centre} px / écran ${plus.ecran} px), 2 entrées de chaque côté`);
-verifier(plus.texte === '' && plus.nom === 'Ajouter', `« + » : aucun texte visible, nom pour les lecteurs d'écran « ${plus.nom} »`);
-verifier(plus.iconesY.every((y) => Math.abs(y - plus.centreY) <= 2) && plus.ombre === 'none' && plus.haut === plus.hautItem, `« + » à plat : sur la ligne des icônes (centre ${plus.centreY} px, icônes ${plus.iconesY}), sans ombre portée (${plus.ombre}), même hauteur que les onglets (${plus.haut} / ${plus.hautItem} px)`);
-const hexTheme = await ev(`getComputedStyle(document.documentElement).getPropertyValue('--cc-fond').trim()`);
-const iconePlus = await ev(`getComputedStyle(document.querySelector('.app-plus__rond svg')).color`);
-verifier(plus.fond === 'rgb(255, 255, 255)' && iconePlus === `rgb(${[1, 3, 5].map((i) => parseInt(hexTheme.slice(i, i + 2), 16)).join(', ')})`, `« + » : fond blanc (${plus.fond}), icône à la couleur du thème (${iconePlus})`);
+const plus = await ev(`(() => {
+  const st = (e) => getComputedStyle(e);
+  const bar = document.querySelector('.app-nav-bas').getBoundingClientRect();
+  const b = document.querySelector('#ajout-bouton'); const r = b.getBoundingClientRect();
+  const items = [...document.querySelectorAll('#nav-bas [data-nav]')];
+  const actif = document.querySelector('#nav-bas [aria-current="page"] .cp-nav-bas__icone');
+  return { nb: items.length, textes: items.map((a) => a.textContent.replace(a.querySelector('[data-retards]')?.textContent ?? '', '').trim()).join(''), noms: items.map((a) => a.getAttribute('aria-label')),
+    barG: Math.round(bar.left), barD: Math.round(bar.right), barH: Math.round(bar.height), barBas: Math.round(bar.bottom),
+    plusG: Math.round(r.left), plusD: Math.round(r.right), plusH: Math.round(r.height), plusL: Math.round(r.width), plusBas: Math.round(r.bottom), ecran: innerWidth,
+    texte: b.textContent.trim(), nom: b.getAttribute('aria-label'), fondPlus: st(b).backgroundColor, fondBarre: st(document.querySelector('.app-nav-bas')).backgroundColor,
+    flouPlus: st(b).backdropFilter, couleurIcone: st(b.querySelector('svg')).color, rondeur: st(b).borderRadius,
+    pastille: actif ? st(actif).backgroundColor : null, pastilleL: actif ? Math.round(actif.getBoundingClientRect().width) : 0 };
+})()`);
+verifier(plus.nb === 4 && plus.barD < plus.plusG && plus.plusD <= plus.ecran - 12 && plus.barG >= 12, `barre (${plus.barG}–${plus.barD} px) puis « + » (${plus.plusG}–${plus.plusD} px) à sa droite, dans l'écran de ${plus.ecran} px`);
+verifier(plus.plusG - plus.barD >= 6 && plus.plusG - plus.barD <= 16, `espace de ${plus.plusG - plus.barD} px entre la barre et le « + »`);
+verifier(plus.plusH === plus.barH && plus.plusBas === plus.barBas && plus.plusL === plus.plusH && plus.rondeur === '50%', `« + » rond (${plus.plusL} px), même hauteur (${plus.plusH} / ${plus.barH} px) et même ligne de pied (${plus.plusBas} / ${plus.barBas}) : pas surélevé`);
+verifier(plus.fondPlus === plus.fondBarre && /blur/.test(plus.flouPlus), `« + » en verre de la même couleur que la barre (${plus.fondPlus})`);
+verifier(plus.couleurIcone === 'rgb(255, 255, 255)' && plus.texte === '' && plus.nom === 'Ajouter', `« + » blanc, sans texte, nommé « ${plus.nom} » pour les lecteurs d'écran`);
+verifier(plus.textes === '' && plus.noms.every(Boolean), `onglets : icônes seules (le badge des retards mis à part), noms pour les lecteurs d'écran (${plus.noms.join(', ')})`);
+verifier(plus.pastille === 'rgb(253, 254, 252)' && plus.pastilleL >= 40, `onglet actif : pastille claire derrière l'icône (${plus.pastille}, ${plus.pastilleL} px de large)`);
 await ecran('barre-plus');
 await ev(`document.querySelector('#ajout-bouton').click()`); await sleep(500);
 const ajout = await ev(`(() => { const d = document.querySelector('dialog[open]'); return [...d.querySelectorAll('.ar-choix__titre')].map((t) => t.textContent.trim()).join(' | '); })()`);

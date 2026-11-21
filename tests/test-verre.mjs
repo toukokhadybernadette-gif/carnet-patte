@@ -160,22 +160,20 @@ log('=== STYLE « CENTRE DE CONTRÔLE » (boutons ronds, capsules, barre flottan
 const rgbaDe = (c) => (c ?? '').match(/[\d.]+/g)?.map(Number) ?? [];
 await taille(390, 844); await aller2('#/accueil'); await sleep(900);
 // actions rapides : grands cercles de verre gris-mauve translucide, reflet clair en haut, icônes blanches
-const cercle = await ev(`(() => { const r = document.querySelector('.app-plus__rond'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, rayon: s.borderRadius, fond: s.backgroundColor, flou: s.backdropFilter, bord: s.borderTopColor, bordLarg: s.borderTopWidth, couleurTheme: (() => { const p = document.createElement("i"); p.style.color = "var(--cc-fond)"; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; })(), ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color }; })()`);
-const fondCercle = rgbaDe(cercle.fond);
-verifier(cercle.w === cercle.h && cercle.w >= 24 && cercle.w <= 28 && cercle.rayon === '50%', `bouton « + » : cercle de ${cercle.w} px`);
-verifier(fondCercle[0] === 255 && fondCercle[1] === 255 && fondCercle[2] === 255, `bouton « + » : fond blanc (${cercle.fond})`);
-verifier(cercle.flou === 'none', `bord net : aucun flou sur le cercle (${cercle.flou})`);
-verifier(cercle.bordLarg === '0px' && !/inset/.test(cercle.ombre), 'sans anneau : aucun bord, reflet ni ombre, bouton à plat (' + cercle.ombre + ')');
-verifier(cercle.icone !== 'rgb(255, 255, 255)' && cercle.icone === cercle.couleurTheme, 'icône « + » à la couleur du thème (' + cercle.icone + ')');
-// contraste de l'icône « + » (couleur du thème) sur le fond blanc du bouton
+const cercle = await ev(`(() => { const r = document.querySelector('.app-plus'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); const bar = document.querySelector('.app-nav-bas'); return { w: b.width, h: b.height, barH: bar.getBoundingClientRect().height, rayon: s.borderRadius, fond: s.backgroundColor, fondBarre: getComputedStyle(bar).backgroundColor, flou: s.backdropFilter, bordLarg: s.borderTopWidth, ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color, couleurTheme: (() => { const p = document.createElement("i"); p.style.color = "var(--cc-fond)"; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; })() }; })()`);
+verifier(cercle.w === cercle.h && cercle.h === cercle.barH && cercle.rayon === '50%', `bouton « + » : rond de ${cercle.w} px, à la hauteur de la barre (${cercle.barH} px)`);
+verifier(cercle.fond === cercle.fondBarre && /blur/.test(cercle.flou), `bouton « + » : verre de la même couleur que la barre (${cercle.fond}), flou léger`);
+verifier(cercle.bordLarg === '1px' && /rgba?\(/.test(cercle.ombre), 'bouton « + » : même fin liseré et même ombre douce que la barre');
+verifier(cercle.icone === 'rgb(255, 255, 255)', 'icône « + » blanche (' + cercle.icone + ')');
+// contraste de l'icône « + » blanche sur le kaki du thème (le fond de verre est presque opaque)
 const lumRgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number).map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }).reduce((t, x, i) => t + x * [0.2126, 0.7152, 0.0722][i], 0);
-const contrastePlus = 1.05 / (lumRgb(cercle.icone) + 0.05);
-verifier(contrastePlus >= 3, `icône « + » sur fond blanc : contraste ${contrastePlus.toFixed(2)}:1 (seuil WCAG des pictogrammes : 3:1)`);
+const contrastePlus = 1.05 / (lumRgb(cercle.couleurTheme) + 0.05);
+verifier(contrastePlus >= 3, `icône « + » blanche sur le fond de la couleur du thème : contraste ${contrastePlus.toFixed(2)}:1 (seuil WCAG des pictogrammes : 3:1)`);
 // barre du bas : capsule flottante détachée des bords
-const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return { gauche: b.left, droite: innerWidth - b.right, bas: innerHeight - b.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: s.position, actif: (() => { const a = e.querySelector('[aria-current="page"]'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
+const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); const bas = document.querySelector('#barre-bas'); const bb = bas.getBoundingClientRect(); return { gauche: bb.left, droite: innerWidth - bb.right, bas: innerHeight - bb.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: getComputedStyle(bas).position, actif: (() => { const a = e.querySelector('[aria-current="page"] .cp-nav-bas__icone'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
 verifier(barre.position === 'fixed' && barre.gauche >= 12 && barre.droite >= 12 && barre.bas >= 8, `barre du bas flottante, détachée des bords (${Math.round(barre.gauche)} px à gauche, ${Math.round(barre.droite)} à droite, ${Math.round(barre.bas)} du bas)`);
 verifier(barre.rayon >= barre.h / 2 - 1 && /blur/.test(barre.flou) && rgbaDe(barre.fond)[3] < 0.97, `capsule : coins en demi-cercle (${barre.rayon} px pour ${Math.round(barre.h)} px de haut), flou léger, fond kaki`);
-verifier((rgbaDe(barre.actif.fond)[3] ?? 1) >= 0.95 && rgbaDe(barre.actif.fond)[0] > 240 && barre.actif.texte === 'rgb(69, 78, 37)', 'onglet actif : capsule sable clair opaque, texte kaki foncé');
+verifier((rgbaDe(barre.actif.fond)[3] ?? 1) >= 0.95 && rgbaDe(barre.actif.fond)[0] > 240 && barre.actif.texte === 'rgb(69, 78, 37)', 'onglet actif : pastille sable clair opaque derrière l\'icône kaki foncé');
 await ev(`window.scrollTo(0, document.documentElement.scrollHeight)`); await sleep(300);
 const sousBarre = await ev(`(() => { const barre = document.querySelector('.app-nav-bas').getBoundingClientRect(); const dernier = [...document.querySelectorAll('#contenu .pg > *')].pop().getBoundingClientRect(); return { fin: dernier.bottom, hautBarre: barre.top }; })()`);
 verifier(sousBarre.fin <= sousBarre.hautBarre - 4, `en bas de page, le dernier élément reste au-dessus de la barre (${Math.round(sousBarre.fin)} px < ${Math.round(sousBarre.hautBarre)} px)`);
@@ -248,7 +246,7 @@ await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-m
 log('=== REBOND DES BOUTONS (étape D) ===');
 await aller2('#/accueil'); await sleep(500);
 verifier(await ev(`(()=>{const b=getComputedStyle(document.querySelector('.cp-btn')).transitionTimingFunction;return /1\.56/.test(b)})()`), 'boutons : courbe à dépassement (ressort) au relâchement');
-verifier(await ev(`(()=>{const a=document.querySelector('.app-plus__rond');return /1\.56/.test(getComputedStyle(a).transitionTimingFunction)})()`), 'bouton « + » : courbe à dépassement');
+verifier(await ev(`(()=>{const a=document.querySelector('.app-plus');return /1\.56/.test(getComputedStyle(a).transitionTimingFunction)})()`), 'bouton « + » : courbe à dépassement');
 verifier(await ev(`import('/js/conseils.js').then(m=>m.CONSEILS.length===12 && m.CONSEILS.every(c=>c.source && !/confirmer/i.test(c.source)))`), 'conseils : 12 conseils, aucune mention « à confirmer » dans les sources');
 
 log('=== PROTECTION DE FLUIDITÉ ===');

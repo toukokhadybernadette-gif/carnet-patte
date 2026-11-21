@@ -146,13 +146,15 @@ export function analyser(json) {
     const id = `${el.type}/${el.id}`;
     if (!cat || !Number.isFinite(lat) || !Number.isFinite(lon) || vus.has(id)) continue;
     vus.add(id);
+    const nom = nettoyer(t.name || t.operator || t.brand, 160);
     lieux.push({
       id, cat: cat.id, lat, lon,
-      nom: nettoyer(t.name || t.operator || t.brand, 160),
+      nom,
       adresse: adresse(t),
       tel: telephone(t),
       horaires: nettoyer(t.opening_hours, 300),
       site: siteWeb(t),
+      rue: nom ? '' : nettoyer(t['addr:street'], 80),
     });
   }
   return lieux;
@@ -301,16 +303,17 @@ export function cercleCouvert(index, centre, rayonKm) {
     .every((a) => dansFrance(index, { lat: centre.lat + dLat * Math.sin(a), lon: centre.lon + dLon * Math.cos(a) }));
 }
 
-/** Une ligne de fichier [id, catégorie, lat, lon, nom, adresse, tél., horaires, site] devient un lieu ; null si elle est invalide. */
+/** Une ligne de fichier [id, catégorie, lat, lon, nom, adresse, tél., horaires, site, rue] devient un lieu ; null si elle est invalide. */
 export function lieuDepuisLigne(ligne) {
   if (!Array.isArray(ligne)) return null;
-  const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = ''] = ligne;
+  const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = '', rue = ''] = ligne;
   const cat = CODES_CATEGORIES[c];
   if (typeof id !== 'string' || !/^[nwr]\d+$/.test(id) || !cat || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   return {
     id: `${TYPES_OSM[id[0]]}/${id.slice(1)}`, cat, lat, lon,
     nom: nettoyer(nom, 160), adresse: nettoyer(adr), tel: telephone({ phone: nettoyer(tel, 60) }), horaires: nettoyer(hor, 300),
     site: /^https?:\/\/[^\s<>"']+$/i.test(site) ? String(site).slice(0, 200) : '',
+    rue: nom ? '' : nettoyer(rue, 80),
   };
 }
 

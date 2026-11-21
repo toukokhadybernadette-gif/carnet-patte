@@ -29,23 +29,38 @@ let jeton = 0;                      // change à chaque affichage de la page : l
 let pageActive = null;              // { afficher, majCarte, focusVille, progression } de la page actuellement affichée
 let minuteurLent = 0;
 
+const SEUIL_BEAUCOUP = 300;           // au-delà, on propose un rayon plus petit
+
+function chargerScript(src) {
+  return new Promise((ok, ko) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = ok;
+    s.onerror = () => ko(new Error(src));
+    document.head.append(s);
+  });
+}
+
+/** Leaflet 1.9.4 puis Leaflet.markercluster 1.5.3 (regroupement des marqueurs en bulles), tous deux hébergés dans assets/. Sans le plugin, la carte marche quand même (marqueurs seuls). */
 function chargerLeaflet() {
   if (window.L?.map) return Promise.resolve(window.L);
-  chargementLeaflet ??= new Promise((ok, ko) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = 'assets/leaflet/leaflet.css';
-    const js = document.createElement('script');
-    js.src = 'assets/leaflet/leaflet.js';
-    js.onload = () => ok(window.L);
-    js.onerror = () => { chargementLeaflet = null; ko(new Error('Leaflet')); };
-    document.head.append(css, js);
-  });
+  chargementLeaflet ??= (async () => {
+    for (const href of ['assets/leaflet/leaflet.css', 'assets/leaflet-markercluster/MarkerCluster.css']) {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = href;
+      document.head.append(css);
+    }
+    await chargerScript('assets/leaflet/leaflet.js');
+    try { await chargerScript('assets/leaflet-markercluster/leaflet.markercluster.js'); } catch (e) { console.warn('[Carte Patte] regroupement des marqueurs indisponible :', e.message); }
+    return window.L;
+  })().catch((e) => { chargementLeaflet = null; throw e; });
   return chargementLeaflet;
 }
 
 const puce = (c) => `<span class="ca-puce" style="--ca-c:${c.couleur}" aria-hidden="true">${icone(c.icone, { taille: 16 })}</span>`;
-const nomLieu = (l) => l.nom || `${D.categorie(l.cat).un} (sans nom)`;
+/** Le nom du lieu ; sans nom : la catégorie et la rue la plus proche si elle est connue (« Vétérinaire · rue des Lilas »), sinon « Vétérinaire (sans nom) ». */
+const nomLieu = (l) => l.nom || (l.rue ? `${D.categorie(l.cat).un} · ${l.rue}` : `${D.categorie(l.cat).un} (sans nom)`);
 const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const hoteSite = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };
@@ -84,8 +99,9 @@ export function rendre(zone) {
         <p class="ca-statut" id="ca-statut" role="status"></p>
         <p class="ca-source" id="ca-source" hidden></p>
         <div id="ca-erreur"></div>
+        <div id="ca-suggestion" hidden></div>
         <div class="cp-filtres ca-filtres" id="ca-filtres" role="group" aria-label="Types de lieux" hidden>
-          ${D.CATEGORIES.map((c) => `<button type="button" class="cp-filtre ca-filtre" aria-pressed="${etat.actives.has(c.id)}" data-cat="${c.id}">${puce(c)}${echapper(c.nom)} <span class="cp-filtre__nombre" data-nombre="${c.id}"></span></button>`).join('')}
+          ${D.CATEGORIES.map((c) => `<button type="button" class="cp-filtre ca-filtre" style="--ca-c:${c.couleur}" aria-pressed="${etat.actives.has(c.id)}" data-cat="${c.id}">${puce(c)}${echapper(c.nom)} <span class="cp-filtre__nombre" data-nombre="${c.id}"></span></button>`).join('')}
         </div>
         <div id="ca-vide" class="cp-carte">${vide({ niveau: 3, icone: 'map-pin', titre: 'Où êtes-vous ?', texte: 'Touchez « Autour de moi », ou entrez une ville ou un code postal : les lieux utiles apparaîtront sur la carte.' })}</div>
         <div id="ca-zone" hidden>
@@ -104,6 +120,7 @@ export function rendre(zone) {
   const elStatut = $('ca-statut');
   const elSource = $('ca-source');
   const elErreur = $('ca-erreur');
+  const elSuggestion = $('ca-suggestion');
   const elFiltres = $('ca-filtres');
   const elVide = $('ca-vide');
   const elZone = $('ca-zone');
@@ -166,7 +183,7 @@ export function rendre(zone) {
         <span class="ca-lieu__corps">
           <span class="ca-lieu__nom">${echapper(nomLieu(l))}</span>
           <span class="ca-lieu__meta">${echapper(c.un)} · ${D.formaterDistance(l.d)}</span>
-          ${l.adresse ? `<span class="ca-lieu__adresse">${echapper(l.adresse)}</span>` : ''}
+          ${l.adresse && !(l.rue && l.adresse === l.rue) ? `<span class="ca-lieu__adresse">${echapper(l.adresse)}</span>` : ''}
         </span>
         <span class="ca-lieu__fleche" aria-hidden="true">${icone('chevron-right', { taille: 18 })}</span>
       </button></li>`;
@@ -191,7 +208,7 @@ export function rendre(zone) {
         ${bouton({ seul: true, variante: 'discret', icone: 'x', titre: 'Fermer la fiche', attrs: { id: 'ca-fermer', class: 'cp-btn cp-btn--discret cp-btn--icone', 'aria-label': 'Fermer la fiche' } })}
       </header>
       <ul class="ca-fiche__infos">
-        <li>${icone('map-pin', { taille: 18 })}<span>${l.adresse ? echapper(l.adresse) : '<span class="ca-absent">Adresse non indiquée</span>'}</span></li>
+        <li>${icone('map-pin', { taille: 18 })}<span>${l.adresse ? echapper(l.adresse) : l.rue ? `Près de : ${echapper(l.rue)}<span class="ca-note"> (rue la plus proche d'après OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Adresse non indiquée</span>'}</span></li>
         <li>${icone('phone', { taille: 18 })}<span>${l.tel ? echapper(l.tel.affiche) : '<span class="ca-absent">Téléphone non indiqué</span>'}</span></li>
         ${l.site ? `<li>${icone('globe', { taille: 18 })}<span><a href="${echapper(l.site)}" target="_blank" rel="noopener noreferrer">Site web<span class="ca-note"> (${echapper(hoteSite(l.site))})</span><span class="cp-sr"> — s'ouvre dans un nouvel onglet</span></a></span></li>` : ''}
         <li>${icone('clock', { taille: 18 })}<span>${h ? `${echapper(h.texte)}<span class="ca-note"> (horaires indiqués dans OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Horaires non indiqués</span>'}</span></li>
@@ -212,9 +229,22 @@ export function rendre(zone) {
     vueCarte?.parId.forEach((m, id) => m.getElement()?.classList.toggle('is-selection', id === etat.selection));
   }
 
+  /** Plus de 300 lieux dans le rayon : on propose le plus grand rayon plus petit qui en garde 300 au plus (au pire 2 km). */
+  function afficherSuggestion() {
+    const n = etat.lieux.length;
+    const plusPetits = [...D.RAYONS_KM].filter((r) => r < etat.rayon).sort((a, b) => b - a);
+    const propose = plusPetits.find((r) => etat.lieux.filter((l) => l.d <= r * 1000).length <= SEUIL_BEAUCOUP) ?? D.RAYONS_KM[0];
+    const montrer = !!etat.centre && !etat.occupe && n > SEUIL_BEAUCOUP && plusPetits.length > 0;
+    elSuggestion.hidden = !montrer;
+    elSuggestion.innerHTML = montrer
+      ? `<div class="ca-suggestion">${alerte({ type: 'info', texte: `Beaucoup de lieux ici (${n}) : passer à ${propose} km ?` })}${bouton({ texte: `Passer à ${propose} km`, icone: 'search', variante: 'secondaire', attrs: { id: 'ca-suggestion-bouton', 'data-rayon': String(propose), class: 'cp-btn cp-btn--secondaire' } })}</div>`
+      : '';
+  }
+
   function afficher() {
     afficherStatut();
     afficherErreur();
+    afficherSuggestion();
     afficherFiltres();
     elVide.hidden = !!etat.centre;
     elZone.hidden = !etat.centre;
@@ -224,9 +254,27 @@ export function rendre(zone) {
 
   // ----- La carte Leaflet -----
 
+  const iconesParCategorie = new Map();
   function iconeMarqueur(L, l) {
-    const c = D.categorie(l.cat);
-    return L.divIcon({ className: 'ca-marqueur', html: `<span style="background:${c.couleur}">${icone(c.icone, { taille: 18 })}</span>`, iconSize: [44, 44], iconAnchor: [22, 22] });
+    if (!iconesParCategorie.has(l.cat)) {
+      const c = D.categorie(l.cat);
+      iconesParCategorie.set(l.cat, L.divIcon({ className: 'ca-marqueur', html: `<span style="background:${c.couleur}">${icone(c.icone, { taille: 18 })}</span>`, iconSize: [44, 44], iconAnchor: [22, 22] }));
+    }
+    return iconesParCategorie.get(l.cat);
+  }
+
+  /** Les marqueurs proches se regroupent en bulles avec le nombre de lieux ; une bulle s'ouvre au toucher (zoom) ou en zoomant la carte. */
+  function groupeDeMarqueurs(L) {
+    if (!L.markerClusterGroup) return L.layerGroup();
+    return L.markerClusterGroup({
+      showCoverageOnHover: false, zoomToBoundsOnClick: true, spiderfyOnMaxZoom: true, maxClusterRadius: 50, chunkedLoading: true, animate: !reduit(),
+      iconCreateFunction: (groupe) => {
+        const n = groupe.getChildCount();
+        const taille = n < 10 ? 'petit' : n < 50 ? 'moyen' : 'grand';
+        return L.divIcon({ className: `ca-groupe ca-groupe--${taille}`, iconSize: [44, 44],
+          html: `<span class="ca-groupe__n" aria-hidden="true">${n}</span><span class="cp-sr">${n} lieux regroupés, touchez pour zoomer</span>` });
+      },
+    });
   }
 
   async function majCarte(recentrer) {
@@ -244,7 +292,7 @@ export function rendre(zone) {
         maxZoom: 19,
         attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
       }).addTo(map);
-      vueCarte = { map, marqueurs: L.layerGroup().addTo(map), parId: new Map(), cercle: null, centre: null };
+      vueCarte = { map, marqueurs: groupeDeMarqueurs(L).addTo(map), parId: new Map(), cercle: null, centre: null };
       recentrer = true;
     }
     const v = vueCarte;
@@ -260,12 +308,16 @@ export function rendre(zone) {
     }
     v.marqueurs.clearLayers();
     v.parId.clear();
+    const marqueurs = [];
     for (const l of visibles()) {
       const m = L.marker([l.lat, l.lon], { icon: iconeMarqueur(L, l), title: nomLieu(l), alt: nomLieu(l), keyboard: true, riseOnHover: true });
       m.on('click', () => choisir(l.id));
-      v.marqueurs.addLayer(m);
+      // un marqueur qui sort d'une bulle (zoom) retrouve sa mise en évidence s'il est le lieu choisi
+      m.on('add', () => m.getElement()?.classList.toggle('is-selection', l.id === etat.selection));
+      marqueurs.push(m);
       v.parId.set(l.id, m);
     }
+    if (v.marqueurs.addLayers) v.marqueurs.addLayers(marqueurs); else marqueurs.forEach((m) => v.marqueurs.addLayer(m));
     afficherFiche();
   }
 
@@ -280,12 +332,34 @@ export function rendre(zone) {
 
   // ----- Choisir un lieu : la fiche s'ouvre sous la carte -----
 
+  /**
+   * Le lieu choisi est peut-être caché dans une bulle : on zoome sur lui jusqu'à ce qu'il en sorte (et on déplie la bulle s'il reste collé à d'autres).
+   * (Pas de zoomToShowLayer du plugin : il laisse un écouteur en attente si les marqueurs sont remplacés entre-temps, et il plante à chaque déplacement.)
+   */
+  function faireApparaitre(m, l) {
+    if (!vueCarte) return;
+    const { map, marqueurs } = vueCarte;
+    const pos = [l.lat, l.lon];
+    if (!m || !marqueurs.getVisibleParent || !marqueurs.hasLayer(m)) { map.panTo(pos, { animate: !reduit() }); return; }
+    const deplier = () => {
+      if (vueCarte?.map !== map || !marqueurs.hasLayer(m)) return;
+      const parent = marqueurs.getVisibleParent(m);
+      if (parent && parent !== m && parent.spiderfy) parent.spiderfy();
+      afficherFiche();
+    };
+    if (marqueurs.getVisibleParent(m) === m && map.getBounds().contains(m.getLatLng())) { map.panTo(pos, { animate: !reduit() }); return; }
+    const zoom = Math.max(map.getZoom(), 16);
+    if (map.getZoom() >= zoom && map.distance(map.getCenter(), pos) < 2) { deplier(); return; } // déjà centré dessus : seule une bulle collée peut encore le cacher
+    map.once('moveend', () => setTimeout(deplier, 400)); // le temps que la bulle se défasse
+    map.setView(pos, zoom, { animate: !reduit() });
+  }
+
   function choisir(id) {
     const l = etat.lieux.find((x) => x.id === id);
     if (!l) return;
     etat.selection = id;
     afficherFiche();
-    vueCarte?.map.panTo([l.lat, l.lon], { animate: !reduit() });
+    faireApparaitre(vueCarte?.parId.get(id), l);
     elFiche.focus({ preventScroll: true });
     elFiche.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' });
   }
@@ -393,6 +467,13 @@ export function rendre(zone) {
     afficherListe();
     afficherFiche();
     majCarte(false);
+  });
+  elSuggestion.addEventListener('click', (e) => {
+    const b = e.target.closest('#ca-suggestion-bouton');
+    const radio = b && zone.querySelector(`input[name=ca-rayon][value="${b.dataset.rayon}"]`);
+    if (!radio) return;
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
   });
   elListe.addEventListener('click', (e) => { const b = e.target.closest('.ca-lieu'); if (b) choisir(b.dataset.id); });
   elFiche.addEventListener('click', (e) => { if (e.target.closest('#ca-fermer')) fermerFiche(); });

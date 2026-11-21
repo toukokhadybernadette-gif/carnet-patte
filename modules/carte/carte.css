@@ -113,3 +113,34 @@ path.ca-cercle { stroke: var(--cp-foret); fill: var(--cp-foret); }
   .ca-acces:active, .ca-lieu:active { transform: none; }
   .ca-fiche { animation: none; }
 }
+
+/* ----- Filtres : une seule rangée de petites pastilles qui défile ; fond clair quand le filtre est actif ----- */
+.cp-filtres.ca-filtres { flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.ca-filtres::-webkit-scrollbar { display: none; }
+.cp-filtres .ca-filtre { flex: none; height: 32px; min-height: 32px; padding: 0 10px 0 4px; gap: 6px; font-size: 13px; line-height: 1; white-space: nowrap; }
+.cp-filtres .ca-filtre[aria-pressed="true"] { background: rgba(255, 255, 255, .92); color: var(--cp-foret-texte); border: 1px solid var(--ca-c); box-shadow: 0 1px 2px rgba(var(--cp-ombre-rgb), .12); font-weight: 600; }
+.cp-filtres .ca-filtre:not([aria-pressed="true"]):not(:disabled) { background: transparent; color: var(--cp-texte-doux); border: 1px dashed var(--cp-bordure-forte); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ca-filtre .ca-puce { width: 22px; height: 22px; margin-left: 0; }
+.ca-filtre:not([aria-pressed="true"]) .ca-puce { filter: grayscale(.85); opacity: .7; }
+.ca-filtre .cp-filtre__nombre { background: none; padding: 0; min-width: 0; font-size: 12px; opacity: .85; }
+
+/* ----- Bulles de regroupement (Leaflet.markercluster) : le nombre de lieux, la taille grandit avec ----- */
+.ca-groupe { background: none; border: 0; }
+.ca-groupe__n { display: grid; place-items: center; width: var(--t, 34px); height: var(--t, 34px); margin: calc((44px - var(--t, 34px)) / 2); box-sizing: border-box; border-radius: 50%;
+  background: var(--cp-foret); color: #FFFFFF; font: 700 13px/1 var(--cp-police-texte); border: 3px solid rgba(255, 255, 255, .92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .35), 0 0 0 5px rgba(255, 255, 255, .35);
+  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
+.ca-groupe--petit { --t: 34px; }
+.ca-groupe--moyen { --t: 40px; }
+.ca-groupe--grand { --t: 44px; }
+.ca-groupe--grand .ca-groupe__n { font-size: 14px; }
+.ca-groupe:hover .ca-groupe__n { transform: scale(1.1); }
+.ca-groupe:active .ca-groupe__n { transform: scale(.92); transition-duration: 90ms; transition-timing-function: ease-out; }
+.ca-groupe:focus-visible { outline: none; }
+.ca-groupe:focus-visible .ca-groupe__n { box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px var(--cp-focus); }
+@media (prefers-reduced-motion: reduce) { .ca-groupe__n { transition-duration: 1ms; } .ca-groupe:hover .ca-groupe__n, .ca-groupe:active .ca-groupe__n { transform: none; } }
+
+/* ----- Suggestion « Beaucoup de lieux ici : passer à 2 km ? » ----- */
+#ca-suggestion[hidden] { display: none; }
+.ca-suggestion { display: grid; gap: var(--cp-espace-2); justify-items: start; }
+.ca-suggestion .cp-alerte { width: 100%; }

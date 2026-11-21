@@ -30,6 +30,8 @@ MODIFICATIONS APPORTÉES AUX DONNÉES D'ORIGINE
   - Pour un bâtiment ou une surface : un seul point (le centre du rectangle qui l'englobe).
   - Champs gardés : identifiant OpenStreetMap, catégorie, position (arrondie à environ 1 m), nom, adresse,
     téléphone, horaires, site web. Tous les autres champs sont supprimés, notamment les COURRIELS.
+  - Pour un lieu SANS NOM : la rue (colonne « rue »), soit celle de son adresse OpenStreetMap, soit celle du point
+    d'adresse OpenStreetMap le plus proche s'il est à moins de 150 m (donnée déduite, à confirmer sur place).
   - Les objets marqués abandonnés ou désaffectés sont ignorés ; un même lieu saisi deux fois (point et bâtiment,
     même nom, moins de 80 m) n'est gardé qu'une fois.
   - Les relations OpenStreetMap (rares) ne sont pas reprises.
