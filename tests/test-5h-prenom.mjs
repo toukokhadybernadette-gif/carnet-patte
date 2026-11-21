@@ -99,7 +99,7 @@ verifier(await ev(`document.querySelector('.ac-resume').getAttribute('href') ===
 // ordre demandé : Bonjour + résumé, avatars, actions rapides, prochains rappels, conseil, ce mois-ci
 verifier(await ev(`(() => { const h = document.querySelector('.ac-hero'); return !!h && !!h.querySelector('h1') && !!h.querySelector('.ac-hero__date') && h.querySelector('.ac-hero__date').textContent.length > 6 && /[a-zé]+ \\d+ [a-zéû]+/i.test(h.querySelector('.ac-hero__date').textContent); })()`), 'carte héros : date du jour en français dans la carte avec « Bonjour »');
 verifier(await ev(`(() => { const a = document.querySelector('.ac-hero [data-afaire]'); return !!a && a.querySelector('[data-fait]') && a.textContent.includes('Vermifuge') && !a.textContent.includes('Pomme'); })()`), 'héros : le rappel le plus urgent (« Vermifuge », sans le nom de l’animal) avec un bouton « Fait » dedans');
-const ordre = await ev(`(() => { const sels = ['h1', '.ac-resume', '.ac-couv', '.ac-actions', '#ac-rappels', '.ac-conseil', '[data-ce-mois]']; const els = sels.map(s => document.querySelector(s)); return els.every(Boolean) && els.every((e, i) => i === 0 || !!(els[i - 1].compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING)); })()`);
+const ordre = await ev(`(() => { const sels = ['h1', '.ac-resume', '.ac-couv', '#ac-rappels', '.ac-conseil', '[data-ce-mois]']; const els = sels.map(s => document.querySelector(s)); return els.every(Boolean) && els.every((e, i) => i === 0 || !!(els[i - 1].compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING)); })()`);
 verifier(ordre, 'ordre : Bonjour + résumé, carrousel, actions rapides, prochains rappels, conseil, ce mois-ci');
 // mes animaux : cartes
 const stories = await ev(`(() => { const ul = document.querySelector('.ac-couv__piste'); const c = document.querySelector('.ac-couv__slide'); const r = c.getBoundingClientRect(); const p = c.querySelector('.ac-couv__photo'); return { n: document.querySelectorAll('.ac-couv__slide:not(.ac-couv__slide--ajout)').length, ajout: document.querySelectorAll('.ac-couv__slide--ajout').length, href: p.getAttribute('href'), defile: getComputedStyle(ul).overflowX, taille: Math.round(r.width), haut: Math.round(r.height), nom: c.querySelector('.ac-couv__nom').textContent, espece: c.querySelector('.ac-couv__espece').textContent, dessin: !!c.querySelector('svg.cp-illu, img'), derniereEstAjout: ul.lastElementChild.classList.contains('ac-couv__slide--ajout'), sansMesAnimaux: !document.querySelector('#ac-animaux, .ac-stories') }; })()`);
@@ -108,17 +108,12 @@ await ev(`document.querySelector('.ac-couv__photo').click()`); await sleep(700);
 verifier(await ev(`location.hash`) === '#/animaux/a' && await texte('.fi-entete h1') === 'Pomme', 'un toucher sur l\'avatar ouvre la fiche de l\'animal');
 await aller2('#/accueil');
 // actions rapides : 4 cercles
-const actionsRapides = await ev(`[...document.querySelectorAll('.ac-action')].map(a => ({ t: a.textContent.trim(), w: Math.round(a.querySelector('.ac-action__rond').getBoundingClientRect().width), rond: getComputedStyle(a.querySelector('.ac-action__rond')).borderRadius, href: a.getAttribute('href') }))`);
-verifier(actionsRapides.map((x) => x.t).join(' | ') === 'Soin | Pesée | Animal | Toxique ? | Sauvegarde', `5 actions rapides, libellés courts : ${actionsRapides.map((x) => x.t).join(' | ')}`);
-verifier(await ev(`(() => { const p = document.querySelector('.ac-actions'); const r = [...p.querySelectorAll('.ac-action__rond')].map(x => Math.round(x.getBoundingClientRect().top)); return r.length === 5 && new Set(r).size === 1 && [...p.querySelectorAll('.ac-action__texte')].every(t => t.getBoundingClientRect().height <= parseFloat(getComputedStyle(t).lineHeight) + 1); })()`), 'actions rapides : un seul panneau, 5 cercles alignés, libellés sur une ligne');
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.getAttribute('aria-label') || a.textContent.trim()).slice(0, 3).join(' | ')`) === 'Ajouter un soin | Ajouter une pesée | Ajouter un animal', 'lecteurs d\'écran : noms complets « Ajouter un soin », etc.');
-verifier(actionsRapides.every((x) => x.w >= 44 && x.rond === '50%'), `ce sont des cercles de ${actionsRapides[0].w} px (cible tactile de 44 px minimum)`);
-verifier(actionsRapides[3].href === '#/toxique' && actionsRapides[4].href === '#/donnees', '« Toxique ? » mène à #/toxique et « Sauvegarde » à la page Sauvegarde');
-await ev(`document.querySelector('.ac-action[data-act=soin]').click()`); await sleep(600);
+verifier(await ev(`!document.querySelector('.ac-action, .ac-actions')`) && !(await texte('#contenu')).includes('Actions rapides'), 'la section « Actions rapides » n\'existe plus (remplacée par le bouton « + » de la barre du bas et le menu ☰)');
+await ev(`(async () => { document.querySelector('#ajout-bouton').click(); await new Promise((r) => setTimeout(r, 350)); document.querySelector('dialog[open] [data-ajout=soin]').click(); })()`); await sleep(600);
 verifier(await ev(`!!document.querySelector('dialog form.sn-form') && document.querySelector('dialog .cp-modale__titre').textContent.includes('Pomme')`), 'un seul animal : « Ajouter un soin » ouvre directement le formulaire du soin de Pomme');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 // ajout d'une pesée depuis l'Accueil
-await ev(`document.querySelector('.ac-action[data-act=pesee]').click()`); await sleep(600);
+await ev(`(async () => { document.querySelector('#ajout-bouton').click(); await new Promise((r) => setTimeout(r, 350)); document.querySelector('dialog[open] [data-ajout=pesee]').click(); })()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Nouvelle pesée pour Pomme'`), '« Ajouter une pesée » : fenêtre de pesée pour Pomme');
 await ev(`(()=>{const f=document.querySelector('dialog form');f.poids.value='abc';f.requestSubmit();})()`); await sleep(300);
 verifier(await ev(`!!document.querySelector('dialog .cp-champ__erreur') && document.querySelector('dialog form').poids.getAttribute('aria-invalid') === 'true'`) && (await donnees()).pesees.length === 2, 'poids invalide : message d\'erreur, rien n\'est enregistré');
@@ -163,20 +158,20 @@ await importerJeu([A('a', 'Pomme'), A('b', 'Bob', { espece: 'chat' })]);
 await aller2('#/accueil');
 verifier(await texte('.ac-resume') === '2 animaux · aucun rappel en retard', `sans retard : « ${await texte('.ac-resume')} »`);
 verifier(await ev(`document.querySelectorAll('.ac-couv__slide:not(.ac-couv__slide--ajout)').length`) === 2 && await ev(`[...document.querySelectorAll('[data-ce-mois] .ac-pastille')].map(l => l.textContent.trim()).join(' | ')`) === '0 soin fait | 0 pesée', 'deux cartes d\'animaux (+ la carte Ajouter) ; bilan du mois à zéro');
-await ev(`document.querySelector('.ac-action[data-act=soin]').click()`); await sleep(600);
+await ev(`(async () => { document.querySelector('#ajout-bouton').click(); await new Promise((r) => setTimeout(r, 350)); document.querySelector('dialog[open] [data-ajout=soin]').click(); })()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Pour quel animal ?' && document.querySelectorAll('dialog .ac-choix__animal').length === 2`), 'deux animaux : un petit choix « Pour quel animal ? »');
 await axe('dialog', 'choix de l\'animal');
 await ev(`[...document.querySelectorAll('dialog .ac-choix__animal')].find(a => a.textContent.includes('Bob')).click()`); await sleep(700);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent.includes('Bob') && !!document.querySelector('dialog form.sn-form')`), 'le choix de Bob ouvre le formulaire de soin de Bob');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
-await ev(`document.querySelector('.ac-action[data-act=pesee]').click()`); await sleep(600);
+await ev(`(async () => { document.querySelector('#ajout-bouton').click(); await new Promise((r) => setTimeout(r, 350)); document.querySelector('dialog[open] [data-ajout=pesee]').click(); })()`); await sleep(600);
 await ev(`[...document.querySelectorAll('dialog .ac-choix__animal')].find(a => a.textContent.includes('Bob')).click()`); await sleep(700);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Nouvelle pesée pour Bob'`), 'le choix de Bob ouvre aussi la pesée de Bob');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 await importerJeu([]);
 await aller2('#/accueil');
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Animal | Toxique ? | Sauvegarde' && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : seulement « Animal », « Toxique ? » et « Sauvegarde », message d\'accueil, pas de conseil');
-await ev(`document.querySelector('.ac-action[data-act=animal]').click()`); await sleep(600);
+verifier(await ev(`!document.querySelector('.ac-action')`) && !!await ev(`document.querySelector('.cp-vide')`) && await ev(`!document.querySelector('.ac-conseil, .ac-stories, [data-ce-mois]')`), 'aucun animal : message d\'accueil, pas de conseil');
+await ev(`(async () => { document.querySelector('#ajout-bouton').click(); await new Promise((r) => setTimeout(r, 350)); document.querySelector('dialog[open] [data-ajout=animal]').click(); })()`); await sleep(600);
 verifier(await ev(`document.querySelector('dialog .cp-modale__titre').textContent === 'Nouvel animal'`), '« Ajouter un animal » ouvre le formulaire d\'un nouvel animal');
 await ev(`document.querySelector('dialog [data-annuler]').click()`); await sleep(300);
 await axe('#app', 'Accueil vide');

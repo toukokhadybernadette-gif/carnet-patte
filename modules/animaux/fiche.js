@@ -24,6 +24,9 @@ const ONGLETS = [
 const PAS_HISTORIQUE = 30; // nombre d'événements affichés à la fois
 const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
+/** Longueur du plus long mot d'un nom : la taille du titre s'adapte pour qu'un mot ne soit jamais coupé au milieu (voir css/refonte.css). */
+const motLong = (nom) => Math.max(1, ...String(nom).split(/[s-]+/).map((m) => m.length));
+
 function avatarGrand(animal) {
   const photo = typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '';
   const rond = avatar({ grand: true, photo, nom: animal.nom, id: animal.id, couleur: couleurAnimal(animal), icone: infosEspece(animal).icone }).replace('class="cp-avatar', 'class="cp-avatar fi-avatar');
@@ -185,7 +188,7 @@ export function rendre(zone, id, soinCible = '') {
       <section class="cp-carte fi-entete" aria-label="Identité de l'animal">
         ${avatarGrand(animal)}
         <div class="fi-entete__texte">
-          <h1>${echapper(animal.nom)}</h1>
+          <h1 style="--mot-long: ${motLong(animal.nom)}">${echapper(animal.nom)}</h1>
           <p class="fi-entete__espece">${details}</p>
           <p class="fi-entete__naissance">${animal.naissance ? `Né(e) le ${formatDate(animal.naissance)} · ${age(animal.naissance)}` : 'Date de naissance inconnue'}</p>
         </div>

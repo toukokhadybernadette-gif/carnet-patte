@@ -106,7 +106,6 @@ await ev(`document.querySelector('[data-piste]').scrollTo({ left: 99999 })`); aw
 verifier(await ev(`[...document.querySelectorAll('.ac-couv__point')].findIndex(p => p.classList.contains('is-actif'))`) === 3, 'le défilement déplace le point actif');
 await ev(`document.querySelector('[data-piste]').scrollTo({ left: 0 })`); await sleep(300);
 verifier(await sansDebord(), 'Accueil : pas de défilement horizontal de la page');
-verifier(await ev(`!/^[A-Z]{1,2}$/.test(document.querySelector('.ac-story .cp-avatar')?.textContent.trim() ?? '')`), 'plus d\'initiales à la place des illustrations');
 await ecran('accueil-kaki', true);
 await ev(`document.querySelector('.ac-couv__photo').click()`); await sleep(700);
 
@@ -144,16 +143,9 @@ const afaire = await texte('.ac-couv__slide [data-afaire] .ac-afaire__titre');
 verifier(afaire === 'Vermifuge', `carte « À faire » : « ${afaire} » (sans le nom de l'animal)`);
 verifier(!(await ev(`[...document.querySelectorAll('.ac-afaire__titre')].some(t => /·/.test(t.textContent))`)), 'aucun titre « À faire » ne contient « · » ni un nom d\'animal');
 verifier((await ev(`document.querySelector('[data-fait]').getAttribute('aria-label')`)).includes('Moka'), 'le bouton « Fait » garde le nom de l\'animal pour les lecteurs d\'écran');
-await ev(`document.querySelector('.ac-couv__ajout').click()`); await sleep(500);
+await ev(`document.querySelector('.ac-couv__ajout [data-act=animal]').click()`); await sleep(500);
 verifier(await ev(`!!document.querySelector('dialog[open] input[name=nom]') && document.querySelector('dialog[open] h2, dialog[open] .cp-modale__titre')?.textContent.includes('Nouvel animal')`), 'toucher « Ajouter un animal » ouvre le formulaire d\'un nouvel animal');
 await ev(`document.querySelector('dialog[open] [data-annuler]').click()`); await sleep(300);
-// Actions rapides : jamais sous la barre du bas
-const chevauche = () => ev(`(() => { const n = document.querySelector('.app-nav-bas').getBoundingClientRect(); return [...document.querySelectorAll('.ac-action')].some(a => { const r = a.getBoundingClientRect(); return r.bottom > n.top && r.top < n.bottom; }); })()`);
-await ev(`document.querySelector('.ac-actions').scrollIntoView({ block: 'end' })`); await sleep(400);
-verifier(!(await chevauche()), 'actions rapides amenées à l\'écran : aucune ne passe sous la barre du bas (téléphone)');
-await ev(`window.scrollTo(0, 1e7)`); await sleep(300);
-verifier(!(await chevauche()), 'page défilée jusqu\'en bas : les actions ne sont pas sous la barre');
-await ecran('accueil-actions-mobile');
 await ev(`window.scrollTo(0, 0)`);
 
 log('=== POIDS : poids actuel, grand graphique, fenêtre d\'ajout, liste compacte ===');

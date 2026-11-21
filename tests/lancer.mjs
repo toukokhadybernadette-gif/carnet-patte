@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte]     (sans argument : tous les tests)
+// Usage : node tests/lancer.mjs [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]     (sans argument : tous les tests)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
 
 import http from 'node:http';
@@ -26,6 +26,7 @@ const TESTS = {
   retouches: 'test-retouches.mjs',
   toxique: 'test-toxique.mjs',
   refonte: 'test-refonte.mjs',
+  etroit: 'test-etroit.mjs',
 };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 

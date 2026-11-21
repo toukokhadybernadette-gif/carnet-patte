@@ -14,7 +14,7 @@ Depuis la racine du projet :
 
 ```
 node tests/lancer.mjs            # tous les tests
-node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique ou refonte
+node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique, refonte ou etroit
 node tests/lancer.mjs 5e 5f      # plusieurs
 ```
 
@@ -37,6 +37,7 @@ Les captures d'écran sont dans `tests/sortie/shots/`. Le dossier `tests/sortie/
 | `finitions` | `test-finitions.mjs` | Navigation, couleurs d'échéance, noms de soins, Accueil, résumés, barre du bas mobile |
 | `toxique` | `test-toxique.mjs` | Module « Toxique ? » : 80 fiches au moins, sources, aucune dose, numéros des centres antipoison, recherche (accents, majuscules), niveaux par espèce, « pas de fiche » jamais présenté comme « sans danger », action rapide de l'Accueil, trois largeurs, accessibilité |
 | `refonte` | `test-refonte.mjs` | Refonte du style : 12 thèmes de couleur + couleur personnalisée (aperçu immédiat, mémorisés sur l'appareil, couleurs d'urgence inchangées, contraste 4,5:1 mesuré sur chaque thème et sur plus de 500 couleurs de départ, puis par axe-core), Accueil (carrousel, diapositive « Ajouter », carte « À faire »), Poids (poids actuel, grand graphique, fenêtre d'ajout), Rappels sur ordinateur, dates en français, illustrations, trois largeurs |
+| `etroit` | `test-etroit.mjs` | Écran de 375 px avec des noms longs (animaux, espèces, soins, fiches Toxique ?) : rien ne déborde, aucun texte n'en chevauche un autre, aucun mot coupé au milieu ; menu ☰, bouton rond « + » de la barre du bas, plus d'« Actions rapides », trait rouge des rappels, carrousel et diapositive « Ajouter » |
 | `5g` | `test-5g-pesees.mjs` | Pesées (validation, petits poids, suppression), graphique (alignement des points sur les graduations à 1 px près, info-bulle à la souris et au toucher), Sauvegarde, Bientôt, page introuvable |
 
 Chaque test passe sur trois largeurs : ordinateur (1280 px), tablette (820 px) et mobile (390 px).

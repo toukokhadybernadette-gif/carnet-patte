@@ -15,6 +15,8 @@ import { echapper } from './utils.js';
 import { bouton, avatar, couleurAnimal } from './composants.js';
 import { compterEnRetard } from '../modules/animaux/rappels.js';
 import { nomEspece } from '../modules/animaux/commun.js';
+import { ouvrirMenu } from './menu.js';
+import { ouvrirAjoutRapide } from './ajout-rapide.js';
 
 // `actif(seg)` dit si l'entrée correspond à la page affichée (seg = morceaux de l'adresse : ['animaux', 'rappels']).
 export const NAV = [
@@ -78,9 +80,14 @@ export function construireNavigation() {
       <ul class="cp-nav-liste app-lateral__pied">${NAV.filter((n) => n.pied).map(itemLateral).join('')}</ul>
     </nav>`;
 
-  el('nav-bas').innerHTML = `<div class="cp-nav-bas">${NAV.filter((n) => n.bas).map(itemBas).join('')}</div>`;
+  // Barre du bas : le bouton rond « + » est au centre (2 entrées de chaque côté)
+  const basEntrees = NAV.filter((n) => n.bas).map(itemBas);
+  const milieu = Math.ceil(basEntrees.length / 2);
+  const boutonPlus = `<button type="button" class="app-plus" id="ajout-bouton" aria-haspopup="dialog" aria-label="Ajouter"><span class="app-plus__rond" aria-hidden="true">${icone('plus', { taille: 28 })}</span></button>`;
+  el('nav-bas').innerHTML = `<div class="cp-nav-bas">${[...basEntrees.slice(0, milieu), boutonPlus, ...basEntrees.slice(milieu)].join('')}</div>`;
 
   el('barre-haut').innerHTML = `
+    <button type="button" class="cp-btn cp-btn--discret cp-btn--icone app-menu-bouton" id="menu-bouton" aria-label="Menu" aria-haspopup="dialog" aria-expanded="false">${icone('menu', { taille: 22 })}</button>
     ${logo()}
     <div class="app-recherche" role="search">
       <div class="cp-champ__zone">
@@ -92,10 +99,14 @@ export function construireNavigation() {
       <span class="cp-sr" id="recherche-etat" role="status"></span>
     </div>
     <div class="app-haut__actions">
+      ${bouton({ texte: 'Ajouter', icone: 'plus', taille: 's', attrs: { class: 'cp-btn cp-btn--principal cp-btn--s app-ajout-haut', id: 'ajout-haut', 'aria-haspopup': 'dialog' } })}
       ${bouton({ variante: 'discret', seul: true, icone: 'search', titre: 'Rechercher', attrs: { class: 'cp-btn cp-btn--discret cp-btn--icone app-bouton-recherche', 'aria-expanded': 'false', id: 'recherche-bouton' } })}
     </div>`;
 
   el('evitement').addEventListener('click', () => el('contenu').focus());
+  el('menu-bouton').addEventListener('click', (e) => ouvrirMenu(e.currentTarget));
+  el('ajout-bouton').addEventListener('click', ouvrirAjoutRapide);
+  el('ajout-haut').addEventListener('click', ouvrirAjoutRapide);
   document.querySelector('[data-bientot] .app-bientot__titre').addEventListener('click', () => ouvrirBientot(!bientotOuvert()));
   initialiserRecherche();
   majRappels();
