@@ -242,7 +242,7 @@ verifier(await ev(`getComputedStyle(document.querySelector('.app-bientot__liste'
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(200);
 verifier(await ev(`document.querySelector('.app-bientot__titre').getAttribute('aria-expanded')`) === 'true' && await ev(`getComputedStyle(document.querySelector('.app-bientot__liste')).display`) !== 'none', 'dépliée au clic (aria-expanded = true)');
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(100);
-await aller2('#/boutique');
+await aller2('#/communaute'); // la Boutique et la Carte ne sont plus « à venir » : on prend la Communauté
 verifier(await ev(`document.querySelector('.app-bientot--ouvert')!==null`), 'dépliée d office sur la page d un module à venir');
 await taille(820, 1000); await sleep(200);
 verifier(await ev(`[...document.querySelectorAll('.app-lateral .app-bientot [data-nav]')].every(a=>a.getBoundingClientRect().width>0)`), 'tablette : modules à venir visibles (icônes)');
