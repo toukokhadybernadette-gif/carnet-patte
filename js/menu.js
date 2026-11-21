@@ -1,5 +1,5 @@
 // Menu ☰ de la barre du haut : un panneau en verre qui glisse depuis la gauche.
-// Entrées : Toxique ?, Sauvegarde, Couleur de l'appli, Bientôt sur Carnet Patte, À propos.
+// Entrées : Toxique ?, Boutique, Sauvegarde, Couleur de l'appli, Bientôt sur Carnet Patte, À propos.
 // C'est un <dialog> modal : le navigateur gère le piégeage du focus, la touche Échap et le fond assombri.
 
 import { icone } from './icons.js';
@@ -7,6 +7,7 @@ import { modale } from './ui.js';
 
 const ENTREES = [
   { id: 'toxique', titre: 'Toxique ?', texte: 'Un aliment, une plante ou un produit est-il dangereux ?', icone: 'shield-alert', href: '#/toxique' },
+  { id: 'boutique', titre: 'Boutique', texte: "Une sélection d'accessoires, avec des liens vers des sites marchands.", icone: 'shopping-bag', href: '#/boutique' },
   { id: 'donnees', titre: 'Sauvegarde', texte: 'Exporter, importer ou effacer vos données.', icone: 'save', href: '#/donnees' },
   { id: 'couleur', titre: "Couleur de l'appli", texte: '12 couleurs, ou la vôtre.', icone: 'palette', href: '#/profil', vers: 'pf-theme' },
   { id: 'bientot', titre: 'Bientôt sur Carnet Patte', texte: 'Les modules à venir.', icone: 'compass', href: '#/bientot' },
@@ -18,7 +19,7 @@ export function ouvrirAPropos() {
   modale('À propos de Carnet Patte', `
     <div class="ap-texte">
       <p><strong>Carnet Patte</strong> est un carnet de santé pour vos animaux : soins, rappels, pesées, et un guide « Toxique ? » pour savoir ce qui est dangereux.</p>
-      <p><strong>Vos données restent sur cet appareil.</strong> Il n'y a pas de compte et vos animaux, soins et rappels ne sont jamais envoyés sur internet. Seule la Carte Patte contacte OpenStreetMap, quand vous lancez une recherche. Pensez à faire une sauvegarde de temps en temps (menu ☰, « Sauvegarde »).</p>
+      <p><strong>Vos données restent sur cet appareil.</strong> Il n'y a pas de compte et vos animaux, soins et rappels ne sont jamais envoyés sur internet. Seule la Carte Patte contacte OpenStreetMap, quand vous lancez une recherche. La Boutique ne contient que des liens vers des sites marchands : ils s'ouvrent dans un nouvel onglet, et la page indique toujours si Carnet Patte touche une commission. Pensez à faire une sauvegarde de temps en temps (menu ☰, « Sauvegarde »).</p>
       <p>Le guide « Toxique ? » est indicatif : il ne remplace pas l'avis d'un vétérinaire. En cas de doute, appelez votre vétérinaire ou un centre antipoison vétérinaire.</p>
       <p class="cp-doux">Polices Manrope et Inter, icônes Lucide, carte Leaflet et son plugin de regroupement : licences libres, hébergées dans l'application. Lieux et fond de carte © contributeurs d'OpenStreetMap.</p>
     </div>`);

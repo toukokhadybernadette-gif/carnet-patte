@@ -1,0 +1,56 @@
+/* Styles propres au module « Boutique » : même langage visuel que le reste (thème choisi, verre, rebond).
+   Les pastilles de filtre reprennent celles de la Carte (une rangée qui défile, fond clair quand le filtre est actif, nombres foncés et gras). */
+
+.pg--boutique { gap: var(--cp-espace-4); }
+
+/* ----- Mention d'affiliation : toujours visible, jamais en petit caractère caché ----- */
+.bq-mention { display: flex; align-items: flex-start; gap: var(--cp-espace-2); margin: 0; padding: var(--cp-espace-3) var(--cp-espace-4); border-radius: 18px;
+  background: var(--cp-ambre-pale, #F6E8C9); color: var(--cp-ambre, #6B4A0B); border: 1px solid #E6D2A3; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); }
+.bq-mention .ic { flex: none; margin-top: 2px; }
+.bq-mention--petite { padding: var(--cp-espace-2) var(--cp-espace-3); font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); border-radius: 14px; }
+
+/* ----- Filtres ----- */
+.bq-outils { gap: var(--cp-espace-3); }
+.bq-groupe { display: grid; gap: 4px; min-width: 0; }
+.bq-groupe__titre { margin: 0; font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-s); color: var(--cp-foret-texte); }
+.cp-filtres.bq-filtres { flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin-inline: calc(var(--cp-espace-4) * -1); padding: 2px var(--cp-espace-4) 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.bq-filtres::-webkit-scrollbar { display: none; }
+.cp-filtres .bq-filtre { flex: none; height: 32px; min-height: 32px; padding: 0 10px; gap: 6px; font-size: 13px; line-height: 1; white-space: nowrap; }
+.cp-filtres .bq-filtre[aria-pressed="true"] { background: rgba(255, 255, 255, .92); color: var(--cp-foret-texte); border: 1px solid var(--cp-foret); box-shadow: 0 1px 2px rgba(var(--cp-ombre-rgb), .12); font-weight: 600; }
+.cp-filtres .bq-filtre:not([aria-pressed="true"]):not(:disabled) { background: transparent; color: var(--cp-foret-texte); border: 1px dashed var(--cp-bordure-forte); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cp-filtres .bq-filtre:disabled { opacity: .6; }
+.cp-filtres .bq-filtre .cp-filtre__nombre, .cp-filtres .bq-filtre[aria-pressed="true"] .cp-filtre__nombre { background: none; padding: 0; min-width: 0; font-size: 13px; font-weight: 700; color: var(--cp-foret-texte); opacity: 1; }
+.bq-resultat { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+#bq-aucun[hidden], .bq-liste[hidden] { display: none; }
+
+/* ----- Produits ----- */
+.bq-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .bq-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+@media (min-width: 1100px) { .bq-liste:not(.bq-liste--bloc) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bq-produit { display: grid; gap: var(--cp-espace-3); padding: var(--cp-espace-4); animation: bq-entree var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)) both; }
+.bq-produit__tete { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--cp-espace-3); }
+.bq-produit__icone { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
+.bq-produit__titre { display: grid; gap: 2px; min-width: 0; }
+.bq-produit__nom { margin: 0; font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); overflow-wrap: break-word; }
+.bq-produit__meta { margin: 0; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); }
+.bq-produit__pourquoi { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-m); overflow-wrap: break-word; }
+.bq-produit__pourquoi strong { color: var(--cp-foret-texte); font-weight: 600; }
+.bq-produit__pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cp-espace-2) var(--cp-espace-3); }
+.bq-produit__marchand { font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.bq-produit__pied .cp-btn { min-height: var(--cp-cible-tactile); }
+@keyframes bq-entree { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* ----- Blocs dans la fiche d'un animal et dans « Toxique ? » ----- */
+.bq-bloc { display: grid; gap: var(--cp-espace-3); }
+.bq-bloc__tete { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cp-espace-4); flex-wrap: wrap; }
+.bq-bloc__tete h2 { font-size: var(--cp-taille-l); }
+.bq-liste--bloc { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .bq-bloc .bq-liste--bloc { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; } }
+.bq-alternative { display: grid; gap: var(--cp-espace-2); margin-top: var(--cp-espace-3); }
+.bq-alternative .bq-produit { padding: var(--cp-espace-3); box-shadow: none; }
+
+.bq-pied { display: grid; gap: var(--cp-espace-2); padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+@media (min-width: 600px) { .bq-pied { padding-bottom: 0; } }
+.bq-pied p { margin: 0; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); max-width: 70ch; }
+
+@media (prefers-reduced-motion: reduce) { .bq-produit { animation: none; } }

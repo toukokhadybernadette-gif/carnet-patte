@@ -19,3 +19,9 @@
 - `donnees/lieux/` est une base dérivée d'OpenStreetMap sous licence **ODbL** : ne jamais y mélanger d'autres données, toujours garder `LICENCE.txt` et la mention « © contributeurs d'OpenStreetMap » dans l'appli. Pas de courriel ni de nom de personne dans ces fichiers (RGPD).
 - On ne modifie pas ces fichiers à la main : `python outils/extraire-lieux.py` les refait, et l'Action mensuelle `lieux-mensuel.yml` ouvre une Pull Request à valider (jamais de publication automatique).
 - Aucun serveur hébergé hors d'Europe dans `SERVEURS_OVERPASS` (vie privée, RGPD).
+
+## Boutique (liens vers des sites marchands)
+
+- `modules/boutique/produits.js` ne contient JAMAIS de médicament, antiparasitaire, vermifuge ni complément de santé, ni prix, ni note, ni avis inventés (testé par `tests/test-boutique.mjs`).
+- Une mention reste visible sur la page Boutique et dans chaque bloc de liens (fiche animal, Toxique ?), et elle est AUTOMATIQUE : « Sélection indépendante : Carnet Patte ne touche aucune commission sur ces liens pour l'instant. » tant qu'aucun `lienAffilie` n'est rempli, « Liens affiliés : Carnet Patte peut toucher une petite commission… » dès qu'un seul l'est (`mentionCourante()` dans `produits.js`). Les liens s'ouvrent dans un nouvel onglet avec `rel="sponsored noopener"`.
+- N'ajouter un produit qu'avec un lien dont la page a été vérifiée (`node tests/lancer.mjs boutique-liens`, à la main).

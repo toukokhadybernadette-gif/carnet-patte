@@ -77,7 +77,7 @@ verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=rappels]') &
 verifier(await ev(`document.querySelectorAll('.pg-tuile').length === 0 && ![...document.querySelectorAll('#contenu a')].some(a => ['Mes animaux','Rappels','Sauvegarde'].includes(a.textContent.trim()) && a.closest('.pg-raccourcis'))`), 'Accueil : plus de boutons Mes animaux / Rappels / Sauvegarde');
 verifier(await ev(`!document.querySelector('.pg-bientot')`), 'Accueil : le bloc « Bientôt » n\'y est plus');
 await aller2('#/profil');
-verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===4 && a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 4 liens (3 modules + « Et d\'autres modules » ; la Carte Patte n\'est plus « bientôt »)');
+verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===3 && a.some(x=>x.getAttribute('href')==='#/communaute') && !a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 3 liens (Communauté, Professionnels + « Et d\'autres modules » ; la Carte Patte et la Boutique ne sont plus « bientôt »)');
 await aller2('#/accueil');
 await importer(JSON.stringify({ ...JSON.parse(ancienExport), soins: [{ id: 's1', animalId: 'a', type: 'vermifuge', titre: '', date: '2025-01-01', notes: '', rappel: '2025-02-01', rappelFait: false }] }));
 await aller2('#/animaux');
@@ -183,7 +183,7 @@ await taille(1280, 900);
 log('=== ÉTAPE B : barre du bas à 4 onglets, rappels sur téléphone ===');
 await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
 verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,carte,rappels,profil', 'barre du bas : 5 onglets (Accueil, Animaux, Carte, Rappels, Profil), plus de Boutique');
-verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique reste dans la section « Bientôt » du menu de gauche');
+verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique est dans le menu de gauche (plus dans « Bientôt »)');
 await aller2('#/animaux/rappels');
 verifier(await ev(`!document.querySelector('.rp-chiffres')`) && await ev(`document.querySelectorAll('.rp-statuts .rp-nombre').length`) === 4, 'Rappels : plus de carrés de chiffres, les 4 boutons de filtre affichent les nombres');
 const lignesRappel = await ev(`[...document.querySelectorAll('.rp-carte')].map(c => { const nom = c.querySelector('.rp-carte__nom').getBoundingClientRect(); const etat = c.querySelector('.rp-carte__etat').getBoundingClientRect(); const animal = c.querySelector('.rp-animal').getBoundingClientRect(); const date = c.querySelector('.rp-ligne').getBoundingClientRect(); const lh = parseFloat(getComputedStyle(c.querySelector('.rp-carte__nom')).lineHeight); return { nomUneLigne: nom.height <= lh + 1, etatADroite: etat.left > nom.left, animalSousNom: animal.top >= nom.bottom - 1, dateSousNom: date.top >= nom.bottom - 1, dernierCache: getComputedStyle(c.querySelector('.rp-ligne--dernier')).display === 'none' }; })`);
@@ -242,7 +242,7 @@ verifier(await ev(`getComputedStyle(document.querySelector('.app-bientot__liste'
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(200);
 verifier(await ev(`document.querySelector('.app-bientot__titre').getAttribute('aria-expanded')`) === 'true' && await ev(`getComputedStyle(document.querySelector('.app-bientot__liste')).display`) !== 'none', 'dépliée au clic (aria-expanded = true)');
 await ev(`document.querySelector('.app-bientot__titre').click()`); await sleep(100);
-await aller2('#/boutique');
+await aller2('#/communaute'); // la Boutique et la Carte ne sont plus « à venir » : on prend la Communauté
 verifier(await ev(`document.querySelector('.app-bientot--ouvert')!==null`), 'dépliée d office sur la page d un module à venir');
 await taille(820, 1000); await sleep(200);
 verifier(await ev(`[...document.querySelectorAll('.app-lateral .app-bientot [data-nav]')].every(a=>a.getBoundingClientRect().width>0)`), 'tablette : modules à venir visibles (icônes)');

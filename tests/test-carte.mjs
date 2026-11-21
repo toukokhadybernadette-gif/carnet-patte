@@ -229,7 +229,7 @@ log('=== ACCÈS : Accueil, menu ☰, barre latérale ===');
 await aller2('#/accueil');
 verifier(await ev(`document.querySelector('a.ca-acces')?.getAttribute('href')`) === '#/carte', 'Accueil : une carte « Carte Patte » mène à #/carte');
 await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
-verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 5 && await ev(`!document.querySelector('dialog.app-menu [data-menu=carte]')`), 'menu ☰ : plus d\'entrée « Carte Patte » (doublon avec la barre du bas), 5 entrées');
+verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6 && await ev(`!document.querySelector('dialog.app-menu [data-menu=carte]')`), 'menu ☰ : plus d\'entrée « Carte Patte » (doublon avec la barre du bas), 6 entrées avec la Boutique');
 await ev(`document.querySelector('dialog.app-menu [data-fermer]').click()`); await sleep(400);
 verifier(await ev(`document.querySelector('#nav-bas [data-nav=carte]')?.getAttribute('href')`) === '#/carte' && await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map((a) => a.dataset.nav).join()`) === 'accueil,animaux,carte,rappels,profil', 'barre du bas : l\'onglet Carte est entre Animaux et Rappels');
 await ev(`document.querySelector('#nav-bas [data-nav=carte]').click()`); await sleep(900);
