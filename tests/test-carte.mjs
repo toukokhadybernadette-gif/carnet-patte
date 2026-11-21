@@ -229,13 +229,26 @@ log('=== ACCÈS : Accueil, menu ☰, barre latérale ===');
 await aller2('#/accueil');
 verifier(await ev(`document.querySelector('a.ca-acces')?.getAttribute('href')`) === '#/carte', 'Accueil : une carte « Carte Patte » mène à #/carte');
 await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
-verifier(await ev(`document.querySelector('dialog.app-menu [data-menu=carte]')?.getAttribute('href')`) === '#/carte' && await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6, 'menu ☰ : entrée « Carte Patte » (6 entrées en tout)');
-await ev(`document.querySelector('dialog.app-menu [data-menu=carte]').click()`); await sleep(900);
-verifier(await ev(`location.hash`) === '#/carte' && await texte('#contenu h1') === 'Carte Patte', 'le menu ouvre la page Carte Patte');
+verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 5 && await ev(`!document.querySelector('dialog.app-menu [data-menu=carte]')`), 'menu ☰ : plus d\'entrée « Carte Patte » (doublon avec la barre du bas), 5 entrées');
+await ev(`document.querySelector('dialog.app-menu [data-fermer]').click()`); await sleep(400);
+verifier(await ev(`document.querySelector('#nav-bas [data-nav=carte]')?.getAttribute('href')`) === '#/carte' && await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map((a) => a.dataset.nav).join()`) === 'accueil,animaux,carte,rappels,profil', 'barre du bas : l\'onglet Carte est entre Animaux et Rappels');
+await ev(`document.querySelector('#nav-bas [data-nav=carte]').click()`); await sleep(900);
+verifier(await ev(`location.hash`) === '#/carte' && await texte('#contenu h1') === 'Carte Patte' && await ev(`document.querySelector('#nav-bas [data-nav=carte]').getAttribute('aria-current')`) === 'page', 'l\'onglet ouvre la page Carte Patte et devient l\'onglet actif');
 verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=carte]') && !document.querySelector('.app-bientot__liste [data-nav=carte]')`), 'barre latérale : la Carte n\'est plus rangée sous « Bientôt »');
 
 log('=== PAGE AVANT TOUTE RECHERCHE ===');
 await poserEspion();
+
+// Les nombres sur les pastilles : foncés, gras, opacité pleine, contraste d'au moins 4,5:1 (sur du blanc ET sur le fond de la page)
+const lisibiliteFiltres = () => ev(`(() => {
+  const lum = (c) => { const [r, g, b] = c.match(/[\\d.]+/g).slice(0, 3).map(Number).map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const rapport = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const versRgb = (c) => { const i = document.createElement('i'); i.style.color = c; document.body.append(i); const r = getComputedStyle(i).color; i.remove(); return r; };
+  const fondPage = versRgb(getComputedStyle(document.documentElement).getPropertyValue('--cp-fond').trim() || '#FFFFFF');
+  return [...document.querySelectorAll('.ca-filtre')].map((b) => { const n = b.querySelector('.cp-filtre__nombre'); const s = getComputedStyle(n); let o = 1; for (let e = n; e; e = e.parentElement) o *= +getComputedStyle(e).opacity;
+    return { cat: b.dataset.cat, actif: b.getAttribute('aria-pressed'), couleur: s.color, taille: parseFloat(s.fontSize), gras: +s.fontWeight, opacite: o, surBlanc: Math.round(rapport(s.color, 'rgb(255, 255, 255)') * 10) / 10, surPage: Math.round(rapport(s.color, fondPage) * 10) / 10 }; });
+})()`);
+const nombresLisibles = (l) => l.length === 5 && l.every((x) => x.surBlanc >= 4.5 && x.surPage >= 4.5 && x.taille >= 12 && x.gras >= 600 && x.opacite === 1);
 const MESSAGE = 'Données OpenStreetMap, parfois incomplètes. En urgence, appelez votre vétérinaire.';
 verifier((await texte('.ca-avertissement')).includes(MESSAGE), `message d'avertissement exact et visible : « ${MESSAGE} »`);
 verifier(await ev(`(() => { const r = document.querySelector('.ca-avertissement').getBoundingClientRect(); return r.width > 100 && r.height > 20; })()`), 'le message est visible (dimensions réelles)');
@@ -302,10 +315,14 @@ verifier(new Set(pastilles.map((p) => p.couleur)).size === 5, 'cinq couleurs dif
 verifier(pastilles.every((p) => +p.n === attendu.filter((x) => x.cat === p.cat).length), `nombre par catégorie juste (${pastilles.map((p) => `${p.cat}=${p.n}`).join(', ')})`);
 const rangee = await ev(`(() => { const f = [...document.querySelectorAll('.ca-filtre')]; const c = document.querySelector('#ca-filtres'); return { lignes: new Set(f.map((b) => Math.round(b.getBoundingClientRect().top))).size, haut: Math.round(f[0].getBoundingClientRect().height), defile: getComputedStyle(c).overflowX, enrobage: getComputedStyle(c).flexWrap, fond: getComputedStyle(f[0]).backgroundColor, bord: getComputedStyle(f[0]).borderTopStyle, nombre: getComputedStyle(f[0].querySelector('.cp-filtre__nombre')).fontSize }; })()`);
 verifier(rangee.lignes === 1 && rangee.haut <= 34 && rangee.defile === 'auto' && rangee.enrobage === 'nowrap', `filtres : une seule rangée de petites pastilles (${rangee.haut} px de haut) qui défile horizontalement`);
+const lisib1 = await lisibiliteFiltres();
+verifier(nombresLisibles(lisib1), `nombres des pastilles actives lisibles : ${lisib1.map((x) => `${x.cat} ${x.surBlanc}:1/${x.surPage}:1 ${x.gras}`).join(' | ')} (4,5:1 exigé sur blanc et sur le fond de la page)`);
 const fondActif = rangee.fond.match(/[\d.]+/g).map(Number);
 verifier(fondActif[0] >= 250 && fondActif[1] >= 250 && fondActif[2] >= 250 && (fondActif[3] ?? 1) >= 0.85 && rangee.bord === 'solid', `filtre actif : fond clair (${rangee.fond}), bord plein à la couleur de la catégorie, plus de gros bloc foncé`);
 await cliquer('.ca-filtre[data-cat=veto]'); await sleep(300);
 const inactif = await ev(`(() => { const b = document.querySelector('.ca-filtre[data-cat=veto]'); const st = getComputedStyle(b); return { fond: st.backgroundColor, bord: st.borderTopStyle }; })()`);
+const lisib2 = await lisibiliteFiltres();
+verifier(nombresLisibles(lisib2) && lisib2.find((x) => x.cat === 'veto').actif === 'false', `nombre d'une pastille INACTIVE aussi lisible (${lisib2.find((x) => x.cat === 'veto').surBlanc}:1 sur blanc, ${lisib2.find((x) => x.cat === 'veto').surPage}:1 sur la page)`);
 verifier(inactif.bord === 'dashed' && /rgba\(0, 0, 0, 0\)|transparent/.test(inactif.fond), `filtre inactif : transparent à bord pointillé (${inactif.fond}, ${inactif.bord}) : on le distingue de l'actif sans la couleur seule`);
 let vis = attendu.filter((x) => x.cat !== 'veto');
 verifier((await liste()).length === vis.length && (await attendreMarqueurs(vis.length, 8000)).total === vis.length && await ev(`document.querySelector('.ca-filtre[data-cat=veto]').getAttribute('aria-pressed')`) === 'false', `sans les vétérinaires : ${vis.length} lieux dans la liste ET sur la carte`);

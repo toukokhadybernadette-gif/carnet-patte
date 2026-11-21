@@ -119,10 +119,12 @@ path.ca-cercle { stroke: var(--cp-foret); fill: var(--cp-foret); }
 .ca-filtres::-webkit-scrollbar { display: none; }
 .cp-filtres .ca-filtre { flex: none; height: 32px; min-height: 32px; padding: 0 10px 0 4px; gap: 6px; font-size: 13px; line-height: 1; white-space: nowrap; }
 .cp-filtres .ca-filtre[aria-pressed="true"] { background: rgba(255, 255, 255, .92); color: var(--cp-foret-texte); border: 1px solid var(--ca-c); box-shadow: 0 1px 2px rgba(var(--cp-ombre-rgb), .12); font-weight: 600; }
-.cp-filtres .ca-filtre:not([aria-pressed="true"]):not(:disabled) { background: transparent; color: var(--cp-texte-doux); border: 1px dashed var(--cp-bordure-forte); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cp-filtres .ca-filtre:not([aria-pressed="true"]):not(:disabled) { background: transparent; color: var(--cp-foret-texte); border: 1px dashed var(--cp-bordure-forte); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .ca-filtre .ca-puce { width: 22px; height: 22px; margin-left: 0; }
 .ca-filtre:not([aria-pressed="true"]) .ca-puce { filter: grayscale(.85); opacity: .7; }
-.ca-filtre .cp-filtre__nombre { background: none; padding: 0; min-width: 0; font-size: 12px; opacity: .85; }
+/* Le nombre de lieux : foncé et en gras, contraste d'au moins 4,5:1 sur la pastille claire comme sur la pastille inactive
+   (verre.css met en blanc les nombres des filtres actifs : invisible sur le fond clair d'ici, d'où ces règles plus précises) */
+.cp-filtres .ca-filtre .cp-filtre__nombre, .cp-filtres .ca-filtre[aria-pressed="true"] .cp-filtre__nombre { background: none; padding: 0; min-width: 0; font-size: 13px; font-weight: 700; color: var(--cp-foret-texte); opacity: 1; }
 
 /* ----- Bulles de regroupement (Leaflet.markercluster) : le nombre de lieux, la taille grandit avec ----- */
 .ca-groupe { background: none; border: 0; }

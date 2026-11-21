@@ -168,7 +168,7 @@ verifier(await ev(`(() => { const b = document.querySelector('#menu-bouton').get
 await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
 const menu = await ev(`(() => { const d = document.querySelector('dialog.app-menu[open]'); if (!d) return null; const r = d.getBoundingClientRect(); const cs = getComputedStyle(d); return { gauche: Math.round(r.left), largeur: Math.round(r.width), hauteur: Math.round(r.height), flou: cs.backdropFilter, fond: cs.backgroundColor, entrees: [...d.querySelectorAll('.app-menu__titre')].map((t) => t.textContent.trim()), expanded: document.querySelector('#menu-bouton').getAttribute('aria-expanded'), anim: cs.animationName }; })()`);
 verifier(menu && menu.gauche === 0 && menu.largeur <= 360 && menu.hauteur >= 700 && /blur/.test(menu.flou) && /rgba/.test(menu.fond), `panneau à gauche, en verre (${menu?.largeur} px de large, flou ${menu?.flou})`);
-verifier(menu && menu.entrees.join(' | ') === "Carte Patte | Toxique ? | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
+verifier(menu && menu.entrees.join(' | ') === "Toxique ? | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
 await controler('Menu ☰', `document.querySelector('dialog.app-menu')`);
 await axe('dialog.app-menu', 'Menu ☰'); await ecran('menu');
 await ev(`document.querySelector('.app-menu [data-menu=toxique]').click()`); await sleep(700);
@@ -209,14 +209,23 @@ const plus = await ev(`(() => {
     flouPlus: st(b).backdropFilter, couleurIcone: st(b.querySelector('svg')).color, rondeur: st(b).borderRadius,
     pastille: actif ? st(actif).backgroundColor : null, pastilleL: actif ? Math.round(actif.getBoundingClientRect().width) : 0 };
 })()`);
-verifier(plus.nb === 4 && plus.barD < plus.plusG && plus.plusD <= plus.ecran - 12 && plus.barG >= 12, `barre (${plus.barG}–${plus.barD} px) puis « + » (${plus.plusG}–${plus.plusD} px) à sa droite, dans l'écran de ${plus.ecran} px`);
+verifier(plus.nb === 5 && plus.barD < plus.plusG && plus.plusD <= plus.ecran - 12 && plus.barG >= 12, `barre (${plus.barG}–${plus.barD} px) puis « + » (${plus.plusG}–${plus.plusD} px) à sa droite, dans l'écran de ${plus.ecran} px`);
 verifier(plus.plusG - plus.barD >= 6 && plus.plusG - plus.barD <= 16, `espace de ${plus.plusG - plus.barD} px entre la barre et le « + »`);
 verifier(plus.plusH === plus.barH && plus.plusBas === plus.barBas && plus.plusL === plus.plusH && plus.rondeur === '50%', `« + » rond (${plus.plusL} px), même hauteur (${plus.plusH} / ${plus.barH} px) et même ligne de pied (${plus.plusBas} / ${plus.barBas}) : pas surélevé`);
 verifier(plus.fondPlus === plus.fondBarre && /blur/.test(plus.flouPlus), `« + » en verre de la même couleur que la barre (${plus.fondPlus})`);
 verifier(plus.couleurIcone === 'rgb(255, 255, 255)' && plus.texte === '' && plus.nom === 'Ajouter', `« + » blanc, sans texte, nommé « ${plus.nom} » pour les lecteurs d'écran`);
 verifier(plus.textes === '' && plus.noms.every(Boolean), `onglets : icônes seules (le badge des retards mis à part), noms pour les lecteurs d'écran (${plus.noms.join(', ')})`);
+const ordreOnglets = await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map((a) => a.dataset.nav).join()`);
+const largeursOnglets = await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map((a) => Math.round(a.getBoundingClientRect().width))`);
+verifier(ordreOnglets === 'accueil,animaux,carte,rappels,profil' && largeursOnglets.every((w) => w >= 44), `5 onglets dans l'ordre Accueil, Animaux, Carte, Rappels, Profil ; chacun assez large pour le doigt (${largeursOnglets.join(', ')} px à 375 px)`);
 verifier(plus.pastille === 'rgb(253, 254, 252)' && plus.pastilleL >= 40, `onglet actif : pastille claire derrière l'icône (${plus.pastille}, ${plus.pastilleL} px de large)`);
 await ecran('barre-plus');
+// Très petit téléphone (320 px, iPhone SE) : les 5 onglets et le « + » doivent encore tenir sans se chevaucher
+await taille(320, 568); await aller2('#/accueil'); await sleep(400);
+const petit = await ev(`(() => { const p = document.querySelector('#ajout-bouton').getBoundingClientRect(); const it = [...document.querySelectorAll('#nav-bas [data-nav]')].map((a) => a.getBoundingClientRect()); const b = document.querySelector('.app-nav-bas').getBoundingClientRect(); return { sansDebord: document.documentElement.scrollWidth <= innerWidth, dedans: b.left >= 0 && p.right <= innerWidth, largeurs: it.map((r) => Math.round(r.width)), chevauche: it.some((r, i) => i > 0 && r.left < it[i - 1].right - 1), plusApres: p.left >= b.right, pastille: Math.round(document.querySelector('#nav-bas [aria-current="page"] .cp-nav-bas__icone').getBoundingClientRect().width) }; })()`);
+verifier(petit.sansDebord && petit.dedans && !petit.chevauche && petit.plusApres && petit.largeurs.every((w) => w >= 36), `320 px : 5 onglets (${petit.largeurs.join(', ')} px) et « + » tiennent sans déborder ni se chevaucher, pastille de l'onglet actif ${petit.pastille} px`);
+await ecran('barre-320');
+await taille(375, 812); await aller2('#/accueil'); await sleep(300);
 await ev(`document.querySelector('#ajout-bouton').click()`); await sleep(500);
 const ajout = await ev(`(() => { const d = document.querySelector('dialog[open]'); return [...d.querySelectorAll('.ar-choix__titre')].map((t) => t.textContent.trim()).join(' | '); })()`);
 verifier(ajout === 'Ajouter un soin | Ajouter une pesée | Ajouter un animal', `petite fenêtre : ${ajout}`);
@@ -252,7 +261,7 @@ for (const [w, h, nom] of [[820, 1000, 'tablette'], [1280, 900, 'ordinateur']]) 
   verifier(await ev(`document.querySelectorAll('dialog[open] .ar-choix').length`) === 3, `${nom} : « Ajouter » ouvre la même petite fenêtre`);
   await ev(`document.querySelector('dialog[open] [data-fermer]').click()`); await sleep(300);
   await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
-  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6, `${nom} : le menu ☰ a ses 6 entrées`);
+  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 5, `${nom} : le menu ☰ a ses 5 entrées (plus de « Carte Patte » : elle est dans la barre du bas)`);
   await ev(`document.querySelector('dialog.app-menu [data-fermer]').click()`); await sleep(500);
   verifier(await sansDebord(), `${nom} : pas de défilement horizontal`);
 }

@@ -182,7 +182,7 @@ await taille(1280, 900);
 
 log('=== ÉTAPE B : barre du bas à 4 onglets, rappels sur téléphone ===');
 await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
-verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,rappels,profil', 'barre du bas : 4 onglets (Accueil, Animaux, Rappels, Profil), plus de Boutique');
+verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,carte,rappels,profil', 'barre du bas : 5 onglets (Accueil, Animaux, Carte, Rappels, Profil), plus de Boutique');
 verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique reste dans la section « Bientôt » du menu de gauche');
 await aller2('#/animaux/rappels');
 verifier(await ev(`!document.querySelector('.rp-chiffres')`) && await ev(`document.querySelectorAll('.rp-statuts .rp-nombre').length`) === 4, 'Rappels : plus de carrés de chiffres, les 4 boutons de filtre affichent les nombres');
