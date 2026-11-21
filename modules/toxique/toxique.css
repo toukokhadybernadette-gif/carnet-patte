@@ -13,9 +13,10 @@
 .tx-urgence p { margin: 0; }
 .tx-urgence__phrase { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); }
 .tx-urgence__numeros { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); }
-.tx-urgence__numeros .tx-tel { flex: 1 1 0; min-width: 0; justify-content: center; padding-inline: 6px; font-size: 13px; }
+.tx-urgence__numeros { flex-direction: column; }
+.tx-urgence__numeros .tx-tel { flex: none; width: 100%; justify-content: center; padding-inline: 6px; font-size: 13px; }
 .tx-urgence__numeros .tx-tel .ic { display: none; }
-@media (min-width: 600px) { .tx-urgence__numeros .tx-tel { flex: 0 1 auto; font-size: var(--cp-taille-s); padding-inline: 12px; } .tx-urgence__numeros .tx-tel .ic { display: inline-block; } }
+@media (min-width: 600px) { .tx-urgence__numeros { flex-direction: row; } .tx-urgence__numeros .tx-tel { width: auto; flex: 0 1 auto; font-size: var(--cp-taille-s); padding-inline: 12px; } .tx-urgence__numeros .tx-tel .ic { display: inline-block; } }
 .tx-tel { display: inline-flex; align-items: center; gap: var(--cp-espace-2); min-height: var(--cp-cible-tactile); padding: 4px 10px; border-radius: 999px;
   background: var(--cp-neutre-bouton); color: var(--cp-terre); border: 1px solid var(--cp-contour); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); text-decoration: none; white-space: nowrap;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 2px 5px rgba(var(--cp-ombre-rgb), .12);
@@ -50,13 +51,15 @@
 .tx-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); grid-template-columns: minmax(0, 1fr); }
 .tx-carte { padding: 0; overflow: hidden; }
 .tx-carte__titre { margin: 0; font-size: inherit; line-height: inherit; font-weight: inherit; font-family: inherit; letter-spacing: 0; }
-.tx-carte__tete { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--cp-espace-2); width: 100%; min-height: 52px; padding: 6px 12px; border: 0; background: none; font: inherit; color: var(--cp-texte); text-align: left; cursor: pointer;
+.tx-carte__tete { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-2); width: 100%; min-height: 52px; padding: 6px 12px; border: 0; background: none; font: inherit; color: var(--cp-texte); text-align: left; cursor: pointer;
   transition: background-color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
 .tx-carte__tete:hover { background: var(--cp-sauge-verre); }
 .tx-carte__tete:active { transform: scale(.985); transition-duration: 90ms; transition-timing-function: ease-out; }
 .tx-carte__tete:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -4px; border-radius: 26px; }
 .tx-carte__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
-.tx-carte__nom { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
+.tx-carte__nom { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); flex: 1 1 11ch; min-width: min-content; overflow-wrap: normal; word-break: normal; hyphens: manual; }
+/* Le nom garde sa place : il ne se coupe jamais au milieu d'un mot. Si le badge ne tient pas à côté, il passe SOUS le nom (le retour à la ligne se fait entre les deux, pas dans le mot). */
+.tx-carte__corps { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--cp-espace-3); min-width: 0; }
 .tx-carte__fleche { display: inline-flex; color: var(--cp-texte-doux); transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
 .tx-carte__tete[aria-expanded="true"] .tx-carte__fleche { transform: rotate(180deg); }
 @media (max-width: 479px) {

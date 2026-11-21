@@ -106,18 +106,13 @@
 /* ---------- Liste des animaux : photo plus présente ---------- */
 .cp-carte-animal .cp-avatar { width: 60px; height: 60px; }
 
-/* ---------- Accueil : dernière diapositive « Ajouter un animal » ---------- */
-.ac-couv__ajout { display: grid; place-content: center; justify-items: center; gap: var(--cp-espace-3); width: 100%; aspect-ratio: 5 / 4; padding: var(--cp-espace-4); border: 2px dashed var(--cp-contour); border-radius: 28px;
-  background: var(--cp-verre-fond); color: var(--cp-foret-texte); font: inherit; text-align: center; cursor: pointer;
-  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)), background-color var(--cp-duree-rapide) var(--cp-courbe); }
-.ac-couv__ajout:active { transform: scale(.97); transition-duration: 90ms; transition-timing-function: ease-out; }
-.ac-couv__ajout:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+/* ---------- Accueil : dernière diapositive « Ajouter un animal » ----------
+   Une vraie carte (un <div>, pas un <button> : Safari ne sait pas mettre en page un bouton en grille) avec le bouton à l'intérieur. */
+.ac-couv__ajout { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cp-espace-4); width: 100%; aspect-ratio: 5 / 4; padding: var(--cp-espace-4); border: 2px dashed var(--cp-contour); border-radius: 28px; background: var(--cp-verre-fond); text-align: center; }
 .ac-couv__plus { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background: var(--cc-fond); color: #FFFFFF; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), var(--cp-ombre-m); }
-.ac-couv__ajout-texte { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-l); line-height: var(--cp-interligne-l); }
-@media (min-width: 900px) { .ac-couv__ajout { aspect-ratio: 16 / 10; } }
-@media (prefers-reduced-motion: reduce) { .ac-couv__ajout { transition-duration: 1ms; } .ac-couv__ajout:active { transform: none; } }
-/* Les actions rapides ne passent jamais sous la barre du bas : même quand on les amène à l'écran (ancre, clavier), il reste de la place */
-.ac-actions { scroll-margin-bottom: calc(150px + env(safe-area-inset-bottom)); }
+/* Une diapositive occupe toute la largeur du carrousel sur téléphone (pas de bout de la voisine qui dépasse) ; largeur fixe sur ordinateur */
+.ac-couv__piste--multi .ac-couv__slide { flex-basis: 100%; }
+@media (min-width: 900px) { .ac-couv__ajout { aspect-ratio: 16 / 10; } .ac-couv__piste--multi .ac-couv__slide { flex-basis: 480px; } }
 
 /* ---------- Profil : couleur personnalisée (nuancier libre) ---------- */
 .pf-perso { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--cp-espace-2) var(--cp-espace-3); padding-top: var(--cp-espace-2); }
@@ -165,3 +160,77 @@
   .rp-carte__actions { grid-column: 2 / -1; grid-row: 2; align-self: start; justify-content: flex-start; }
   .rp-ligne--dernier { display: none; }
 }
+
+/* ---------- Rappels en retard : un vrai trait rouge, droit, à l'intérieur de la carte (plus de trait déformé par les coins arrondis) ---------- */
+.rp-carte { position: relative; }
+.rp-carte--retard { box-shadow: none; }
+.rp-carte--retard::before { content: ""; position: absolute; left: 6px; top: 12px; bottom: 12px; width: 4px; border-radius: 2px; background: var(--cp-terre); }
+
+/* ---------- Barre du haut : bouton menu ☰ à gauche, bouton « Ajouter » (tablette et ordinateur) ---------- */
+.app-menu-bouton { flex: none; margin-left: calc(var(--cp-espace-2) * -1); }
+.app-ajout-haut { display: none; }
+@media (min-width: 600px) { .app-ajout-haut { display: inline-flex; } }
+
+/* ---------- Barre du bas : bouton rond « + » au centre, couleur du thème, un peu plus grand ---------- */
+.app-nav-bas .cp-nav-bas > * { flex: 1 1 0; min-width: 0; }
+.app-plus { position: relative; display: flex; align-items: center; justify-content: center; min-height: 54px; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.app-plus__rond { flex: none; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; margin-top: -18px; border-radius: 50%; background: var(--cc-fond); color: #FFFFFF; border: 3px solid var(--cp-carte);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 6px 14px rgba(var(--cp-ombre-rgb), .3);
+  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)), background-color var(--cp-duree-rapide) var(--cp-courbe); }
+.app-plus:hover .app-plus__rond { background: var(--cc-fond-survol); }
+.app-plus:active .app-plus__rond { background: var(--cc-actif); transform: scale(.88); transition-duration: 90ms; transition-timing-function: ease-out; }
+.app-plus:focus-visible { outline: none; }
+.app-plus:focus-visible .app-plus__rond { outline: 2px solid var(--cp-focus); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .app-plus__rond { transition-duration: 1ms; } .app-plus:active .app-plus__rond { transform: none; } }
+
+/* ---------- Petite fenêtre d'ajout ---------- */
+.ar-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-2); }
+.ar-choix { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); width: 100%; min-height: 64px; padding: var(--cp-espace-2) var(--cp-espace-4) var(--cp-espace-2) var(--cp-espace-3); border: 1px solid var(--cp-bordure); border-radius: 22px; background: var(--cp-verre-fond-fort); font: inherit; color: var(--cp-texte); text-align: left; cursor: pointer;
+  transition: transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
+.ar-choix:active:not(:disabled) { transform: scale(.97); transition-duration: 90ms; transition-timing-function: ease-out; }
+.ar-choix:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.ar-choix:disabled { background: var(--cp-desactive-fond); color: var(--cp-desactive-texte); cursor: not-allowed; }
+.ar-choix__icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--cc-fond); color: #FFFFFF; }
+.ar-choix:disabled .ar-choix__icone { background: var(--cp-surface-2); color: var(--cp-desactive-texte); }
+.ar-choix__corps { display: grid; gap: 2px; min-width: 0; }
+.ar-choix__titre { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); }
+.ar-choix:disabled .ar-choix__titre { color: var(--cp-desactive-texte); }
+.ar-choix__texte { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.ar-choix:disabled .ar-choix__texte { color: var(--cp-desactive-texte); }
+.ar-choix__fleche { color: var(--cp-texte-doux); }
+.ac-choix__nom { min-width: 0; overflow-wrap: break-word; }
+
+/* ---------- Menu ☰ : panneau de verre qui glisse depuis la gauche ---------- */
+.app-menu { position: fixed; inset: 0 auto 0 0; margin: 0; width: min(88vw, 360px); max-width: none; height: 100dvh; max-height: none; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); overflow-y: auto;
+  border: 0; border-right: 1px solid var(--cp-verre-bordure); border-radius: 0 32px 32px 0; color: var(--cp-texte); font-family: var(--cp-police-texte);
+  background: var(--cp-verre-fenetre); -webkit-backdrop-filter: blur(30px) saturate(1.6); backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 24px 60px rgba(var(--cp-ombre-rgb), .25); }
+.app-menu[open] { animation: app-menu-entree .26s var(--cp-courbe) both; }
+.app-menu--sortie { animation: app-menu-sortie .18s ease-in both !important; }
+.app-menu::backdrop { background: var(--cp-voile); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+@keyframes app-menu-entree { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes app-menu-sortie { from { transform: none; } to { transform: translateX(-100%); } }
+.app-menu__tete { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-3); padding: var(--cp-espace-4) var(--cp-espace-4) var(--cp-espace-2); }
+.app-menu .app-marque { color: var(--cp-foret-texte); }
+.app-menu__liste { list-style: none; margin: 0; padding: var(--cp-espace-2) var(--cp-espace-3) var(--cp-espace-5); display: grid; gap: var(--cp-espace-1); }
+.app-menu__lien { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cp-espace-3); width: 100%; min-height: 60px; padding: var(--cp-espace-2) var(--cp-espace-3); border: 0; border-radius: 22px; background: none; font: inherit; color: var(--cp-texte); text-align: left; text-decoration: none; cursor: pointer;
+  transition: background-color var(--cp-duree-rapide) var(--cp-courbe), transform var(--cp-ressort-duree, 420ms) var(--cp-ressort, cubic-bezier(.34, 1.56, .64, 1)); }
+.app-menu a.app-menu__lien { color: var(--cp-texte); text-decoration: none; }
+.app-menu__lien:hover { background: var(--cp-sauge-verre); }
+.app-menu__lien:active { background: var(--cp-sauge-verre-fort); transform: scale(.98); transition-duration: 90ms; }
+.app-menu__lien:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -2px; }
+.app-menu__icone { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
+.app-menu__corps { display: grid; gap: 2px; min-width: 0; }
+.app-menu__titre { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); line-height: var(--cp-interligne-s); color: var(--cp-foret-texte); }
+.app-menu__texte { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.app-menu__fleche { color: var(--cp-texte-doux); }
+@media (prefers-reduced-motion: reduce) { .app-menu[open], .app-menu--sortie { animation: none !important; } }
+.ap-texte p { margin: 0 0 var(--cp-espace-3); }
+
+/* ---------- Noms longs : jamais coupés au milieu d'un mot ---------- */
+/* Titre de la fiche : la taille baisse juste ce qu'il faut pour que le plus long mot tienne sur une ligne (0,62 em par lettre en moyenne) */
+.fi-entete h1 { font-size: min(var(--cp-taille-xxl), calc((100vw - 96px) / (var(--mot-long, 1) * 0.62))); overflow-wrap: normal; }
+@media (min-width: 900px) { .fi-entete h1 { font-size: var(--cp-taille-xxl); } }
+/* Écart entre diapositives = marge du carrousel : rien de la voisine ne dépasse sur le côté */
+.ac-couv__piste { gap: var(--cp-espace-4); }
+@media (min-width: 600px) { .ac-couv__piste { gap: var(--cp-espace-5); } }

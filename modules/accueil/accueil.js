@@ -1,19 +1,16 @@
-// Accueil : carte « héros » (Bonjour [prénom], date, la chose à faire maintenant), mes animaux (cartes), actions rapides (un panneau),
+// Accueil : carte « héros » (Bonjour [prénom], date, la chose à faire maintenant), le carrousel des animaux,
 // prochains rappels, conseil du moment (2 lignes + « Lire la suite »), « Ce mois-ci » en pastilles.
 // Cette page LIT les données mais ne les modifie jamais (les ajouts passent par les formulaires existants).
 
 import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
 import { echapper, formatDate, aujourdhui, lireISO } from '../../js/utils.js';
-import { vide, avatar, couleurAnimal, bouton } from '../../js/composants.js';
+import { vide, couleurAnimal, bouton } from '../../js/composants.js';
 import { illustration } from '../../js/illustrations.js';
-import { modale } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { conseilDuMois, PHRASE_VETERINAIRE } from '../../js/conseils.js';
 import { calculerRappels } from '../animaux/rappels.js';
 import { formulaireAnimal } from '../animaux/animaux.js';
-import { formulaireSoin } from '../animaux/soins.js';
-import { formulairePesee } from '../animaux/pesees.js';
 import { infosEspece, nomEspece, infosType, classeType, badgeEcheance, nomCourtSoin, ouvrirRappelFait } from '../animaux/commun.js';
 
 const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
@@ -34,31 +31,6 @@ function ligneRappel(r) {
       <div class="cp-liste__fin">${badgeEcheance(r.statut)}</div>
     </a></li>`;
 }
-
-/** Plusieurs animaux : un petit choix « Pour quel animal ? » avant le formulaire. Un seul animal : on va directement au formulaire. */
-function pourUnAnimal(animaux, suite) {
-  if (animaux.length === 1) { suite(animaux[0]); return; }
-  const html = `
-    <div class="ac-choix" role="group" aria-label="Animal concerné">
-      ${animaux.map((a) => `<button type="button" class="cp-carte ac-choix__animal" data-animal="${echapper(a.id)}">${avatar({ icone: infosEspece(a).icone, photo: photoDe(a), nom: a.nom, id: a.id, couleur: couleurAnimal(a) })}<span>${echapper(a.nom)}</span></button>`).join('')}
-    </div>`;
-  modale('Pour quel animal ?', html, (dlg) => {
-    dlg.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-animal]');
-      const animal = b && storage.trouver('animaux', b.dataset.animal);
-      if (!animal) return;
-      dlg.close();
-      suite(animal);
-    });
-  });
-}
-
-/** Un des cercles du panneau d'actions : libellé court visible, nom complet pour les lecteurs d'écran. */
-const action = ({ id, texte, ic, href, nom = texte }) => {
-  const rond = `<span class="ac-action__rond" aria-hidden="true">${icone(ic, { taille: 26 })}</span><span class="ac-action__texte">${texte}</span>`;
-  const etiquette = nom === texte ? '' : ` aria-label="${echapper(nom)}"`;
-  return href ? `<a class="ac-action" href="${href}"${etiquette}>${rond}</a>` : `<button type="button" class="ac-action" data-act="${id}"${etiquette}>${rond}</button>`;
-};
 
 /** « Mardi 11 novembre » */
 const dateDuJour = () => {
@@ -128,15 +100,6 @@ export function rendre(zone) {
     : '<p class="ac-resume ac-resume--vide">Votre carnet est vide pour l\'instant.</p>';
 
 
-  const actions = [
-    animaux.length && action({ id: 'soin', texte: 'Soin', nom: 'Ajouter un soin', ic: 'stethoscope' }),
-    animaux.length && action({ id: 'pesee', texte: 'Pesée', nom: 'Ajouter une pesée', ic: 'scale' }),
-    action({ id: 'animal', texte: 'Animal', nom: 'Ajouter un animal', ic: 'paw-print' }),
-    action({ texte: 'Toxique ?', nom: 'Toxique ? Vérifier un aliment ou une plante', ic: 'shield-alert', href: '#/toxique' }),
-    action({ texte: 'Sauvegarde', ic: 'save', href: '#/donnees' }),
-  ].filter(Boolean);
-  const nbActions = actions.length;
-
   const blocRappels = rappels.length
     ? `<ul class="cp-liste">${rappels.slice(0, 3).map(ligneRappel).join('')}</ul>`
     : `<div class="cp-carte">${vide({ icone: 'circle-check', titre: 'Aucun rappel en attente', texte: 'Ajoutez une date de rappel quand vous notez un soin.' })}</div>`;
@@ -154,16 +117,11 @@ export function rendre(zone) {
         <div class="ac-couv" role="region" aria-label="Photos de mes animaux">
           <ul class="ac-couv__piste ac-couv__piste--multi" tabindex="0" data-piste>
             ${ordreCouverture.map((a, i) => slideAnimal(a, urgentDe(a), i, ordreCouverture.length + 1)).join('')}
-            <li class="ac-couv__slide ac-couv__slide--ajout" data-slide="ajout"><button type="button" class="ac-couv__ajout" data-act="animal"><span class="ac-couv__plus" aria-hidden="true">${icone('plus', { taille: 28 })}</span><span class="ac-couv__ajout-texte">Ajouter un animal</span></button></li>
+            <li class="ac-couv__slide ac-couv__slide--ajout" data-slide="ajout"><div class="ac-couv__ajout"><span class="ac-couv__plus" aria-hidden="true">${icone('plus', { taille: 28 })}</span>${bouton({ texte: 'Ajouter un animal', attrs: { 'data-act': 'animal' } })}</div></li>
           </ul>
           <div class="ac-couv__points" aria-hidden="true">${[...ordreCouverture, null].map((_, i) => `<span class="ac-couv__point" data-point="${i}"></span>`).join('')}</div>
         </div>` : ''}
       </header>
-
-      <section class="pg-section" aria-labelledby="ac-actions">
-        <h2 id="ac-actions">Actions rapides</h2>
-        <div class="ac-actions cp-carte" style="--ac-nb:${nbActions}">${actions.join('')}</div>
-      </section>
 
       ${animaux.length ? `
       <section class="pg-section" aria-labelledby="ac-rappels">
@@ -220,9 +178,6 @@ export function rendre(zone) {
       zone.querySelectorAll('.ac-conseil__vet, .ac-conseil__source').forEach((el) => { el.hidden = !ouvert; });
       return;
     }
-    const act = e.target.closest('[data-act]')?.dataset.act;
-    if (act === 'soin') pourUnAnimal(animaux, (a) => formulaireSoin(a, null, rafraichir));
-    else if (act === 'pesee') pourUnAnimal(animaux, (a) => formulairePesee(a, rafraichir));
-    else if (act === 'animal') formulaireAnimal(null, rafraichir);
+    if (e.target.closest('[data-act="animal"]')) formulaireAnimal(null, rafraichir);
   });
 }

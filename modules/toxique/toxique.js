@@ -98,8 +98,7 @@ function carte(fiche, groupe, id, ouverte) {
   const concerne = ESPECES_TOXIQUE.filter((g) => fiche.niveaux[g.id]).map((g) => g.nom.toLowerCase()).join(', ');
   const entete = `
     <span class="tx-carte__icone" aria-hidden="true">${icone(ICONES_CATEGORIES[fiche.cat], { taille: 20 })}</span>
-    <span class="tx-carte__nom">${echapper(fiche.nom)}</span>
-    ${niveau ? badgeNiveau(niveau) : badge({ texte: 'Pas de fiche', variante: 'neutre', icone: 'circle-help' })}
+    <span class="tx-carte__corps"><span class="tx-carte__nom">${echapper(fiche.nom)}</span>${niveau ? badgeNiveau(niveau) : badge({ texte: 'Pas de fiche', variante: 'neutre', icone: 'circle-help' })}</span>
     <span class="tx-carte__fleche" aria-hidden="true">${icone('chevron-down', { taille: 18 })}</span>`;
   const corps = niveau ? detail(fiche, groupe) : `
     <div class="tx-bandeau tx-bandeau--aucune">${icone('circle-help', { taille: 20 })}<p><strong>Pas d'information vérifiée pour ${echapper(groupe.nom.toLowerCase())}.</strong> Cela ne veut pas dire que c'est sans danger. Cet élément a une fiche pour : ${echapper(concerne)}.</p></div>

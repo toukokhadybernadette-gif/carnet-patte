@@ -75,12 +75,11 @@ await importer(JSON.stringify({ version: 1, exemplesAjoutes: true, animaux: [A('
 
 log('=== ACCUEIL : action rapide ===');
 await taille(390, 844); await aller2('#/accueil'); await sleep(700);
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Soin | Pesée | Animal | Toxique ? | Sauvegarde', 'actions rapides : Soin, Pesée, Animal, Toxique ?, Sauvegarde');
-verifier(await ev(`document.querySelector('.ac-action[href="#/toxique"]').getAttribute('aria-label')`) === 'Toxique ? Vérifier un aliment ou une plante', 'nom complet pour les lecteurs d\'écran');
-verifier(await ev(`(() => { const p = document.querySelector('.ac-actions'); const r = [...p.querySelectorAll('.ac-action__rond')].map(x => Math.round(x.getBoundingClientRect().top)); return r.length === 5 && new Set(r).size === 1 && [...p.querySelectorAll('.ac-action__texte')].every(t => t.getBoundingClientRect().height <= parseFloat(getComputedStyle(t).lineHeight) + 1 && t.getBoundingClientRect().right <= p.getBoundingClientRect().right); })()`), 'téléphone : 5 cercles alignés, libellés sur une ligne et dans le panneau');
+verifier(await ev(`!document.querySelector('.ac-action, .ac-actions')`), 'plus d\'« Actions rapides » sur l\'Accueil : « Toxique ? » est dans le menu ☰');
+verifier(await ev(`(() => { document.querySelector('#menu-bouton').click(); return true; })()`) && (await sleep(500), await ev(`document.querySelector('dialog.app-menu [data-menu=toxique]')?.getAttribute('href')`)) === '#/toxique', 'le menu ☰ propose « Toxique ? »');
 verifier(await sansDebord(), 'Accueil : pas de défilement horizontal');
 await ecran('accueil-mobile');
-await ev(`document.querySelector('.ac-action[href="#/toxique"]').click()`); await sleep(800);
+await ev(`document.querySelector('dialog.app-menu [data-menu=toxique]').click()`); await sleep(800);
 verifier(await ev(`location.hash`) === '#/toxique' && await texte('h1') === 'Toxique ?', 'le clic ouvre la page « Toxique ? »');
 verifier(await ev(`document.title`) === 'Toxique ? · Carnet Patte', "titre de l'onglet : « Toxique ? · Carnet Patte »");
 
@@ -174,7 +173,7 @@ const esp = await ev(`(() => { const f = document.querySelector('.tx-especes'); 
 log('espèces :', JSON.stringify(esp)); verifier(esp.defile && esp.overflowX === 'auto' && esp.tops < 3, `espèces : une seule rangée de pastilles qui défile (hauteur ${Math.round(esp.h)} px)`);
 verifier(esp.h <= 90, 'la rangée d’espèces prend peu de place');
 const hurg = await ev(`document.querySelector('.tx-urgence--haut').getBoundingClientRect().height`);
-verifier(hurg <= 130, `bloc urgence compact sur iPhone (${Math.round(hurg)} px de haut)`);
+verifier(hurg <= 175, `bloc urgence compact sur iPhone (${Math.round(hurg)} px de haut)`);
 verifier(await ev(`[...document.querySelectorAll('.tx-urgence--haut .tx-tel')].map(a => a.getAttribute('href')).join()`) === 'tel:+33478871040,tel:+33240687740', 'bloc urgence : CNITV et CAPAE-Ouest');
 await ecran('haut-mobile'); await ev(`document.scrollingElement.scrollTop = 1e7; document.querySelector('.contenu').scrollTop = 1e7`); await sleep(400);
 verifier(await ev(`(() => { const p = document.querySelector('.tx-pied').lastElementChild.getBoundingClientRect(); const nav = document.querySelector('.app-nav-bas'); const n = nav ? nav.getBoundingClientRect() : null; return !n || p.bottom <= n.top + 1; })()`), 'la note en bas de page n’est pas cachée par la barre du bas');
@@ -248,7 +247,7 @@ await ev(`import('/js/storage.js').then(m=>m.importer(JSON.stringify({ version: 
 await aller2('#/toxique');
 verifier(await ev(`document.querySelector('input[name=tx-espece]:checked').value`) === 'chien' && await ev(`document.querySelector('[data-defaut]').hidden`), 'sans animal : chien par défaut, sans mention');
 await aller2('#/accueil');
-verifier(await ev(`[...document.querySelectorAll('.ac-action')].map(a => a.textContent.trim()).join(' | ')`) === 'Animal | Toxique ? | Sauvegarde', 'sans animal : Animal, Toxique ?, Sauvegarde');
+verifier(await ev(`!document.querySelector('.ac-action')`) && await ev(`!!document.querySelector('.cp-vide')`), 'sans animal : message d\'accueil, pas d\'« Actions rapides »');
 
 log('ERREURS CONSOLE :', erreurs.length ? erreurs : 'aucune');
 log('VÉRIFICATIONS EN ÉCHEC :', echecs);
