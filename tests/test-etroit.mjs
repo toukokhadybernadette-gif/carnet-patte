@@ -237,7 +237,7 @@ for (const [w, h, nom] of [[820, 1000, 'tablette'], [1280, 900, 'ordinateur']]) 
   verifier(await ev(`document.querySelectorAll('dialog[open] .ar-choix').length`) === 3, `${nom} : « Ajouter » ouvre la même petite fenêtre`);
   await ev(`document.querySelector('dialog[open] [data-fermer]').click()`); await sleep(300);
   await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
-  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 5, `${nom} : le menu ☰ a ses 5 entrées`);
+  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6, `${nom} : le menu ☰ a ses 6 entrées`);
   await ev(`document.querySelector('dialog.app-menu [data-fermer]').click()`); await sleep(500);
   verifier(await sansDebord(), `${nom} : pas de défilement horizontal`);
 }

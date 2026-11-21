@@ -197,6 +197,7 @@ export function importer(texte) {
 }
 
 export function toutEffacer() {
+  try { localStorage.removeItem('carnetpatte.carteCache'); } catch { /* stockage bloqué */ } // lieux gardés par la Carte Patte
   probleme = null;
   donnees = vide();
   donnees.exemplesAjoutes = true;

@@ -3,7 +3,7 @@
 // UNE SEULE LISTE (NAV) décrit les entrées. Elle sert aux trois dispositions :
 //   - barre latérale (tablette et ordinateur) : toutes les entrées ;
 //   - barre du bas (téléphone) : seulement celles marquées `bas: true` (4 entrées : Accueil, Animaux, Rappels avec son badge de retards, Profil ; la Boutique n'y sera qu'une fois réalisée) ;
-//     la Carte reste accessible depuis la carte « Bientôt » de l'Accueil ;
+//     la Carte Patte est dans le menu ☰ et sur l'Accueil ;
 //   - Communauté et Professionnels restent accessibles sur téléphone depuis l'Accueil et le Profil.
 //
 // POUR AJOUTER UNE PAGE : créer son module, l'enregistrer avec route() dans js/app.js,
@@ -24,7 +24,7 @@ export const NAV = [
   { id: 'animaux', titre: 'Mes animaux', court: 'Animaux', icone: 'paw-print', href: '#/animaux', bas: true, actif: (s) => s[0] === 'animaux' && s[1] !== 'rappels' },
   // Rappels : adresse inchangée (#/animaux/rappels) pour ne casser aucun lien. La cloche de la barre du haut y mène aussi.
   { id: 'rappels', titre: 'Rappels', court: 'Rappels', icone: 'bell', href: '#/animaux/rappels', bas: true, compteurRetards: true, actif: (s) => s[0] === 'animaux' && s[1] === 'rappels' },
-  { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', bientot: true, actif: (s) => s[0] === 'carte' },
+  { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', actif: (s) => s[0] === 'carte' },
   { id: 'boutique', titre: 'Boutique', court: 'Boutique', icone: 'shopping-bag', href: '#/boutique', bientot: true, actif: (s) => s[0] === 'boutique' },
   { id: 'communaute', titre: 'Communauté', court: 'Communauté', icone: 'users', href: '#/communaute', bientot: true, actif: (s) => s[0] === 'communaute' },
   { id: 'pro', titre: 'Professionnels', court: 'Pro', icone: 'briefcase-business', href: '#/pro', bientot: true, actif: (s) => s[0] === 'pro' },

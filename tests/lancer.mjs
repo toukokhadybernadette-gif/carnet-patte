@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte]
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
@@ -29,11 +29,13 @@ const TESTS = {
   toxique: 'test-toxique.mjs',
   refonte: 'test-refonte.mjs',
   etroit: 'test-etroit.mjs',
+  carte: 'test-carte.mjs',
 };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
+  [/^modules\/carte\/|^assets\/leaflet\//, ['carte', 'etroit']],
   [/^tests\/lancer\.mjs$|\.md$|^\.github\/|^\.gitignore$|^assets\/|^tests\/sortie\//, []],
   [/^tests\/test-(.+)\.mjs$/, (m) => [Object.keys(TESTS).find((k) => TESTS[k] === `test-${m[1]}.mjs`)].filter(Boolean)],
   [/^css\/verre\.css$|^js\/fond\.js$/, ['verre', 'etroit']],
@@ -44,7 +46,7 @@ const REGLES = [
   [/^modules\/animaux\/pesees\.js$/, ['5g', 'graphique', 'finitions']],
   [/^modules\/animaux\/(fiche|animaux|commun|exemples)\.js$|^modules\/animaux\/animaux\.css$/, ['5e', '5f', '5g', '5h', 'finitions', 'retouches', 'etroit']],
   [/^js\/conseils\.js$/, ['5h', 'verre']],
-  [/^modules\/(accueil|boutique|carte|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit']],
+  [/^modules\/(accueil|boutique|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit', 'carte']],
 ];
 
 function testsLiesAuxModifications() {

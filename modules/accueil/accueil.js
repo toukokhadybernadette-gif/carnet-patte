@@ -150,6 +150,15 @@ export function rendre(zone) {
         <h2 id="ac-mois">Ce mois-ci</h2>
         <ul class="ac-mois" data-ce-mois>${pastilles}</ul>
       </section>` : `<div class="cp-carte">${vide({ niveau: 2, icone: 'paw-print', titre: "Aucun animal pour l'instant", texte: 'Ajoutez votre premier compagnon pour suivre ses soins, ses pesées et ses rappels.' })}</div>`}
+
+      <section class="pg-section" aria-labelledby="ac-carte">
+        <h2 id="ac-carte">Autour de vous</h2>
+        <a class="cp-carte ca-acces" href="#/carte">
+          <span class="ca-acces__icone" aria-hidden="true">${icone('map-pin', { taille: 22 })}</span>
+          <span class="ca-acces__corps"><span class="ca-acces__titre">Carte Patte</span><span class="ca-acces__texte">Vétérinaires, parcs à chiens, animaleries, toiletteurs et refuges près de chez vous.</span></span>
+          <span class="ca-acces__fleche" aria-hidden="true">${icone('chevron-right', { taille: 18 })}</span>
+        </a>
+      </section>
     </div>`;
 
   // Points sous le défilement : celui de la photo la plus visible est plein

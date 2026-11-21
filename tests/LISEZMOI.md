@@ -14,7 +14,7 @@ Depuis la racine du projet :
 
 ```
 node tests/lancer.mjs            # tous les tests
-node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique, refonte ou etroit
+node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique, refonte, etroit ou carte
 node tests/lancer.mjs 5e 5f      # plusieurs
 ```
 
@@ -49,3 +49,4 @@ Chaque test passe sur trois largeurs : ordinateur (1280 px), tablette (820 px) e
 ## Si les données de test changent
 
 Les scripts s'appuient sur les données d'exemple de l'application (Moka, Mimi) et sur des fichiers d'import construits dans le script. Si vous modifiez `modules/animaux/exemples.js`, certains tests (`finitions`) devront être ajustés.
+| `carte` | `test-carte.mjs` | Carte Patte, avec des réponses SIMULÉES (aucun vrai serveur OpenStreetMap appelé) : accès depuis l'Accueil et le menu ☰, position demandée seulement après un toucher (refus simulé aussi), liste triée par distance, filtres en pastilles, fiche d'un lieu (adresse, téléphone, horaires, Itinéraire, Appeler, jamais « 24h/24 » inventé), rayon 2/5/10 km, cache de 6 h, recherche par ville ou code postal, une seule recherche à la fois et pause entre deux requêtes, erreurs réseau avec « Réessayer », attribution OpenStreetMap visible, position exacte jamais enregistrée ni envoyée, 375 px, trois largeurs, accessibilité |

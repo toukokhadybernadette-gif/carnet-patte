@@ -1,3 +1,16 @@
+# Module 3 « Carte Patte » : en cours (branche `carte`, pas encore publié)
+
+Version d'avant : `main` (avant la fusion de la branche `carte`). Retour arrière après publication : `git revert -m 1 <commit de merge>` puis `git push origin main`.
+Le module ne modifie jamais les données des animaux (testé dans `tests/test-carte.mjs`, avec des réponses simulées : aucun vrai serveur n'est appelé).
+
+## À savoir
+- La géolocalisation du navigateur n'existe qu'en **HTTPS** (ou sur `localhost`). Sur iPhone via le Wi-Fi en `http://192.168…`, « Autour de moi » ne marche pas : utiliser le champ « Ville ou code postal », ou tester « Autour de moi » sur le site publié (HTTPS).
+- Règles d'usage d'OpenStreetMap respectées : une recherche à la fois, 1,5 s minimum entre deux requêtes, lieux gardés 6 h (zone arrondie à 1 km, jamais la position exacte). Les serveurs publics (Overpass, Nominatim, tuiles) n'ont aucune garantie de disponibilité : l'appli affiche un message et « Réessayer ».
+- Les lieux viennent d'OpenStreetMap et sont parfois incomplets ou périmés : l'appli n'affiche jamais « ouvert 24h/24 » sauf si la donnée dit exactement `24/7`, et n'indique jamais si un lieu est ouvert « maintenant ».
+
+## À vérifier à la main (non testé automatiquement)
+Safari sur iPhone : fenêtre de permission de localisation (en HTTPS), défilement de la page avec la carte sous le doigt, appui sur « Itinéraire » (Plans) et « Appeler », taille des marqueurs, clavier du champ « Ville ».
+
 # Refonte du design (5h) : publiée
 
 Fusionnée sur `main` après validation en local. Version d'avant : tag `avant-refonte-5h` (commit `6d4e74c`).

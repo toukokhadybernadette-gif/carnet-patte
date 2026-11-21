@@ -1,6 +1,6 @@
 # Carnet Patte
 
-Application web pour les propriétaires d'animaux (module 1 : animaux, soins, rappels, pesées ; module 2 : « Toxique ? », aliments, plantes et produits dangereux selon l'espèce).
+Application web pour les propriétaires d'animaux (module 1 : animaux, soins, rappels, pesées ; module 2 : « Toxique ? », aliments, plantes et produits dangereux selon l'espèce ; module 3 : « Carte Patte », vétérinaires, parcs à chiens, animaleries, toiletteurs et refuges autour de soi).
 
 ## Lancer
 1. Ouvrir ce dossier dans VS Code.
@@ -12,4 +12,5 @@ Ouvrir `index.html` par double-clic ne fonctionne pas (les modules JS exigent un
 ## Organisation
 - `js/` : cœur de l'appli (stockage, routeur, interface, sauvegarde)
 - `css/` : styles communs
-- `modules/<nom>/` : un dossier par module (`animaux` et `toxique` sont réalisés ; les fiches de « Toxique ? » sont dans `modules/toxique/donnees.js`)
+- `modules/<nom>/` : un dossier par module (`animaux`, `toxique` et `carte` sont réalisés ; les fiches de « Toxique ? » sont dans `modules/toxique/donnees.js`)
+- `assets/leaflet/` : Leaflet 1.9.4 (licence BSD-2), hébergé ici et chargé seulement sur la page Carte. Fond de carte et lieux : © contributeurs d'OpenStreetMap (ODbL). Le module Carte contacte `overpass-api.de` (lieux), `nominatim.openstreetmap.org` (ville ou code postal) et `tile.openstreetmap.org` (fond de carte), une recherche à la fois.
