@@ -99,7 +99,8 @@ const JOURS = { Mo: 'lun', Tu: 'mar', We: 'mer', Th: 'jeu', Fr: 'ven', Sa: 'sam'
 
 /** Horaires tels qu'indiqués dans OpenStreetMap, jours traduits. « Ouvert 24h/24 » seulement si la donnée dit exactement 24/7. */
 export function horaires(brut) {
-  const t = nettoyer(brut, 300);
+  // OpenStreetMap met ses commentaires entre guillemets ("sur rendez-vous") : on garde le texte, sans les guillemets
+  const t = nettoyer(String(brut ?? '').replace(/["\u201C\u201D\u00AB\u00BB]/g, ''), 300);
   if (!t) return null;
   if (t === '24/7') return { texte: 'Ouvert 24h/24, 7 j/7', h24: true };
   const texte = t.replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)\b/g, (j) => JOURS[j]).replace(/\b(off|closed)\b/g, 'fermé').replace(/\s*;\s*/g, ' ; ');

@@ -50,7 +50,7 @@ const ELEMENTS = [
   { type: 'node', id: 2, lat: C.lat, lon: est(1500), tags: { amenity: 'veterinary', name: 'Urgences Vétérinaires Rennes', opening_hours: '24/7', phone: '02 99 00 00 02' } },
   { type: 'way', id: 3, center: { lat: nord(2600), lon: C.lon }, tags: { leisure: 'dog_park', name: 'Parc canin de la Prévalaye' } },
   { type: 'node', id: 4, lat: nord(-3500), lon: C.lon, tags: { shop: 'pet', name: 'Au Royaume des Animaux', 'x-ban': '7 Rue Test, 35000 Rennes' } },
-  { type: 'node', id: 5, lat: C.lat, lon: est(-4500), tags: { shop: 'pet_grooming', name: 'Toilettage Doudou', phone: 'pas un numéro', opening_hours: 'Mo-Sa 10:00-19:00' } },
+  { type: 'node', id: 5, lat: C.lat, lon: est(-4500), tags: { shop: 'pet_grooming', name: 'Toilettage Doudou', phone: 'pas un numéro', opening_hours: '"Sur rendez-vous"; Mo-Sa 10:00-19:00' } },
   { type: 'node', id: 7, lat: nord(6000), lon: C.lon, tags: { amenity: 'veterinary', 'x-rue-proche': 'avenue de la Gare' } },
   { type: 'node', id: 13, lat: nord(900), lon: C.lon, tags: { amenity: 'veterinary', 'addr:street': 'rue Anonyme' } },
   { type: 'node', id: 6, lat: C.lat, lon: est(8000), tags: { amenity: 'animal_shelter', name: 'Refuge de la SPA', phone: '+33 2 99 00 00 06' } },
@@ -363,6 +363,8 @@ const f4 = await texte('#ca-fiche');
 verifier(/Horaires non indiqués/.test(f4) && /Téléphone non indiqué/.test(f4) && /Adresse non indiquée/.test(f4) && !/24\s?h/i.test(f4) && await ev(`![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Appeler/.test(x.textContent.trim()))`), 'sans horaires ni téléphone dans les données : rien d\'inventé, jamais « 24h/24 », pas de bouton « Appeler »');
 await ouvrir('node/5');
 verifier(/Téléphone non indiqué/.test(await texte('#ca-fiche')) && /lun-sam 10:00-19:00/.test(await texte('#ca-fiche')), 'un « téléphone » qui n\'en est pas un est ignoré');
+const f5h = await texte('#ca-fiche');
+verifier(!/["\u201C\u201D]/.test(f5h) && /Sur rendez-vous ; lun-sam 10:00-19:00/.test(f5h), `horaires : les guillemets d'OpenStreetMap disparaissent, le commentaire reste (« ${(f5h.match(/Sur rendez-vous[^()]*/) ?? [''])[0].trim()} »)`);
 await ouvrir('way/3');   // choisir un lieu dans la liste le fait sortir de sa bulle : la carte zoome sur lui
 verifier(await attendre(`!!document.querySelector('.leaflet-marker-icon[title="Parc canin de la Prévalaye"]')`, 8000), 'choisir un lieu dans la liste fait apparaître son marqueur (la carte zoome jusqu\'à le sortir de sa bulle)');
 await cliquer('#ca-fermer'); await sleep(300);
@@ -497,6 +499,24 @@ verifier(/Adresse officielle la plus proche : 7 Rue Test, 35000 Rennes/.test(f4b
 verifier(await ev(`document.querySelector('.ca-lieu[data-id="node/4"] .ca-lieu__adresse')?.textContent`) === 'Près de : 7 Rue Test, 35000 Rennes', 'liste : « Près de : 7 Rue Test, 35000 Rennes » (une adresse BAN n\'est jamais présentée comme l\'adresse exacte)');
 await ouvrir('node/1');
 verifier(!/Adresse officielle la plus proche|Base Adresse Nationale/.test(await texte('#ca-fiche')) && /12 rue des Lilas, 35000 Rennes/.test(await texte('#ca-fiche')) && await ev(`!/Près de/.test(document.querySelector('.ca-lieu[data-id="node/1"]').textContent)`), 'une adresse d\'OpenStreetMap reste affichée telle quelle, sans la mention BAN');
+log('--- fiche ouverte : la carte et le marqueur restent visibles (écran de 667 px, fiche haute, lieu choisi tout en bas de la liste) ---');
+await cliquer('#ca-fermer'); await sleep(300);
+await taille(375, 667); await sleep(500);
+await ev(`window.scrollTo(0, document.body.scrollHeight)`); await sleep(400);
+const hCarteSans = await ev(`Math.round(document.querySelector('#ca-carte').getBoundingClientRect().height)`);
+await ev(`document.querySelector('.ca-lieu[data-id="node/1"]').click()`); await sleep(1800);
+const visFiche = await ev(`(() => { const c = document.querySelector('#ca-carte').getBoundingClientRect(); const m = document.querySelector('.leaflet-marker-icon.is-selection')?.getBoundingClientRect(); const eh = document.querySelector('#barre-haut').getBoundingClientRect().bottom; const bas = document.querySelector('#barre-bas')?.getBoundingClientRect().top ?? innerHeight; const f = document.querySelector('#ca-fiche').getBoundingClientRect();
+  return { carte: [Math.round(c.top), Math.round(c.bottom)], ecran: innerHeight, entete: Math.round(eh), marqueur: m ? { cx: Math.round(m.left + m.width / 2) - Math.round(c.left + c.width / 2), cy: Math.round(m.top + m.height / 2) - Math.round(c.top + c.height / 2), dedans: m.top >= eh && m.bottom <= bas } : null, ficheHaut: Math.round(f.top), hCarte: Math.round(c.height) }; })()`);
+verifier(visFiche.marqueur && visFiche.marqueur.dedans && Math.abs(visFiche.marqueur.cx) <= 8 && Math.abs(visFiche.marqueur.cy) <= 8, `le marqueur est visible et AU CENTRE de la carte (écart ${visFiche.marqueur?.cx}, ${visFiche.marqueur?.cy} px ; carte de ${visFiche.carte[0]} à ${visFiche.carte[1]} px sous l'en-tête de ${visFiche.entete} px, écran de ${visFiche.ecran} px)`);
+verifier(visFiche.hCarte < hCarteSans && visFiche.ficheHaut > visFiche.carte[1] - 4 && visFiche.ficheHaut < visFiche.ecran - 100, `la carte se resserre (${hCarteSans} → ${visFiche.hCarte} px) et le début de la fiche est visible juste dessous (haut de la fiche à ${visFiche.ficheHaut} px sur ${visFiche.ecran})`);
+await ouvrir('node/5');
+await sleep(1200);
+verifier(await attendre(`(() => { const c = document.querySelector('#ca-carte').getBoundingClientRect(); const m = document.querySelector('.leaflet-marker-icon.is-selection')?.getBoundingClientRect(); return !!m && Math.abs(m.left + m.width / 2 - (c.left + c.width / 2)) <= 8 && Math.abs(m.top + m.height / 2 - (c.top + c.height / 2)) <= 8; })()`, 6000), 'passer à une autre fiche : le nouveau marqueur vient aussi au centre de la carte');
+await cliquer('#ca-fermer'); await sleep(500);
+verifier(await ev(`Math.round(document.querySelector('#ca-carte').getBoundingClientRect().height)`) === hCarteSans, 'fiche fermée : la carte retrouve sa taille');
+await taille(1280, 900); await sleep(400);
+await ouvrir('node/1');   // la suite du scénario referme cette fiche
+
 await cliquer('#ca-fermer'); await sleep(200);
 await cliquer('input[name=ca-rayon][value="10"]'); await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`);
 verifier(donneesAppels.slice(lf0).filter((f) => f.endsWith('.json')).length === 3 && nbOverpass() === lo0, 'autre rayon : lecture en mémoire, aucun nouveau fichier ni requête');
@@ -629,7 +649,7 @@ const idsFichesT = await ev(`[...document.querySelectorAll('.ca-lieu')].map((b) 
 const ecartsFiches = []; let nAdrFiche = 0, nTelFiche = 0, nBanFiche = 0;
 for (const idl of idsFichesT) {
   await ev(`document.querySelector('.ca-lieu[data-id="${idl}"]').click()`); await sleep(300);
-  const f = await ev(`(() => { const t = document.querySelector('#ca-fiche').innerText; return { adr: !/Adresse non indiquée/.test(t), tel: !!document.querySelector('#ca-fiche a[href^="tel:"]'), ban: /Adresse officielle la plus proche/.test(t) }; })()`);
+  const f = await ev(`(() => { const t = document.querySelector('#ca-fiche').innerText; return { adr: !/Adresse non indiquée/.test(t), tel: !!document.querySelector('#ca-fiche a[href^="tel:"]'), ban: /Adresse officielle la plus proche/.test(t), guillemets: /["\u201C\u201D]/.test(t) }; })()`);
   const [type, num] = idl.split('/');
   const ligne = reels31.get(`${type[0]}${num}`);
   if (!ligne) { ecartsFiches.push(`${idl} : absent du fichier 31.json`); continue; }
@@ -638,6 +658,7 @@ for (const idl of idsFichesT) {
   const attTel = /^\+?\d{6,15}$/.test(String(telL).split(/[;,/]/)[0].replace(/[\s.()-]/g, ''));
   if (f.adr !== attAdr) ecartsFiches.push(`${idl} : adresse ${f.adr ? 'affichée' : 'absente'} mais fichier ${attAdr ? 'en a une' : 'sans adresse'}`);
   if (f.tel !== attTel) ecartsFiches.push(`${idl} : téléphone ${f.tel ? 'affiché' : 'absent'} mais fichier ${attTel ? 'en a un' : 'sans téléphone'}`);
+  if (f.guillemets) ecartsFiches.push(`${idl} : guillemets dans la fiche`);
   if (f.ban !== (srcL === 'b' && !!adrL)) ecartsFiches.push(`${idl} : mention BAN ${f.ban ? 'affichée' : 'absente'} (fichier : ${srcL || 'OpenStreetMap'})`);
   if (f.adr) nAdrFiche++; if (f.tel) nTelFiche++; if (f.ban) nBanFiche++;
 }

@@ -225,6 +225,8 @@ export function rendre(zone) {
     const l = etat.lieux.find((x) => x.id === etat.selection);
     elFiche.hidden = !l;
     elFiche.innerHTML = l ? ficheHtml(l) : '';
+    // Fiche ouverte : la carte se resserre (CSS) pour tenir à l'écran avec le début de la fiche ; on prévient Leaflet de sa nouvelle taille
+    if (elZone.classList.contains('ca-zone--fiche') !== !!l) { elZone.classList.toggle('ca-zone--fiche', !!l); vueCarte?.map.invalidateSize({ pan: false }); }
     if (l) elFiche.setAttribute('aria-label', `Fiche : ${nomLieu(l)}`);
     elListe.querySelectorAll('.ca-lieu').forEach((b) => { if (b.dataset.id === etat.selection) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     vueCarte?.parId.forEach((m, id) => m.getElement()?.classList.toggle('is-selection', id === etat.selection));
@@ -362,7 +364,17 @@ export function rendre(zone) {
     afficherFiche();
     faireApparaitre(vueCarte?.parId.get(id), l);
     elFiche.focus({ preventScroll: true });
-    elFiche.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' });
+    montrerCarteEtFiche();
+  }
+
+  /**
+   * On fait défiler la page pour que la CARTE soit juste sous l'en-tête, avec le début de la fiche dessous : le marqueur du lieu, au centre de la carte, reste visible.
+   * (Avant, on visait le bas de la fiche : avec une fiche haute ou un petit écran, la carte sortait entièrement de l'écran.)
+   */
+  function montrerCarteEtFiche() {
+    const entete = document.querySelector('#barre-haut')?.getBoundingClientRect().bottom ?? 0;
+    const haut = elZone.getBoundingClientRect().top + window.scrollY - entete - 8;
+    window.scrollTo({ top: Math.max(0, haut), behavior: reduit() ? 'auto' : 'smooth' });
   }
 
   function fermerFiche() {
