@@ -1,5 +1,6 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [carte-reel]
+//   « carte-reel » appelle les VRAIS serveurs OpenStreetMap : il n'est jamais lancé par la suite automatique ni par --rapide, seulement à la main (node tests/lancer.mjs carte-reel)
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
@@ -29,11 +30,17 @@ const TESTS = {
   toxique: 'test-toxique.mjs',
   refonte: 'test-refonte.mjs',
   etroit: 'test-etroit.mjs',
+  carte: 'test-carte.mjs',
+  'carte-reel': 'test-carte-reel.mjs',
 };
+const MANUELS = new Set(['carte-reel']); // jamais dans « tous les tests » (internet et serveurs publics requis)
+const AUTOMATIQUES = Object.keys(TESTS).filter((t) => !MANUELS.has(t));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
+  [/^modules\/carte\/|^assets\/leaflet\//, ['carte', 'etroit']],
+  [/^donnees\/|^outils\/|^\.github\/workflows\/(lieux-mensuel|pages)\.yml$/, ['carte']],
   [/^tests\/lancer\.mjs$|\.md$|^\.github\/|^\.gitignore$|^assets\/|^tests\/sortie\//, []],
   [/^tests\/test-(.+)\.mjs$/, (m) => [Object.keys(TESTS).find((k) => TESTS[k] === `test-${m[1]}.mjs`)].filter(Boolean)],
   [/^css\/verre\.css$|^js\/fond\.js$/, ['verre', 'etroit']],
@@ -44,7 +51,7 @@ const REGLES = [
   [/^modules\/animaux\/pesees\.js$/, ['5g', 'graphique', 'finitions']],
   [/^modules\/animaux\/(fiche|animaux|commun|exemples)\.js$|^modules\/animaux\/animaux\.css$/, ['5e', '5f', '5g', '5h', 'finitions', 'retouches', 'etroit']],
   [/^js\/conseils\.js$/, ['5h', 'verre']],
-  [/^modules\/(accueil|boutique|carte|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit']],
+  [/^modules\/(accueil|boutique|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit', 'carte']],
 ];
 
 function testsLiesAuxModifications() {
@@ -63,17 +70,17 @@ function testsLiesAuxModifications() {
   }
   if (centraux.length) {
     console.log(`Fichier(s) central(aux) modifié(s) (${centraux.join(', ')}) : ils touchent toute l'application, tous les tests sont lancés.`);
-    return Object.keys(TESTS);
+    return AUTOMATIQUES;
   }
   console.log(`Fichiers modifiés : ${fichiers.size}. Tests concernés : ${[...tests].join(', ') || 'aucun'}.`);
-  return Object.keys(TESTS).filter((t) => tests.has(t));
+  return AUTOMATIQUES.filter((t) => tests.has(t));
 }
 
 const args = process.argv.slice(2);
 const rapide = args.includes('--rapide');
 const jobs = Math.max(1, Number((args.find((a) => a.startsWith('--jobs=')) ?? '').slice(7)) || 2);
 const choisis = args.filter((a) => !a.startsWith('--'));
-const aLancer = choisis.length ? choisis : rapide ? testsLiesAuxModifications() : Object.keys(TESTS);
+const aLancer = choisis.length ? choisis : rapide ? testsLiesAuxModifications() : AUTOMATIQUES;
 const inconnus = aLancer.filter((t) => !TESTS[t]);
 if (inconnus.length) { console.error(`Test inconnu : ${inconnus.join(', ')}. Choix possibles : ${Object.keys(TESTS).join(', ')}`); process.exit(2); }
 if (!aLancer.length) { console.log('Rien à tester : aucun fichier modifié ne concerne les tests.'); process.exit(0); }

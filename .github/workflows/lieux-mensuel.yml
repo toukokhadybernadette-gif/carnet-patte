@@ -1,0 +1,56 @@
+# Met à jour chaque mois les lieux utiles aux animaux (donnees/lieux/) depuis un extrait OpenStreetMap.
+# Le résultat n'est JAMAIS publié tout seul : le workflow ouvre une Pull Request (avec le nombre de lieux ajoutés et retirés)
+# que vous relisez puis fusionnez ; le déploiement du site (pages.yml) se fait alors comme d'habitude.
+#
+# À activer une fois dans GitHub : Settings > Actions > General > « Allow GitHub Actions to create and approve pull requests ».
+# À lancer à la main si besoin : onglet Actions > « Lieux : mise à jour mensuelle » > Run workflow.
+name: "Lieux : mise à jour mensuelle"
+on:
+  schedule:
+    - cron: '0 4 2 * *'   # le 2 de chaque mois, 04:00 (UTC)
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: lieux-mensuel
+  cancel-in-progress: false
+jobs:
+  extraction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Installer les dépendances
+        run: pip install osmium shapely
+      - name: Tester le script d'extraction
+        run: python outils/test_extraire_lieux.py
+      - name: Télécharger l'extrait France (Geofabrik, environ 5 Go)
+        run: curl -fL --retry 5 --retry-delay 30 -o "$RUNNER_TEMP/france.osm.pbf" https://download.geofabrik.de/europe/france-latest.osm.pbf
+      - name: Extraire les lieux (refuse d'écraser les données si le résultat est anormalement petit)
+        run: python outils/extraire-lieux.py --pbf "$RUNNER_TEMP/france.osm.pbf" --sortie donnees/lieux --contours "$RUNNER_TEMP/departements.geojson" --resume "$RUNNER_TEMP/resume.md"
+      - name: Ouvrir la Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$(git status --porcelain donnees/lieux)" ]; then
+            echo "Aucun changement depuis la dernière mise à jour : pas de Pull Request."
+            exit 0
+          fi
+          branche="donnees-lieux-$(date -u +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branche"
+          git add donnees/lieux
+          git commit -m "Lieux OpenStreetMap : mise à jour $(date -u +%Y-%m)"
+          git push --force origin "$branche"
+          titre="Lieux OpenStreetMap : mise à jour $(date -u +%Y-%m)"
+          existante="$(gh pr list --head "$branche" --state open --json number --jq '.[0].number')"
+          if [ -n "$existante" ]; then
+            gh pr edit "$existante" --title "$titre" --body-file "$RUNNER_TEMP/resume.md"
+          else
+            gh pr create --base main --head "$branche" --title "$titre" --body-file "$RUNNER_TEMP/resume.md"
+          fi

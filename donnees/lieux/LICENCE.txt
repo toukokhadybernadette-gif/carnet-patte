@@ -1,0 +1,61 @@
+LIEUX UTILES AUX ANIMAUX : DONNÉES OPENSTREETMAP
+=================================================
+
+Les fichiers de ce dossier (index.json et un fichier <code du département>.json par département de la
+France métropolitaine) forment une BASE DE DONNÉES DÉRIVÉE d'OpenStreetMap.
+
+  © Contributeurs d'OpenStreetMap
+  https://www.openstreetmap.org/copyright
+
+LICENCE : Open Database License (ODbL) 1.0
+  https://opendatacommons.org/licenses/odbl/1-0/
+
+Vous êtes libre de copier, distribuer, utiliser et adapter cette base de données, à ces conditions :
+  1. Attribution : mentionnez « © contributeurs d'OpenStreetMap » et la licence ODbL, avec les adresses ci-dessus.
+  2. Partage à l'identique : si vous adaptez cette base ou en tirez une autre base de données, vous devez
+     la publier sous ODbL.
+  3. Maintien de l'ouverture : si vous redistribuez la base, ne la protégez pas par des moyens techniques
+     qui empêcheraient d'autres personnes d'y accéder librement.
+Seule la licence officielle ODbL 1.0 (adresse ci-dessus) fait foi ; ceci n'en est qu'un résumé.
+
+SOURCE
+  Extrait « France » de Geofabrik (https://download.geofabrik.de/europe/france-latest.osm.pbf), lui-même tiré
+  d'OpenStreetMap. La date de l'extrait est dans index.json (champ « extrait »).
+  Les contours des départements servent seulement à ranger chaque lieu dans un fichier : IGN Admin Express
+  via Etalab, Licence Ouverte 2.0 (https://www.data.gouv.fr/).
+
+MODIFICATIONS APPORTÉES AUX DONNÉES D'ORIGINE
+  - Sélection de 5 catégories : vétérinaires (amenity=veterinary), parcs à chiens (leisure=dog_park),
+    animaleries (shop=pet, shop=pet_supply), toiletteurs (shop=pet_grooming), refuges (amenity=animal_shelter).
+  - Pour un bâtiment ou une surface : un seul point (le centre du rectangle qui l'englobe).
+  - Champs gardés : identifiant OpenStreetMap, catégorie, position (arrondie à environ 1 m), nom, adresse,
+    téléphone, horaires, site web. Tous les autres champs sont supprimés, notamment les COURRIELS.
+  - Pour un lieu SANS NOM : la rue (colonne « rue »), soit celle de son adresse OpenStreetMap, soit celle du point
+    d'adresse OpenStreetMap le plus proche s'il est à moins de 150 m (donnée déduite, à confirmer sur place).
+  - Les objets marqués abandonnés ou désaffectés sont ignorés ; un même lieu saisi deux fois (point et bâtiment,
+    même nom, moins de 80 m) n'est gardé qu'une fois.
+  - Les relations OpenStreetMap (rares) ne sont pas reprises.
+
+RECONSTRUIRE CES FICHIERS
+  Le script outils/extraire-lieux.py du dépôt refait exactement cette base à partir d'un extrait OpenStreetMap.
+  Une Pull Request automatique la met à jour chaque mois (.github/workflows/lieux-mensuel.yml).
+
+CORRIGER OU SUPPRIMER UN LIEU
+  Les données ne sont pas modifiées ici : corrigez-les sur https://www.openstreetmap.org (chaque fiche de la Carte
+  Patte a un lien « Corriger ou compléter ce lieu sur OpenStreetMap »). La correction arrive dans ces fichiers à la
+  prochaine mise à jour mensuelle ; un lieu supprimé dans OpenStreetMap disparaît de la même façon.
+
+AUCUNE GARANTIE
+  Ces données viennent de contributeurs bénévoles : elles sont parfois incomplètes ou périmées. En urgence,
+  appelez votre vétérinaire.
+
+-------------------------------------------------------------------------------------------------------------
+
+ENGLISH SUMMARY
+  These files are a Derived Database of OpenStreetMap data (pet-related places in metropolitan France).
+  © OpenStreetMap contributors, available under the Open Database License 1.0:
+  https://www.openstreetmap.org/copyright and https://opendatacommons.org/licenses/odbl/1-0/
+  You must attribute OpenStreetMap, share any adapted database under the same licence (ODbL), and keep it
+  open. Source: Geofabrik France extract (date in index.json). Modifications: 5 categories selected, one
+  point per object, only name/address/phone/opening hours/website kept (e-mail addresses removed), duplicates
+  merged, split by département. The build script is in outils/extraire-lieux.py.

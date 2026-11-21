@@ -77,7 +77,7 @@ verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=rappels]') &
 verifier(await ev(`document.querySelectorAll('.pg-tuile').length === 0 && ![...document.querySelectorAll('#contenu a')].some(a => ['Mes animaux','Rappels','Sauvegarde'].includes(a.textContent.trim()) && a.closest('.pg-raccourcis'))`), 'Accueil : plus de boutons Mes animaux / Rappels / Sauvegarde');
 verifier(await ev(`!document.querySelector('.pg-bientot')`), 'Accueil : le bloc « Bientôt » n\'y est plus');
 await aller2('#/profil');
-verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===5 && a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 5 liens (modules + « Et d\'autres modules »)');
+verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===4 && a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 4 liens (3 modules + « Et d\'autres modules » ; la Carte Patte n\'est plus « bientôt »)');
 await aller2('#/accueil');
 await importer(JSON.stringify({ ...JSON.parse(ancienExport), soins: [{ id: 's1', animalId: 'a', type: 'vermifuge', titre: '', date: '2025-01-01', notes: '', rappel: '2025-02-01', rappelFait: false }] }));
 await aller2('#/animaux');
@@ -182,7 +182,7 @@ await taille(1280, 900);
 
 log('=== ÉTAPE B : barre du bas à 4 onglets, rappels sur téléphone ===');
 await taille(390, 844); await aller2('#/accueil'); await clip('accueil-mobile', '.pg--accueil', 3000);
-verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,rappels,profil', 'barre du bas : 4 onglets (Accueil, Animaux, Rappels, Profil), plus de Boutique');
+verifier(await ev(`[...document.querySelectorAll('#nav-bas [data-nav]')].map(a=>a.dataset.nav).join(',')`) === 'accueil,animaux,carte,rappels,profil', 'barre du bas : 5 onglets (Accueil, Animaux, Carte, Rappels, Profil), plus de Boutique');
 verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=boutique]')`), 'la Boutique reste dans la section « Bientôt » du menu de gauche');
 await aller2('#/animaux/rappels');
 verifier(await ev(`!document.querySelector('.rp-chiffres')`) && await ev(`document.querySelectorAll('.rp-statuts .rp-nombre').length`) === 4, 'Rappels : plus de carrés de chiffres, les 4 boutons de filtre affichent les nombres');

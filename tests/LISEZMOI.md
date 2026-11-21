@@ -14,7 +14,7 @@ Depuis la racine du projet :
 
 ```
 node tests/lancer.mjs            # tous les tests
-node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique, refonte ou etroit
+node tests/lancer.mjs 5g         # un seul test : 5e, 5f, finitions, 5g, 5h, toxique, refonte, etroit ou carte
 node tests/lancer.mjs 5e 5f      # plusieurs
 ```
 
@@ -49,3 +49,5 @@ Chaque test passe sur trois largeurs : ordinateur (1280 px), tablette (820 px) e
 ## Si les données de test changent
 
 Les scripts s'appuient sur les données d'exemple de l'application (Moka, Mimi) et sur des fichiers d'import construits dans le script. Si vous modifiez `modules/animaux/exemples.js`, certains tests (`finitions`) devront être ajustés.
+| `carte-reel` | `test-carte-reel.mjs` | **À LANCER À LA MAIN SEULEMENT** (`node tests/lancer.mjs carte-reel`, jamais dans la suite automatique ni avec `--rapide`) : appelle les VRAIS serveurs (Nominatim, chaque serveur Overpass, tuiles) pour une vraie recherche « Toulouse » à 5 km. Montre pour chaque serveur le code HTTP, la durée et si le navigateur accepte la réponse (CORS). Peut échouer sans que l'appli soit en faute : les serveurs publics sont parfois saturés ou en panne ; lisez le détail dans `tests/sortie/carte-reel.txt` |
+| `carte` | `test-carte.mjs` | Carte Patte, avec des réponses SIMULÉES (aucun vrai serveur OpenStreetMap appelé) ; lit aussi les VRAIS fichiers de `donnees/lieux/` (structure, 5 catégories, tailles, aucun courriel, contour de la France, LICENCE.txt ODbL, Action mensuelle qui ouvre une Pull Request) et lance les tests Python du script d'extraction. Navigateur : accès depuis l'Accueil et le menu ☰, position demandée seulement après un toucher (refus simulé aussi), lieux lus dans les fichiers du site (instantané, aucune requête Overpass ni Nominatim pour « Autour de moi », seuls les départements voisins chargés, lignes piégées ignorées, site web `javascript:` refusé, source et date affichées, remarque près d'une frontière), repli sur Overpass hors métropole ou si les fichiers sont en panne (HTTP 500), liste triée par distance, filtres en pastilles, fiche d'un lieu (adresse, téléphone, horaires, site web, Itinéraire, Appeler, jamais « 24h/24 » inventé), rayon 2/5/10 km, cache de 6 h (Overpass), recherche par ville ou code postal, une seule recherche à la fois et pause entre deux requêtes, serveurs Overpass de secours, erreurs réseau avec « Réessayer » et détails techniques, attribution OpenStreetMap et licence ODbL visibles, position exacte jamais enregistrée ni envoyée, 375 px, trois largeurs, accessibilité |

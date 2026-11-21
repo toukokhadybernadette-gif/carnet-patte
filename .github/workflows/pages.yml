@@ -1,4 +1,4 @@
-# Publie SEULEMENT ce qui sert au site (pas tests/, README, notes, captures).
+# Publie SEULEMENT ce qui sert au site (pas tests/, outils/, README, notes, captures). donnees/ = lieux préparés à l'avance (licence ODbL).
 name: Publier le site
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
       - name: Assembler le site
         run: |
           mkdir _site
-          cp -r index.html assets css js modules _site/
+          cp -r index.html assets css js modules donnees _site/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

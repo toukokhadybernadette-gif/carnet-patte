@@ -2,8 +2,8 @@
 //
 // UNE SEULE LISTE (NAV) décrit les entrées. Elle sert aux trois dispositions :
 //   - barre latérale (tablette et ordinateur) : toutes les entrées ;
-//   - barre du bas (téléphone) : seulement celles marquées `bas: true` (4 entrées : Accueil, Animaux, Rappels avec son badge de retards, Profil ; la Boutique n'y sera qu'une fois réalisée) ;
-//     la Carte reste accessible depuis la carte « Bientôt » de l'Accueil ;
+//   - barre du bas (téléphone) : seulement celles marquées `bas: true` (5 entrées, icônes seules : Accueil, Animaux, Carte, Rappels avec son badge de retards, Profil), plus le bouton « + » à part ;
+//     la Carte Patte est dans le menu ☰ et sur l'Accueil ;
 //   - Communauté et Professionnels restent accessibles sur téléphone depuis l'Accueil et le Profil.
 //
 // POUR AJOUTER UNE PAGE : créer son module, l'enregistrer avec route() dans js/app.js,
@@ -22,9 +22,9 @@ import { ouvrirAjoutRapide } from './ajout-rapide.js';
 export const NAV = [
   { id: 'accueil', titre: 'Accueil', court: 'Accueil', icone: 'house', href: '#/accueil', bas: true, actif: (s) => s[0] === 'accueil' },
   { id: 'animaux', titre: 'Mes animaux', court: 'Animaux', icone: 'paw-print', href: '#/animaux', bas: true, actif: (s) => s[0] === 'animaux' && s[1] !== 'rappels' },
+  { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', bas: true, actif: (s) => s[0] === 'carte' },
   // Rappels : adresse inchangée (#/animaux/rappels) pour ne casser aucun lien. La cloche de la barre du haut y mène aussi.
   { id: 'rappels', titre: 'Rappels', court: 'Rappels', icone: 'bell', href: '#/animaux/rappels', bas: true, compteurRetards: true, actif: (s) => s[0] === 'animaux' && s[1] === 'rappels' },
-  { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', bientot: true, actif: (s) => s[0] === 'carte' },
   { id: 'boutique', titre: 'Boutique', court: 'Boutique', icone: 'shopping-bag', href: '#/boutique', bientot: true, actif: (s) => s[0] === 'boutique' },
   { id: 'communaute', titre: 'Communauté', court: 'Communauté', icone: 'users', href: '#/communaute', bientot: true, actif: (s) => s[0] === 'communaute' },
   { id: 'pro', titre: 'Professionnels', court: 'Pro', icone: 'briefcase-business', href: '#/pro', bientot: true, actif: (s) => s[0] === 'pro' },
@@ -62,8 +62,8 @@ const sectionBientot = () => {
 };
 
 const itemBas = (n) => `
-  <a class="cp-nav-bas__item" href="${n.href}" data-nav="${n.id}">
-    <span class="cp-nav-bas__icone">${icone(n.icone, { taille: 22 })}${n.compteurRetards ? '<span class="cp-compteur cp-nav-bas__compteur" data-retards hidden></span>' : ''}</span>${echapper(n.court)}
+  <a class="cp-nav-bas__item" href="${n.href}" data-nav="${n.id}" aria-label="${echapper(n.titre)}">
+    <span class="cp-nav-bas__icone">${icone(n.icone, { taille: 24 })}${n.compteurRetards ? '<span class="cp-compteur cp-nav-bas__compteur" data-retards hidden></span>' : ''}</span>
   </a>`;
 
 const logo = () => `
@@ -80,11 +80,9 @@ export function construireNavigation() {
       <ul class="cp-nav-liste app-lateral__pied">${NAV.filter((n) => n.pied).map(itemLateral).join('')}</ul>
     </nav>`;
 
-  // Barre du bas : le bouton rond « + » est au centre (2 entrées de chaque côté)
-  const basEntrees = NAV.filter((n) => n.bas).map(itemBas);
-  const milieu = Math.ceil(basEntrees.length / 2);
-  const boutonPlus = `<button type="button" class="app-plus" id="ajout-bouton" aria-haspopup="dialog" aria-label="Ajouter"><span class="app-plus__rond" aria-hidden="true">${icone('plus', { taille: 28 })}</span></button>`;
-  el('nav-bas').innerHTML = `<div class="cp-nav-bas">${[...basEntrees.slice(0, milieu), boutonPlus, ...basEntrees.slice(milieu)].join('')}</div>`;
+  // Barre du bas (façon iOS 26) : une capsule d'icônes seules, et le bouton rond « + » à sa droite, séparé, à la même hauteur
+  el('nav-bas').innerHTML = `<div class="cp-nav-bas">${NAV.filter((n) => n.bas).map(itemBas).join('')}</div>`;
+  el('barre-bas').insertAdjacentHTML('beforeend', `<button type="button" class="app-plus" id="ajout-bouton" aria-haspopup="dialog" aria-label="Ajouter"><span class="app-plus__rond" aria-hidden="true">${icone('plus', { taille: 30 })}</span></button>`);
 
   el('barre-haut').innerHTML = `
     <button type="button" class="cp-btn cp-btn--discret cp-btn--icone app-menu-bouton" id="menu-bouton" aria-label="Menu" aria-haspopup="dialog" aria-expanded="false">${icone('menu', { taille: 22 })}</button>
