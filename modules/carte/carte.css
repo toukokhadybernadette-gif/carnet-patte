@@ -32,6 +32,9 @@
 
 .ca-resultats { gap: var(--cp-espace-3); }
 .ca-statut { margin: 0; font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
+.ca-source { margin: 0; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); max-width: 70ch; }
+.ca-licence p { margin: 0; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); max-width: 70ch; }
+.ca-source[hidden] { display: none; }
 .ca-statut[hidden], #ca-vide[hidden], #ca-zone[hidden], .ca-fiche[hidden], .ca-filtres[hidden], .ca-plus[hidden] { display: none; }
 .ca-erreur { display: grid; gap: var(--cp-espace-2); justify-items: start; }
 .ca-erreur .cp-alerte { width: 100%; }

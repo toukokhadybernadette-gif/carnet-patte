@@ -45,7 +45,7 @@ const nord = (m) => +(C.lat + m / 111320).toFixed(6);
 const est = (m) => +(C.lon + m / (111320 * Math.cos(C.lat * Math.PI / 180))).toFixed(6);
 const NOM_LONG = 'Clinique Vétérinaire Universitaire Internationale des Animaux de Compagnie et de la Faune Sauvage de Bretagne Occidentale';
 const ELEMENTS = [
-  { type: 'node', id: 1, lat: nord(400), lon: C.lon, tags: { amenity: 'veterinary', name: 'Clinique Vétérinaire du Parc', 'addr:housenumber': '12', 'addr:street': 'rue des Lilas', 'addr:postcode': '35000', 'addr:city': 'Rennes', phone: '+33 2 99 00 00 01', opening_hours: 'Mo-Fr 09:00-18:00; Sa 09:00-12:00' } },
+  { type: 'node', id: 1, lat: nord(400), lon: C.lon, tags: { amenity: 'veterinary', name: 'Clinique Vétérinaire du Parc', 'addr:housenumber': '12', 'addr:street': 'rue des Lilas', 'addr:postcode': '35000', 'addr:city': 'Rennes', phone: '+33 2 99 00 00 01', opening_hours: 'Mo-Fr 09:00-18:00; Sa 09:00-12:00', website: 'https://clinique-du-parc.example/rdv' } },
   { type: 'node', id: 12, lat: nord(-700), lon: C.lon, tags: { amenity: 'veterinary', name: NOM_LONG, 'addr:full': '1 avenue du Professeur Docteur Jean-Baptiste de la Fontaine-Saint-Martin, 35000 Rennes' } },
   { type: 'node', id: 2, lat: C.lat, lon: est(1500), tags: { amenity: 'veterinary', name: 'Urgences Vétérinaires Rennes', opening_hours: '24/7', phone: '02 99 00 00 02' } },
   { type: 'way', id: 3, center: { lat: nord(2600), lon: C.lon }, tags: { leisure: 'dog_park', name: 'Parc canin de la Prévalaye' } },
@@ -63,13 +63,94 @@ const attendus = (centre, rayonKm) => ELEMENTS.map((e) => ({ id: `${e.type}/${e.
 const VILLES = { rennes: { lat: C.lat, lon: C.lon, display_name: 'Rennes, Ille-et-Vilaine, Bretagne, France métropolitaine, France' }, '35000': { lat: C.lat, lon: C.lon, display_name: '35000, Rennes, Ille-et-Vilaine, Bretagne, France' },
   brest: { lat: 48.39, lon: -4.486, display_name: 'Brest, Finistère, Bretagne, France' }, nantes: { lat: 47.2184, lon: -1.5536, display_name: 'Nantes, Loire-Atlantique, Pays de la Loire, France' },
   toulouse: { lat: 43.6045, lon: 1.4442, display_name: 'Toulouse, Haute-Garonne, Occitanie, France' },
+  bruxelles: { lat: 50.8503, lon: 4.3517, display_name: 'Bruxelles, Région de Bruxelles-Capitale, Belgique' }, frontiere: { lat: 50.45, lon: 1.0, display_name: 'Ville-Frontière, Pas-de-Calais, France' },
   paris: { lat: 48.8566, lon: 2.3522, display_name: 'Paris, Île-de-France, France' }, lille: { lat: 50.6292, lon: 3.0573, display_name: 'Lille, Nord, Hauts-de-France, France' },
   lyon: { lat: 45.764, lon: 4.8357, display_name: 'Lyon, Métropole de Lyon, Rhône, France' }, marseille: { lat: 43.2965, lon: 5.3698, display_name: 'Marseille, Bouches-du-Rhône, France' } };
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
 
+// ----- Lieux préparés à l'avance (donnees/lieux/) : fichiers SIMULÉS pour le navigateur -----
+const CODE_CAT = { veto: 'v', parc: 'p', animalerie: 'a', toiletteur: 't', refuge: 'r' };
+const ligneDe = (e) => { const t = e.tags; const c = coord(e); return [`${e.type[0]}${e.id}`, CODE_CAT[CAT(t)], c.lat, c.lon, t.name ?? '', t['addr:full'] ?? (t['addr:street'] ? `${t['addr:housenumber']} ${t['addr:street']}, ${t['addr:postcode']} ${t['addr:city']}` : ''), t.phone ?? '', t.opening_hours ?? '', t.website ?? '']; };
+const LIGNES_35 = ELEMENTS.filter((e) => e.id % 2 === 1).map(ligneDe);   // deux « départements » qui se partagent la zone de Rennes
+const LIGNES_53 = ELEMENTS.filter((e) => e.id % 2 === 0).map(ligneDe);
+const LIGNES_29 = [                                                       // Brest : de bonnes lignes et des lignes piégées
+  ['n501', 'v', 48.3905, -4.486, 'Vétérinaire de Brest', '', '', '', 'https://brest.example'],
+  ['x502', 'v', 48.39, -4.49, 'Ligne invalide : identifiant'],
+  ['n503', 'z', 48.39, -4.49, 'Ligne invalide : catégorie'],
+  ['n504', 'p', 'pas un nombre', -4.49, 'Ligne invalide : position'],
+  ['n505', 'a', 48.392, -4.485, 'Animalerie piégée', '', '+33 2 98 00 00 05', '', 'javascript:alert(1)'],
+  'pas une ligne',
+];
+const bornes = (l) => [Math.min(...l.filter((x) => Number.isFinite(x[2])).map((x) => x[2])), Math.min(...l.map((x) => x[3])), Math.max(...l.filter((x) => Number.isFinite(x[2])).map((x) => x[2])), Math.max(...l.map((x) => x[3]))];
+const INDEX_SIMULE = { v: 1, extrait: '2026-11-20T21:21:21Z', genere: '2026-11-21', total: LIGNES_35.length + LIGNES_53.length + 2,
+  departements: { '35': { n: LIGNES_35.length, bbox: bornes(LIGNES_35) }, '53': { n: LIGNES_53.length, bbox: bornes(LIGNES_53) }, '29': { n: 2, bbox: [48.39, -4.49, 48.392, -4.485] } },
+  france: [[[-5, 42], [8, 42], [8, 50.5], [-5, 50.5], [-5, 42]]] };   // un grand rectangle : Bruxelles (50,85° N) est hors couverture
+const FICHIERS_SIMULES = { 'index.json': INDEX_SIMULE, '35.json': { v: 1, dep: '35', lieux: LIGNES_35 }, '53.json': { v: 1, dep: '53', lieux: LIGNES_53 }, '29.json': { v: 1, dep: '29', lieux: LIGNES_29 } };
+let modeLocal = 'indisponible';    // 'indisponible' (réponse inutilisable : l'appli passe à Overpass) | 'mock' (fichiers simulés) | 'erreur-500'
+const donneesAppels = [];          // les fichiers de donnees/lieux/ demandés par l'appli
+
+// ===== Les VRAIS fichiers de donnees/lieux/ (lus sur le disque) : structure, tailles, protection de la vie privée =====
+log('=== DONNÉES PRÉPARÉES À L\'AVANCE : donnees/lieux/ (fichiers réels du dépôt) ===');
+const DOSSIER_LIEUX = path.join(RACINE, 'donnees/lieux');
+const lireLieux = (f) => JSON.parse(fs.readFileSync(path.join(DOSSIER_LIEUX, f), 'utf8'));
+let idxReel = null; try { idxReel = lireLieux('index.json'); } catch { /* signalé par la vérification suivante */ }
+verifier(idxReel?.v === 1 && /^\d{4}-\d{2}-\d{2}T/.test(idxReel.extrait ?? '') && Object.keys(idxReel.departements ?? {}).length >= 90, `index.json lisible : version 1, extrait du ${idxReel?.extrait}, ${Object.keys(idxReel?.departements ?? {}).length} départements`);
+if (idxReel) {
+  const fichiersReels = fs.readdirSync(DOSSIER_LIEUX).filter((f) => /^[0-9AB]{2}\.json$/.test(f));
+  verifier(fichiersReels.length === Object.keys(idxReel.departements).length && fichiersReels.every((f) => idxReel.departements[f.slice(0, 2)]), `un fichier par département de l'index (${fichiersReels.length})`);
+  let total = 0, octets = 0, plusGros = 0, nomPlusGros = '', mauvaises = [], vusIds = new Set(), doublons = 0, courriels = 0, sitesMauvais = 0, tels = 0, horsBoite = 0, nonTries = 0;
+  const parCat = {};
+  for (const f of fichiersReels) {
+    const code = f.slice(0, 2);
+    const taille = fs.statSync(path.join(DOSSIER_LIEUX, f)).size;
+    octets += taille; if (taille > plusGros) { plusGros = taille; nomPlusGros = code; }
+    const d = lireLieux(f);
+    const [s0, w0, n0, e0] = idxReel.departements[code].bbox;
+    if (d.v !== 1 || d.dep !== code || d.lieux.length !== idxReel.departements[code].n) mauvaises.push(`${code} : en-tête ou nombre`);
+    let precedent = '';
+    for (const l of d.lieux) {
+      total++;
+      const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = ''] = l;
+      if (!/^[nwr]\d+$/.test(id) || !'vpatr'.includes(c) || !Number.isFinite(lat) || !Number.isFinite(lon)) mauvaises.push(`${code} : ${JSON.stringify(l).slice(0, 80)}`);
+      if (lat < s0 - 1e-9 || lat > n0 + 1e-9 || lon < w0 - 1e-9 || lon > e0 + 1e-9) horsBoite++;
+      if (vusIds.has(id)) doublons++; vusIds.add(id);
+      if (id < precedent) nonTries++; precedent = id;
+      if (l.slice(4).some((x) => typeof x !== 'string' || /[\w.+-]+@[\w-]+\.[\w.-]+/.test(x))) courriels++;
+      if (site && !/^https?:\/\/[^\s<>"']+$/i.test(site)) sitesMauvais++;
+      if (tel) { tels++; if (!/^\+?\d{6,15}$/.test(tel.replace(/[\s.()-]/g, ''))) mauvaises.push(`${code} : téléphone ${tel}`); }
+      parCat[c] = (parCat[c] ?? 0) + 1;
+    }
+  }
+  verifier(mauvaises.length === 0, `toutes les lignes sont valides (${mauvaises.slice(0, 3).join(' | ') || 'aucune erreur'})`);
+  verifier(total === idxReel.total && total >= 5000, `${total} lieux au total (index : ${idxReel.total}) : au moins 5 000 pour la France métropolitaine`);
+  verifier(['v', 'p', 'a', 't', 'r'].every((c) => parCat[c] >= 50) && parCat.v >= 1000, `les 5 catégories sont bien présentes : ${Object.entries(parCat).map(([c, n]) => `${c}=${n}`).join(' ')}`);
+  verifier(doublons === 0 && horsBoite === 0 && nonTries === 0, `identifiants uniques (${doublons} doublons), tous dans la zone de leur département (${horsBoite} dehors), fichiers triés (${nonTries} désordres)`);
+  verifier(courriels === 0 && sitesMauvais === 0, `aucun courriel (${courriels}), tous les sites sont des adresses http(s) (${sitesMauvais} mauvais)`);
+  const tailleIndex = fs.statSync(path.join(DOSSIER_LIEUX, 'index.json')).size;
+  log(`  TAILLE RÉELLE : ${(octets / 1048576).toFixed(2)} Mo de départements (${fichiersReels.length} fichiers, moyenne ${Math.round(octets / fichiersReels.length / 1024)} Ko, plus gros : ${nomPlusGros} = ${Math.round(plusGros / 1024)} Ko) + index ${Math.round(tailleIndex / 1024)} Ko ; ${total} lieux, ${tels} avec téléphone`);
+  verifier(octets < 12 * 1048576 && plusGros < 600 * 1024 && tailleIndex < 60 * 1024, 'tailles raisonnables (moins de 12 Mo en tout, moins de 600 Ko par département, index de moins de 60 Ko)');
+  // Vérification de bon sens : autour du centre de Toulouse, il y a des vétérinaires dans le fichier de la Haute-Garonne
+  const toulouse = { lat: 43.6045, lon: 1.4442 };
+  const vetosToulouse = lireLieux('31.json').lieux.filter((l) => l[1] === 'v' && mondial(toulouse, { lat: l[2], lon: l[3] }) <= 5000);
+  verifier(vetosToulouse.length >= 10, `bon sens : ${vetosToulouse.length} vétérinaires à moins de 5 km du centre de Toulouse (fichier 31)`);
+  const contour = idxReel.france;
+  const dansContour = (lon, lat) => contour.some((a) => { let d = false; for (let i = 0, j = a.length - 1; i < a.length; j = i++) { const [xi, yi] = a[i], [xj, yj] = a[j]; if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) d = !d; } return d; });
+  verifier(dansContour(1.4442, 43.6045) && dansContour(2.3522, 48.8566) && dansContour(8.7386, 41.9192) && dansContour(9.4503, 42.6977) && !dansContour(4.35, 50.85) && !dansContour(-0.1276, 51.5072) && !dansContour(55.45, -20.88), 'contour de la France : Toulouse, Paris, Ajaccio et Bastia dedans ; Bruxelles, Londres et La Réunion dehors');
+}
+const licence = fs.existsSync(path.join(DOSSIER_LIEUX, 'LICENCE.txt')) ? fs.readFileSync(path.join(DOSSIER_LIEUX, 'LICENCE.txt'), 'utf8') : '';
+verifier(/ODbL/.test(licence) && /openstreetmap\.org\/copyright/.test(licence) && /opendatacommons\.org\/licenses\/odbl\/1-0/.test(licence) && /COURRIELS/.test(licence) && /Geofabrik/.test(licence), 'LICENCE.txt : ODbL 1.0, attribution OpenStreetMap, source Geofabrik, modifications (courriels supprimés)');
+const wfMensuel = fs.readFileSync(path.join(RACINE, '.github/workflows/lieux-mensuel.yml'), 'utf8');
+const wfPages = fs.readFileSync(path.join(RACINE, '.github/workflows/pages.yml'), 'utf8');
+verifier(/cron: '0 4 2 \* \*'/.test(wfMensuel) && /workflow_dispatch/.test(wfMensuel) && /gh pr create/.test(wfMensuel) && /pull-requests: write/.test(wfMensuel) && !/push[^\n]*origin main|--base main --head main/.test(wfMensuel), 'GitHub Action mensuelle : planifiée, lancement manuel possible, ouvre une Pull Request, ne pousse jamais sur main');
+verifier(/cp -r [^\n]*\bdonnees\b[^\n]* _site/.test(wfPages), 'le déploiement du site publie le dossier donnees/');
+const { spawnSync } = await import('node:child_process');
+const py = ['python', 'python3', 'py'].map((c) => spawnSync(c, [path.join(RACINE, 'outils/test_extraire_lieux.py')], { encoding: 'utf8' })).find((r) => !r.error);
+const pySansModule = py && /No module named/.test(py.stderr ?? '');
+verifier(!py || pySansModule || py.status === 0, py ? (pySansModule ? 'tests Python du script d\'extraction ignorés (pip install osmium shapely manquant)' : `tests Python du script d'extraction (12 contrôles : sans courriel, sites sûrs, doublons, départements) : ${py.status === 0 ? 'OK' : (py.stderr || py.stdout).slice(-300)}`) : 'tests Python ignorés (Python absent)');
+
 const appels = [];                 // chaque requête vers Overpass ou Nominatim : { t, type, ... }
 let tuiles = 0, enCours = 0, maxEnCours = 0, mode = 'ok';
-await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*overpass.kumi.systems*' }, { urlPattern: '*overpass.private.coffee*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
+await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*overpass.kumi.systems*' }, { urlPattern: '*overpass.private.coffee*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }, { urlPattern: '*/donnees/lieux/*' }] });
 const repondre = (requestId, { status = 200, type = 'application/json', corps = '' }) => send('Fetch.fulfillRequest', { requestId, responseCode: status, responseHeaders: [{ name: 'Content-Type', value: type }, { name: 'Access-Control-Allow-Origin', value: '*' }], body: Buffer.from(corps).toString('base64') });
 ws.addEventListener('message', async (m) => {
   const d = JSON.parse(m.data);
@@ -77,6 +158,15 @@ ws.addEventListener('message', async (m) => {
   const { requestId, request } = d.params;
   const u = new globalThis.URL(request.url);
   if (u.hostname === 'tile.openstreetmap.org') { tuiles++; await repondre(requestId, { type: 'image/png', corps: PNG }); return; }
+  if (u.pathname.includes('/donnees/lieux/')) {
+    const fichier = u.pathname.split('/').pop();
+    donneesAppels.push(fichier);
+    if (!/\.json$/.test(fichier)) { await send('Fetch.continueRequest', { requestId }); return; }   // LICENCE.txt : le vrai fichier du dépôt
+    if (modeLocal === 'erreur-500') await repondre(requestId, { status: 500, type: 'text/plain', corps: 'Erreur du serveur' });
+    else if (modeLocal === 'mock' && FICHIERS_SIMULES[fichier]) await repondre(requestId, { corps: JSON.stringify(FICHIERS_SIMULES[fichier]) });
+    else await repondre(requestId, { corps: JSON.stringify({ v: 0 }) });
+    return;
+  }
   enCours++; maxEnCours = Math.max(maxEnCours, enCours);
   await sleep(450); // une vraie réponse n'est pas instantanée : on vérifie qu'aucune autre requête ne part pendant ce temps
   try {
@@ -332,6 +422,71 @@ verifier(await attendre(`/autour de Lille/.test(document.querySelector('#ca-stat
 verifier(appels.slice(avantL).filter((a) => a.type === 'overpass').map((a) => a.serveur).join() === 'overpass.kumi.systems', 'la recherche suivante commence directement par le serveur qui répond (pas d\'attente inutile sur celui en panne)');
 mode = 'ok';
 verifier(erreursAttendues(avantE) >= 0, 'seules les erreurs réseau simulées apparaissent dans la console (retirées du compte)');
+
+log('=== LIEUX PRÉPARÉS À L\'AVANCE : lecture des fichiers du site (simulés) ===');
+modeLocal = 'mock';
+const lo0 = nbOverpass(), nn0 = nbNominatim(), lf0 = donneesAppels.length;
+await ev(`window.__geo = 0`);
+const lt0 = Date.now();
+await cliquer('#ca-loc');
+verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut').textContent) && /extrait/.test(document.querySelector('#ca-source').textContent)`, 20000), 'les lieux s\'affichent depuis les fichiers du site');
+const dureeLocale = Date.now() - lt0;
+verifier(dureeLocale < 4000, `recherche « Autour de moi » en ${dureeLocale} ms (jamais 30 à 45 s) : aucune requête Overpass ni pause de 1,5 s`);
+verifier(nbOverpass() === lo0 && nbNominatim() === nn0, 'AUCUNE requête vers Overpass ni Nominatim : la position ne quitte pas l\'appareil');
+verifier(donneesAppels.slice(lf0).slice().sort().join() === '35.json,53.json,index.json', `seuls les départements voisins sont chargés (${donneesAppels.slice(lf0).join(', ')}) : pas 29.json (Brest)`);
+attendu = attendus(POS, 5);
+verifier(JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)), `liste triée par distance, deux fichiers réunis : ${(await liste()).map((x) => x.id.replace('node/', '')).join(' > ')}`);
+const lsource = await texte('#ca-source');
+verifier(/extrait d'OpenStreetMap du .*2026/.test(lsource) && /préparé à l'avance/.test(lsource) && !/frontière/.test(lsource), `la source est indiquée : « ${lsource} »`);
+verifier(await ev(`(() => { const a = [...document.querySelectorAll('.ca-licence a')]; return a.some((x) => x.href === 'https://www.openstreetmap.org/copyright') && a.some((x) => x.href === 'https://opendatacommons.org/licenses/odbl/1-0/') && a.some((x) => x.href.endsWith('donnees/lieux/LICENCE.txt')) && /© contributeurs d'OpenStreetMap/.test(document.querySelector('.ca-licence').textContent) && a.every((x) => /noopener/.test(x.rel)); })()`), 'pied de page : « © contributeurs d\'OpenStreetMap », licence ODbL et lien vers la licence des fichiers');
+verifier(await ev(`fetch('donnees/lieux/LICENCE.txt').then(async (r) => r.status === 200 && /ODbL/.test(await r.text()))`), 'le lien « licence et source » ouvre bien LICENCE.txt (ODbL)');
+await ouvrir('node/1');
+const lfSite = await ev(`(() => { const a = [...document.querySelectorAll('#ca-fiche a')].find((x) => /^Site web/.test(x.textContent.trim())); return a ? { href: a.href, rel: a.rel, cible: a.target, hote: a.textContent } : null; })()`);
+verifier(lfSite && lfSite.href === 'https://clinique-du-parc.example/rdv' && /noopener/.test(lfSite.rel) && lfSite.cible === '_blank' && /clinique-du-parc\.example/.test(lfSite.hote), `fiche : lien « Site web » vers ${lfSite?.href} (nouvel onglet, noopener)`);
+await ouvrir('node/4');
+verifier(await ev(`![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Site web/.test(x.textContent.trim()))`), 'sans site web dans les données : pas de ligne « Site web »');
+await cliquer('#ca-fermer'); await sleep(200);
+await cliquer('input[name=ca-rayon][value="10"]'); await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`);
+verifier(donneesAppels.slice(lf0).filter((f) => f.endsWith('.json')).length === 3 && nbOverpass() === lo0, 'autre rayon : lecture en mémoire, aucun nouveau fichier ni requête');
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+await axe('#contenu', 'Carte, lieux des fichiers du site (1280 px)');
+
+log('--- une autre ville de France (Brest) : lignes piégées dans le fichier ---');
+await chercherVille('Brest');
+verifier(await attendre(`/autour de Brest/.test(document.querySelector('#ca-statut').textContent)`, 20000), `ville : « ${await statut()} »`);
+const lbrest = await liste();
+verifier(lbrest.length === 2 && lbrest.map((x) => x.nom).join('|') === 'Vétérinaire de Brest|Animalerie piégée', `les 4 lignes invalides (identifiant, catégorie, position, « pas une ligne ») sont ignorées : ${lbrest.map((x) => x.nom).join(' | ')}`);
+verifier(donneesAppels.slice(lf0).filter((f) => f === '29.json').length === 1 && donneesAppels.slice(lf0).filter((f) => f === 'index.json').length === 1, 'seul 29.json est chargé de plus ; index.json une seule fois pour toute la visite');
+await ouvrir('node/505');
+verifier(await ev(`document.querySelectorAll('a[href^="javascript"]').length === 0 && ![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Site web/.test(x.textContent.trim()))`), 'un site « javascript:… » est refusé : aucun lien dangereux');
+verifier(await ev(`[...document.querySelectorAll('#ca-fiche a')].some((x) => x.href === 'tel:+33298000005')`), 'le téléphone valide de la même fiche reste utilisable');
+await cliquer('#ca-fermer'); await sleep(200);
+
+log('--- hors de la France métropolitaine (Bruxelles) : Overpass en secours ---');
+const lo1 = nbOverpass(), lf1 = donneesAppels.length;
+await chercherVille('Bruxelles');
+verifier(await attendre(`/autour de Bruxelles/.test(document.querySelector('#ca-statut').textContent) && /Overpass/.test(document.querySelector('#ca-source').textContent)`, 30000), `hors couverture : « ${await texte('#ca-source')} »`);
+verifier(nbOverpass() === lo1 + 1 && donneesAppels.length === lf1, 'une requête Overpass, aucun fichier de département chargé');
+
+log('--- près d\'une frontière : la limite est dite ---');
+const lf2 = donneesAppels.length;
+await chercherVille('Frontiere');
+await attendre(`/autour de Ville-Frontière/.test(document.querySelector('#ca-statut').textContent)`, 20000);
+verifier(!/frontière ou d'une côte/.test(await texte('#ca-source')), 'rayon 5 km, cercle entièrement en France : pas de remarque');
+await cliquer('input[name=ca-rayon][value="10"]');
+verifier(await attendre(`/frontière ou d'une côte/.test(document.querySelector('#ca-source').textContent)`, 20000), `rayon 10 km, cercle qui sort de France : « ${await texte('#ca-source')} »`);
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km|Aucun lieu trouvé dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+
+log('--- fichiers du site en panne (HTTP 500) : repli automatique sur Overpass ---');
+await send('Page.navigate', { url: URL }); await sleep(1800); await aller2('#/carte'); await ev(axeSrc); await poserEspion();
+modeLocal = 'erreur-500';
+const avantL500 = erreurs.length, lo2 = nbOverpass();
+await cliquer('#ca-loc');
+verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut').textContent) && /Overpass/.test(document.querySelector('#ca-source').textContent)`, 40000), 'fichiers illisibles : la recherche réussit quand même, via Overpass');
+verifier(nbOverpass() === lo2 + 1 && JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(attendus(POS, 5).map((x) => x.id)), 'les lieux viennent bien d\'Overpass (une requête) et sont triés');
+verifier(erreurs.slice(avantL500).every((e) => /Failed to load resource|500/.test(e)) && erreurs.slice(avantL500).length >= 1, 'seule l\'erreur réseau simulée apparaît dans la console (retirée du compte)');
+erreurs.splice(avantL500);
+modeLocal = 'indisponible';
 
 log('=== AFFICHAGE SUR 375 px (iPhone), PAGE RECHARGÉE ===');
 await taille(375, 812);

@@ -40,6 +40,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
   [/^modules\/carte\/|^assets\/leaflet\//, ['carte', 'etroit']],
+  [/^donnees\/|^outils\/|^\.github\/workflows\/(lieux-mensuel|pages)\.yml$/, ['carte']],
   [/^tests\/lancer\.mjs$|\.md$|^\.github\/|^\.gitignore$|^assets\/|^tests\/sortie\//, []],
   [/^tests\/test-(.+)\.mjs$/, (m) => [Object.keys(TESTS).find((k) => TESTS[k] === `test-${m[1]}.mjs`)].filter(Boolean)],
   [/^css\/verre\.css$|^js\/fond\.js$/, ['verre', 'etroit']],

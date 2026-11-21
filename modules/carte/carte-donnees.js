@@ -1,4 +1,6 @@
 // Carte Patte : la logique, sans interface.
+//   - les lieux viennent d'abord de fichiers préparés à l'avance (donnees/lieux/<département>.json, France métropolitaine) : instantané, et la position ne quitte pas l'appareil ;
+//   - sinon (hors métropole, ou fichiers indisponibles) des serveurs Overpass publics, plus lents et parfois saturés ;
 //   - les catégories de lieux (couleur, icône, étiquettes OpenStreetMap) ;
 //   - la requête Overpass et la lecture de sa réponse ;
 //   - les distances, adresses, téléphones et horaires ;
@@ -49,6 +51,7 @@ export const MESSAGES = {
   'trop-long': 'La recherche prend trop de temps. Réessayez, ou choisissez un rayon plus petit.',
   'ville-introuvable': "Aucune ville ni aucun code postal ne correspond. Vérifiez l'orthographe.",
   'ville-vide': 'Entrez une ville ou un code postal.',
+  'donnees-locales': "Les lieux préparés à l'avance ne sont pas disponibles.",
 };
 
 /** `detail` : la vraie raison technique (code HTTP, message du navigateur…). `essais` : un détail par serveur essayé. */
@@ -103,6 +106,13 @@ export function horaires(brut) {
   return { texte, h24: false };
 }
 
+/** Adresse du site web, seulement si c'est une vraie adresse http(s) (jamais de courriel ni de lien « javascript: »). */
+export function siteWeb(t) {
+  let brut = nettoyer(t.website || t['contact:website'] || t.url, 200);
+  if (brut && !/^[a-z][a-z0-9+.-]*:\/\//i.test(brut) && /^[\w-]+(\.[\w-]+)+(\/.*)?$/.test(brut)) brut = `https://${brut}`;
+  return /^https?:\/\/[^\s<>"']+$/i.test(brut) && !brut.split('/')[2].includes('@') ? brut : '';
+}
+
 const apple = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
 
 /** Lien d'itinéraire : Plans sur iPhone et Mac, Google Maps ailleurs. */
@@ -142,6 +152,7 @@ export function analyser(json) {
       adresse: adresse(t),
       tel: telephone(t),
       horaires: nettoyer(t.opening_hours, 300),
+      site: siteWeb(t),
     });
   }
   return lieux;
@@ -237,11 +248,107 @@ async function interrogerOverpass(corps, progression) {
   throw new ErreurCarte(derniere.code, derniere.detail, essais);
 }
 
+// ===== Lieux préparés à l'avance : donnees/lieux/ (voir outils/extraire-lieux.py, mis à jour chaque mois par une Pull Request) =====
+
+const DOSSIER_LIEUX = new URL('../../donnees/lieux/', import.meta.url);
+const CODES_CATEGORIES = { v: 'veto', p: 'parc', a: 'animalerie', t: 'toiletteur', r: 'refuge' };
+const TYPES_OSM = { n: 'node', w: 'way', r: 'relation' };
+let promesseIndex = null;
+const promessesFichiers = new Map();
+
+async function lireJsonLocal(nom) {
+  let reponse;
+  try { reponse = await fetch(new URL(nom, DOSSIER_LIEUX)); } catch (e) { throw new ErreurCarte('donnees-locales', `${nom} : ${e?.name ?? 'Erreur'} : ${e?.message ?? ''}`); }
+  if (!reponse.ok) throw new ErreurCarte('donnees-locales', `${nom} : HTTP ${reponse.status}${reponse.statusText ? ` ${reponse.statusText}` : ''}`);
+  try { return await reponse.json(); } catch (e) { throw new ErreurCarte('donnees-locales', `${nom} : JSON illisible (${e?.message ?? ''})`); }
+}
+
+function chargerIndex() {
+  promesseIndex ??= lireJsonLocal('index.json').then((index) => {
+    if (index?.v !== 1 || !index.departements || !Array.isArray(index.france)) throw new ErreurCarte('donnees-locales', 'index.json : format inattendu');
+    return index;
+  }).catch((e) => { promesseIndex = null; throw e; });
+  return promesseIndex;
+}
+
+function chargerDepartement(code) {
+  if (!promessesFichiers.has(code)) {
+    promessesFichiers.set(code, lireJsonLocal(`${code}.json`).then((f) => {
+      if (f?.v !== 1 || !Array.isArray(f.lieux)) throw new ErreurCarte('donnees-locales', `${code}.json : format inattendu`);
+      return f.lieux;
+    }).catch((e) => { promessesFichiers.delete(code); throw e; }));
+  }
+  return promessesFichiers.get(code);
+}
+
+/** Point dans un polygone (anneau de [lon, lat]). */
+function dansAnneau(lon, lat, anneau) {
+  let dedans = false;
+  for (let i = 0, j = anneau.length - 1; i < anneau.length; j = i++) {
+    const [xi, yi] = anneau[i];
+    const [xj, yj] = anneau[j];
+    if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) dedans = !dedans;
+  }
+  return dedans;
+}
+export const dansFrance = (index, p) => index.france.some((anneau) => dansAnneau(p.lon, p.lat, anneau));
+
+/** Le cercle de recherche est-il entièrement couvert ? (huit points sur le cercle) Sinon on est près d'une frontière ou d'une côte. */
+export function cercleCouvert(index, centre, rayonKm) {
+  const dLat = rayonKm / 111.32;
+  const dLon = rayonKm / (111.32 * Math.cos((centre.lat * Math.PI) / 180));
+  return Array.from({ length: 8 }, (_, k) => (k * Math.PI) / 4)
+    .every((a) => dansFrance(index, { lat: centre.lat + dLat * Math.sin(a), lon: centre.lon + dLon * Math.cos(a) }));
+}
+
+/** Une ligne de fichier [id, catégorie, lat, lon, nom, adresse, tél., horaires, site] devient un lieu ; null si elle est invalide. */
+export function lieuDepuisLigne(ligne) {
+  if (!Array.isArray(ligne)) return null;
+  const [id, c, lat, lon, nom = '', adr = '', tel = '', hor = '', site = ''] = ligne;
+  const cat = CODES_CATEGORIES[c];
+  if (typeof id !== 'string' || !/^[nwr]\d+$/.test(id) || !cat || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return {
+    id: `${TYPES_OSM[id[0]]}/${id.slice(1)}`, cat, lat, lon,
+    nom: nettoyer(nom, 160), adresse: nettoyer(adr), tel: telephone({ phone: nettoyer(tel, 60) }), horaires: nettoyer(hor, 300),
+    site: /^https?:\/\/[^\s<>"']+$/i.test(site) ? String(site).slice(0, 200) : '',
+  };
+}
+
 /**
- * Les lieux autour d'un point : depuis le cache s'il est récent, sinon depuis Overpass.
+ * Les lieux depuis les fichiers du site. Renvoie null si le point est hors de la France métropolitaine (on passe alors à Overpass).
+ * Lève une ErreurCarte si les fichiers sont illisibles (on passe aussi à Overpass).
+ */
+async function lieuxLocaux(centre, rayonKm) {
+  const index = await chargerIndex();
+  if (!dansFrance(index, centre)) return null;
+  const dLat = rayonKm / 111.32;
+  const dLon = rayonKm / (111.32 * Math.cos((centre.lat * Math.PI) / 180));
+  const codes = Object.entries(index.departements)
+    .filter(([, d]) => d.bbox[0] <= centre.lat + dLat && d.bbox[2] >= centre.lat - dLat && d.bbox[1] <= centre.lon + dLon && d.bbox[3] >= centre.lon - dLon)
+    .map(([code]) => code);
+  const fichiers = await Promise.all(codes.map(chargerDepartement));
+  const lieux = fichiers.flat().map(lieuDepuisLigne).filter(Boolean)
+    .map((l) => ({ ...l, d: distance(centre, l) }))
+    .filter((l) => l.d <= rayonKm * 1000)
+    .sort((a, b) => a.d - b.d);
+  return { lieux, depuisCache: false, source: 'locale', extrait: String(index.extrait ?? ''), partiel: !cercleCouvert(index, centre, rayonKm) };
+}
+
+/**
+ * Les lieux autour d'un point : depuis les fichiers du site (France métropolitaine), sinon depuis le cache récent, sinon depuis Overpass.
  * Renvoie { lieux (avec `d`, la distance en mètres, triés du plus proche au plus loin, dans le rayon demandé), depuisCache }.
  */
 export async function lieuxAutour(centre, rayonKm, progression) {
+  // 1. Les fichiers préparés à l'avance (France métropolitaine) : instantané, aucune requête vers OpenStreetMap
+  let raisonLocale = '';
+  try {
+    const local = await lieuxLocaux(centre, rayonKm);
+    if (local) return local;
+  } catch (e) {
+    raisonLocale = e?.detail || e?.message || String(e);
+    console.info(`[Carte Patte] lieux préparés à l'avance indisponibles, passage à Overpass : ${raisonLocale}`);
+  }
+  // 2. Sinon Overpass (hors métropole, ou fichiers indisponibles) : cache de quelques heures, puis serveurs publics
   const arrondi = (x) => Math.round(x * GRILLE) / GRILLE;
   const lat = arrondi(centre.lat);
   const lon = arrondi(centre.lon);
@@ -250,14 +357,19 @@ export async function lieuxAutour(centre, rayonKm, progression) {
   let lieux = lireCache(cle, rayonRequeteM);
   const depuisCache = lieux !== null;
   if (!depuisCache) {
-    lieux = analyser(await interrogerOverpass(requeteOverpass(lat, lon, rayonRequeteM), progression));
+    try {
+      lieux = analyser(await interrogerOverpass(requeteOverpass(lat, lon, rayonRequeteM), progression));
+    } catch (e) {
+      if (e instanceof ErreurCarte && raisonLocale) e.essais.unshift({ serveur: "lieux préparés à l'avance", raison: raisonLocale });
+      throw e;
+    }
     ecrireCache(cle, rayonRequeteM, lieux);
   }
   const proches = lieux
     .map((l) => ({ ...l, d: distance(centre, l) }))
     .filter((l) => l.d <= rayonKm * 1000)
     .sort((a, b) => a.d - b.d);
-  return { lieux: proches, depuisCache };
+  return { lieux: proches, depuisCache, source: 'overpass', extrait: '', partiel: false };
 }
 
 // ===== Recherche d'une ville ou d'un code postal (Nominatim) =====

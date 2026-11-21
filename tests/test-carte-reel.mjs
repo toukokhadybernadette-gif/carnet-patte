@@ -77,6 +77,9 @@ const statut = await texte('#ca-statut');
 const erreurUi = await texte('#ca-erreur');
 log(`  durée : ${duree} ms · statut : « ${statut} » · erreur affichée : « ${erreurUi === 'ABSENT' ? '' : erreurUi} »`);
 verifier(fini && !(await ev(`!!document.querySelector('#ca-erreur .cp-alerte')`)), `la recherche aboutit sans message d'erreur (${erreurUi.slice(0, 200)})`);
+verifier(duree < 8000, `rapide : ${duree} ms (les lieux viennent des fichiers du site, plus d'attente d'un serveur Overpass saturé)`);
+const sourceReelle = await texte('#ca-source');
+verifier(/extrait d'OpenStreetMap du/.test(sourceReelle), `source affichée : « ${sourceReelle} »`);
 verifier(new RegExp(`autour de ${VILLE}`).test(statut) && /^\d+ lieux? dans 5 km/.test(statut), `statut : « ${statut} »`);
 const lieux = await ev(`[...document.querySelectorAll('.ca-lieu')].map((b) => ({ nom: b.querySelector('.ca-lieu__nom').textContent, meta: b.querySelector('.ca-lieu__meta').textContent }))`);
 log('  premiers lieux :', lieux.slice(0, 5).map((l) => `${l.nom} (${l.meta})`).join(' | '));
@@ -85,8 +88,19 @@ const km = (t) => { const m = t.match(/([\d,]+)\s*(km|m)\b/); return m ? parseFl
 verifier(lieux.every((l, i) => i === 0 || km(l.meta) >= km(lieux[i - 1].meta)) && lieux.every((l) => km(l.meta) <= 5000), 'liste triée par distance, tous dans les 5 km');
 verifier(await attendre(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length > 0 && document.querySelectorAll('.leaflet-tile-loaded').length > 0`, 20000), 'la carte affiche des marqueurs et de vraies tuiles OpenStreetMap');
 const serveurUtilise = await ev(`JSON.parse(localStorage.getItem('carnetpatte.carteCache') ?? '{"zones":[]}').zones.length`);
-verifier(serveurUtilise === 1, 'les lieux sont gardés en cache après une vraie recherche');
+verifier(serveurUtilise === 0, 'rien n\'est mis en cache : les lieux viennent des fichiers du site (le cache ne sert qu\'à Overpass)');
 await ecran('reel-toulouse');
+
+log('=== 2b. SECOURS HORS FRANCE MÉTROPOLITAINE : Bruxelles via les vrais serveurs Overpass (lent, parfois en panne) ===');
+await sleep(1600);
+const tb = Date.now();
+await ev(`(() => { const i = document.querySelector('#ca-ville'); i.value = 'Bruxelles'; i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('#ca-form').requestSubmit(); })()`);
+const finiB = await attendre(`!/Recherche en cours/.test(document.querySelector('#ca-statut').textContent) && (/autour de Bruxelles/.test(document.querySelector('#ca-statut').textContent) || document.querySelector('#ca-erreur .cp-alerte'))`, 250000);
+const statutB = await texte('#ca-statut');
+const sourceB = await texte('#ca-source');
+log(`  durée : ${Date.now() - tb} ms · statut : « ${statutB} » · source : « ${sourceB} » · erreur : « ${(await texte('#ca-erreur')).slice(0, 300)} »`);
+verifier(finiB && /autour de Bruxelles/.test(statutB) && /Overpass/.test(sourceB), 'hors métropole, la recherche passe par un serveur Overpass et aboutit');
+verifier(await ev(`document.querySelectorAll('.ca-lieu').length`) >= 1, 'des lieux belges réels sont affichés');
 
 log('=== 3. CE QUE L\'APPLI A ÉCRIT DANS LA CONSOLE ===');
 const estDiag = (e) => /\[Carte Patte\]|overpass|maps\.mail\.ru|nominatim|Access-Control|ERR_FAILED|Failed to load resource/.test(e); // vraies erreurs réseau des serveurs publics : informatives

@@ -4,7 +4,7 @@
 //   - la carte est Leaflet 1.9.4, hébergé dans assets/leaflet/ et chargé seulement quand on ouvre cette page.
 // La position n'est jamais enregistrée : elle ne vit que dans la mémoire de la page (etat.centre) et disparaît au rechargement.
 
-import { echapper } from '../../js/utils.js';
+import { echapper, formatDateLongue } from '../../js/utils.js';
 import { icone } from '../../js/icons.js';
 import { bouton, alerte, vide, champ, choix } from '../../js/composants.js';
 import * as D from './carte-donnees.js';
@@ -16,6 +16,7 @@ const etat = {
   actives: new Set(D.CATEGORIES.map((c) => c.id)),
   lieux: [],                        // lieux du rayon, triés par distance
   depuisCache: false,
+  source: null,                     // { type: 'locale' | 'overpass', depuisCache, extrait, partiel } : d'où viennent les lieux affichés
   selection: null,                  // id du lieu dont la fiche est ouverte
   nbListe: 20,
   erreur: null,                     // { texte, reessayer }
@@ -47,6 +48,8 @@ const puce = (c) => `<span class="ca-puce" style="--ca-c:${c.couleur}" aria-hidd
 const nomLieu = (l) => l.nom || `${D.categorie(l.cat).un} (sans nom)`;
 const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hoteSite = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };
+const dateFr = (iso) => { const j = String(iso).slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(j) ? formatDateLongue(j) : 'date inconnue'; };
 
 export function rendre(zone) {
   jeton++;
@@ -73,12 +76,13 @@ export function rendre(zone) {
           </form>
         </div>
         ${choix({ nom: 'ca-rayon', legende: 'Rayon de recherche', options: D.RAYONS_KM.map((km) => ({ valeur: String(km), texte: `${km} km` })), valeur: String(etat.rayon), classe: 'ca-rayons' })}
-        <p class="ca-info">${icone('shield-check', { taille: 16 })}<span>Vie privée : votre position sert seulement à la recherche, sur des serveurs publics OpenStreetMap (Overpass), et n'est pas enregistrée. Seuls les lieux trouvés, avec la zone approximative, sont gardés quelques heures sur cet appareil.</span></p>
+        <p class="ca-info">${icone('shield-check', { taille: 16 })}<span>Vie privée : en France métropolitaine, les lieux viennent de fichiers du site, donc votre position ne quitte pas votre appareil. Ailleurs, la zone approximative (1 km) est envoyée à un serveur public OpenStreetMap, et les lieux trouvés sont gardés quelques heures sur cet appareil. Votre position n'est pas enregistrée.</span></p>
       </section>
 
       <section class="pg-section ca-resultats" aria-labelledby="ca-res" id="ca-resultats">
         <h2 id="ca-res" class="cp-sr">Résultats</h2>
         <p class="ca-statut" id="ca-statut" role="status"></p>
+        <p class="ca-source" id="ca-source" hidden></p>
         <div id="ca-erreur"></div>
         <div class="cp-filtres ca-filtres" id="ca-filtres" role="group" aria-label="Types de lieux" hidden>
           ${D.CATEGORIES.map((c) => `<button type="button" class="cp-filtre ca-filtre" aria-pressed="${etat.actives.has(c.id)}" data-cat="${c.id}">${puce(c)}${echapper(c.nom)} <span class="cp-filtre__nombre" data-nombre="${c.id}"></span></button>`).join('')}
@@ -90,11 +94,15 @@ export function rendre(zone) {
         <article class="cp-carte ca-fiche" id="ca-fiche" tabindex="-1" aria-label="Fiche du lieu" hidden></article>
         <ul class="ca-liste" id="ca-liste"></ul>
         <div class="ca-plus" id="ca-plus" hidden>${bouton({ texte: 'Afficher plus de lieux', variante: 'secondaire', attrs: { id: 'ca-plus-bouton', class: 'cp-btn cp-btn--secondaire' } })}</div>
+        <footer class="ca-licence" id="ca-licence">
+          <p>Lieux et fond de carte : © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">contributeurs d'OpenStreetMap</a>, données sous <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">licence ODbL</a>. Les fichiers de lieux préparés à l'avance sont publiés sous la même licence : <a href="donnees/lieux/LICENCE.txt" target="_blank" rel="noopener noreferrer">voir la licence et la source</a>.</p>
+        </footer>
       </section>
     </div>`;
 
   const $ = (id) => zone.querySelector(`#${id}`);
   const elStatut = $('ca-statut');
+  const elSource = $('ca-source');
   const elErreur = $('ca-erreur');
   const elFiltres = $('ca-filtres');
   const elVide = $('ca-vide');
@@ -123,6 +131,14 @@ export function rendre(zone) {
     }
     elStatut.textContent = texte;
     elStatut.hidden = !texte;
+    const s = etat.source;
+    let source = '';
+    if (s && etat.centre && !etat.occupe) {
+      if (s.type === 'locale') source = `Lieux : extrait d'OpenStreetMap du ${dateFr(s.extrait)}, préparé à l'avance et mis à jour chaque mois.${s.partiel ? " Près d'une frontière ou d'une côte : les lieux situés de l'autre côté ne sont pas inclus." : ''}`;
+      else source = s.depuisCache ? "Lieux : serveur Overpass d'OpenStreetMap (résultats gardés quelques heures sur cet appareil)." : "Lieux : serveur Overpass d'OpenStreetMap, en direct.";
+    }
+    elSource.textContent = source;
+    elSource.hidden = !source;
     zone.querySelector('#ca-resultats').setAttribute('aria-busy', String(etat.occupe));
     for (const b of [elLoc, elChercher]) b.setAttribute('aria-disabled', String(etat.occupe));
   }
@@ -177,6 +193,7 @@ export function rendre(zone) {
       <ul class="ca-fiche__infos">
         <li>${icone('map-pin', { taille: 18 })}<span>${l.adresse ? echapper(l.adresse) : '<span class="ca-absent">Adresse non indiquée</span>'}</span></li>
         <li>${icone('phone', { taille: 18 })}<span>${l.tel ? echapper(l.tel.affiche) : '<span class="ca-absent">Téléphone non indiqué</span>'}</span></li>
+        ${l.site ? `<li>${icone('globe', { taille: 18 })}<span><a href="${echapper(l.site)}" target="_blank" rel="noopener noreferrer">Site web<span class="ca-note"> (${echapper(hoteSite(l.site))})</span><span class="cp-sr"> — s'ouvre dans un nouvel onglet</span></a></span></li>` : ''}
         <li>${icone('clock', { taille: 18 })}<span>${h ? `${echapper(h.texte)}<span class="ca-note"> (horaires indiqués dans OpenStreetMap, à confirmer)</span>` : '<span class="ca-absent">Horaires non indiqués</span>'}</span></li>
       </ul>
       <div class="ca-fiche__actions">
@@ -290,10 +307,11 @@ export function rendre(zone) {
       afficher();
       try {
         const centre = await trouverCentre();
-        const { lieux, depuisCache } = await D.lieuxAutour(centre, etat.rayon, (p) => pageActive?.progression(p));
+        const resultat = await D.lieuxAutour(centre, etat.rayon, (p) => pageActive?.progression(p));
         etat.centre = centre;
-        etat.lieux = lieux;
-        etat.depuisCache = depuisCache;
+        etat.lieux = resultat.lieux;
+        etat.depuisCache = resultat.depuisCache;
+        etat.source = { type: resultat.source, depuisCache: resultat.depuisCache, extrait: resultat.extrait, partiel: resultat.partiel };
         etat.selection = null;
         etat.nbListe = 20;
         etat.rayonEnAttente = false;
