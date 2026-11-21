@@ -7,7 +7,18 @@
 //     et les résultats gardés quelques heures (localStorage, à part des données des animaux : ni exporté ni importé).
 // Données © contributeurs d'OpenStreetMap (licence ODbL). Elles sont parfois incomplètes : on n'invente jamais rien.
 
-export const ADRESSE_OVERPASS = 'https://overpass-api.de/api/interpreter';
+/**
+ * Serveurs Overpass, essayés dans l'ordre : on passe au suivant à la moindre erreur (502 « at capacity », 403, coupure, délai dépassé…).
+ * Le serveur principal est souvent saturé : quand il accepte la requête il peut mettre 30 à 45 s, d'où son long délai.
+ * `overpass.openstreetmap.fr` n'est PAS dans la liste : il répond « service réservé à des usages autorisés » (403 sans en-tête CORS).
+ * `maps.mail.ru` est en dernier recours (serveur public hébergé par VK) : retirer cette ligne pour ne jamais lui envoyer de recherche.
+ */
+export const SERVEURS_OVERPASS = [
+  { nom: 'overpass-api.de', url: 'https://overpass-api.de/api/interpreter', delaiMs: 55000 },
+  { nom: 'overpass.kumi.systems', url: 'https://overpass.kumi.systems/api/interpreter', delaiMs: 15000 },
+  { nom: 'overpass.private.coffee', url: 'https://overpass.private.coffee/api/interpreter', delaiMs: 15000 },
+  { nom: 'maps.mail.ru', url: 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', delaiMs: 30000 },
+];
 export const ADRESSE_NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 export const RAYONS_KM = [2, 5, 10];
 export const RAYON_DEFAUT_KM = 5;
@@ -41,8 +52,14 @@ export const MESSAGES = {
   'ville-vide': 'Entrez une ville ou un code postal.',
 };
 
+/** `detail` : la vraie raison technique (code HTTP, message du navigateur…). `essais` : un détail par serveur essayé. */
 export class ErreurCarte extends Error {
-  constructor(code) { super(MESSAGES[code] ?? MESSAGES.serveur); this.code = code; }
+  constructor(code, detail = '', essais = []) { super(MESSAGES[code] ?? MESSAGES.serveur); this.code = code; this.detail = detail; this.essais = essais; }
+}
+
+/** La vraie raison dans la console, pour pouvoir diagnostiquer (Safari : Réglages > Safari > Avancé > Inspecteur web). */
+function diagnostiquer(serveur, e) {
+  console.warn(`[Carte Patte] ${serveur} : ${e?.detail || e?.message || e}`);
 }
 
 // ===== Distances et mise en forme =====
@@ -176,21 +193,56 @@ async function appeler(url, options, delaiMs) {
   try {
     reponse = await fetch(url, { ...options, signal: controle.signal });
   } catch (e) {
-    throw new ErreurCarte(e?.name === 'AbortError' ? 'trop-long' : 'reseau');
+    // Le navigateur ne distingue pas une coupure réseau d'un refus CORS : on le dit tel quel
+    const abandon = e?.name === 'AbortError';
+    throw new ErreurCarte(abandon ? 'trop-long' : 'reseau', abandon ? `aucune réponse après ${delaiMs / 1000} s` : `${e?.name ?? 'Erreur'} : ${e?.message ?? ''} (réseau coupé, serveur injoignable ou requête refusée par le navigateur)`);
   } finally {
     clearTimeout(minuteur);
     dernierAppel = Date.now();
   }
-  if (reponse.status === 429) throw new ErreurCarte('occupe');
-  if (!reponse.ok) throw new ErreurCarte('serveur');
-  try { return await reponse.json(); } catch { throw new ErreurCarte('serveur'); }
+  if (!reponse.ok) {
+    const debut = (await reponse.text().catch(() => '')).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    throw new ErreurCarte(reponse.status === 429 ? 'occupe' : 'serveur', `HTTP ${reponse.status}${reponse.statusText ? ` ${reponse.statusText}` : ''}${debut ? ` — ${debut}` : ''}`);
+  }
+  try { return await reponse.json(); } catch (e) { throw new ErreurCarte('serveur', `réponse illisible (pas du JSON) : ${e?.message ?? ''}`); }
+}
+
+// Le serveur qui a répondu en dernier est essayé en premier pendant 10 minutes (inutile d'attendre un serveur en panne à chaque recherche)
+let bonServeur = { index: 0, t: 0 };
+const MEMOIRE_SERVEUR_MS = 10 * 60e3;
+
+/** Interroge Overpass : serveur préféré d'abord, puis l'autre. Lève une erreur avec le détail de CHAQUE essai si tous échouent. */
+async function interrogerOverpass(corps, progression) {
+  const prefere = Date.now() - bonServeur.t < MEMOIRE_SERVEUR_MS ? bonServeur.index : 0;
+  const ordre = SERVEURS_OVERPASS.map((_, i) => i).sort((a, b) => (a === prefere ? -1 : b === prefere ? 1 : a - b));
+  const essais = [];
+  let derniere;
+  for (const [rang, i] of ordre.entries()) {
+    const s = SERVEURS_OVERPASS[i];
+    progression?.({ rang, total: ordre.length, nom: s.nom });
+    try {
+      const json = await appeler(s.url, { method: 'POST', body: new URLSearchParams({ data: corps }) }, s.delaiMs);
+      if (!Array.isArray(json?.elements)) throw new ErreurCarte('serveur', 'réponse sans liste « elements »');
+      // Overpass répond parfois 200 avec une « remarque » d'erreur et rien d'autre : ce n'est pas « aucun lieu »
+      if (!json.elements.length && /error|timed out|too busy/i.test(String(json.remark ?? ''))) throw new ErreurCarte('serveur', `remarque d'Overpass : ${String(json.remark).slice(0, 120)}`);
+      bonServeur = { index: i, t: Date.now() };
+      return json;
+    } catch (e) {
+      if (!(e instanceof ErreurCarte)) throw e;
+      diagnostiquer(s.nom, e);
+      essais.push({ serveur: s.nom, raison: e.detail || e.message });
+      derniere = e;
+      if (e.code === 'hors-ligne') break; // inutile d'essayer l'autre serveur sans connexion
+    }
+  }
+  throw new ErreurCarte(derniere.code, derniere.detail, essais);
 }
 
 /**
  * Les lieux autour d'un point : depuis le cache s'il est récent, sinon depuis Overpass.
  * Renvoie { lieux (avec `d`, la distance en mètres, triés du plus proche au plus loin, dans le rayon demandé), depuisCache }.
  */
-export async function lieuxAutour(centre, rayonKm) {
+export async function lieuxAutour(centre, rayonKm, progression) {
   const arrondi = (x) => Math.round(x * GRILLE) / GRILLE;
   const lat = arrondi(centre.lat);
   const lon = arrondi(centre.lon);
@@ -199,10 +251,7 @@ export async function lieuxAutour(centre, rayonKm) {
   let lieux = lireCache(cle, rayonRequeteM);
   const depuisCache = lieux !== null;
   if (!depuisCache) {
-    const json = await appeler(ADRESSE_OVERPASS, { method: 'POST', body: new URLSearchParams({ data: requeteOverpass(lat, lon, rayonRequeteM) }) }, 30000);
-    lieux = analyser(json);
-    // Overpass répond parfois 200 avec une « remarque » d'erreur et rien d'autre : ce n'est pas « aucun lieu »
-    if (!lieux.length && /error|timed out|too busy/i.test(String(json?.remark ?? ''))) throw new ErreurCarte('serveur');
+    lieux = analyser(await interrogerOverpass(requeteOverpass(lat, lon, rayonRequeteM), progression));
     ecrireCache(cle, rayonRequeteM, lieux);
   }
   const proches = lieux
@@ -225,7 +274,13 @@ export async function trouverVille(texte) {
   const parametres = /^\d{5}$/.test(q)
     ? { postalcode: q, country: 'France' }
     : { q };
-  const json = await appeler(`${ADRESSE_NOMINATIM}?${new URLSearchParams({ ...parametres, format: 'jsonv2', limit: '1', 'accept-language': 'fr' })}`, {}, 15000);
+  let json;
+  try {
+    json = await appeler(`${ADRESSE_NOMINATIM}?${new URLSearchParams({ ...parametres, format: 'jsonv2', limit: '1', 'accept-language': 'fr' })}`, {}, 15000);
+  } catch (e) {
+    if (e instanceof ErreurCarte) { diagnostiquer('nominatim.openstreetmap.org', e); throw new ErreurCarte(e.code, e.detail, [{ serveur: 'nominatim.openstreetmap.org', raison: e.detail || e.message }]); }
+    throw e;
+  }
   const r = Array.isArray(json) ? json[0] : null;
   const lat = Number(r?.lat);
   const lon = Number(r?.lon);

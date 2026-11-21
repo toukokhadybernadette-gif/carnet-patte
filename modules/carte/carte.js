@@ -25,7 +25,8 @@ const etat = {
 let vueCarte = null;                // { map, marqueurs, parId, cercle, centre } : la carte Leaflet de la page affichée
 let chargementLeaflet = null;
 let jeton = 0;                      // change à chaque affichage de la page : les réponses qui arrivent trop tard sont ignorées
-let pageActive = null;              // { afficher, majCarte, focusVille } de la page actuellement affichée
+let pageActive = null;              // { afficher, majCarte, focusVille, progression } de la page actuellement affichée
+let minuteurLent = 0;
 
 function chargerLeaflet() {
   if (window.L?.map) return Promise.resolve(window.L);
@@ -72,7 +73,7 @@ export function rendre(zone) {
           </form>
         </div>
         ${choix({ nom: 'ca-rayon', legende: 'Rayon de recherche', options: D.RAYONS_KM.map((km) => ({ valeur: String(km), texte: `${km} km` })), valeur: String(etat.rayon), classe: 'ca-rayons' })}
-        <p class="ca-info">${icone('shield-check', { taille: 16 })}<span>Vie privée : votre position sert seulement à la recherche (OpenStreetMap) et n'est pas enregistrée. Seuls les lieux trouvés, avec la zone approximative, sont gardés quelques heures sur cet appareil.</span></p>
+        <p class="ca-info">${icone('shield-check', { taille: 16 })}<span>Vie privée : votre position sert seulement à la recherche, sur des serveurs publics OpenStreetMap (Overpass), et n'est pas enregistrée. Seuls les lieux trouvés, avec la zone approximative, sont gardés quelques heures sur cet appareil.</span></p>
       </section>
 
       <section class="pg-section ca-resultats" aria-labelledby="ca-res" id="ca-resultats">
@@ -111,6 +112,7 @@ export function rendre(zone) {
   // ----- Affichage -----
 
   function afficherStatut() {
+    clearTimeout(minuteurLent);
     let texte = '';
     if (etat.occupe) texte = 'Recherche en cours…';
     else if (etat.centre) {
@@ -127,7 +129,9 @@ export function rendre(zone) {
 
   function afficherErreur() {
     if (!etat.erreur) { elErreur.innerHTML = ''; return; }
-    elErreur.innerHTML = `<div class="ca-erreur">${alerte({ type: 'erreur', titre: 'La recherche a échoué', texte: etat.erreur.texte })}${etat.erreur.reessayer ? bouton({ texte: 'Réessayer', icone: 'search', attrs: { id: 'ca-reessayer', class: 'cp-btn cp-btn--principal' } }) : ''}</div>`;
+    const essais = etat.erreur.essais ?? [];
+    const details = essais.length ? `<details class="ca-details"><summary>Détails techniques</summary><ul>${essais.map((x) => `<li><strong>${echapper(x.serveur)}</strong> : ${echapper(x.raison)}</li>`).join('')}</ul></details>` : '';
+    elErreur.innerHTML = `<div class="ca-erreur">${alerte({ type: 'erreur', titre: 'La recherche a échoué', texte: etat.erreur.texte })}${details}${etat.erreur.reessayer ? bouton({ texte: 'Réessayer', icone: 'search', attrs: { id: 'ca-reessayer', class: 'cp-btn cp-btn--principal' } }) : ''}</div>`;
   }
 
   function afficherFiltres() {
@@ -248,6 +252,15 @@ export function rendre(zone) {
     afficherFiche();
   }
 
+  /** Pendant une recherche : dit quel serveur on essaie, et prévient quand il est lent (le serveur principal peut mettre 30 à 45 s). */
+  function progression({ rang, total }) {
+    clearTimeout(minuteurLent);
+    const base = rang === 0 ? 'Recherche en cours…' : `Recherche en cours… le serveur précédent n'a pas répondu, essai du serveur ${rang + 1} sur ${total}.`;
+    elStatut.hidden = false;
+    elStatut.textContent = base;
+    minuteurLent = setTimeout(() => { elStatut.textContent = `${base} Le serveur est lent, merci de patienter (jusqu'à une minute).`; }, 8000);
+  }
+
   // ----- Choisir un lieu : la fiche s'ouvre sous la carte -----
 
   function choisir(id) {
@@ -277,7 +290,7 @@ export function rendre(zone) {
       afficher();
       try {
         const centre = await trouverCentre();
-        const { lieux, depuisCache } = await D.lieuxAutour(centre, etat.rayon);
+        const { lieux, depuisCache } = await D.lieuxAutour(centre, etat.rayon, (p) => pageActive?.progression(p));
         etat.centre = centre;
         etat.lieux = lieux;
         etat.depuisCache = depuisCache;
@@ -287,7 +300,7 @@ export function rendre(zone) {
       } catch (e) {
         const code = e?.code;
         const texte = e instanceof D.ErreurCarte ? e.message : D.MESSAGES.serveur;
-        etat.erreur = { texte, reessayer: code && code.startsWith('ville-') ? null : () => chercher(trouverCentre), ville: !!code?.startsWith('ville-') };
+        etat.erreur = { texte, essais: e?.essais ?? [], reessayer: code && code.startsWith('ville-') ? null : () => chercher(trouverCentre), ville: !!code?.startsWith('ville-') };
       } finally {
         etat.occupe = false;
       }
@@ -373,7 +386,7 @@ export function rendre(zone) {
   });
   elErreur.addEventListener('click', (e) => { if (e.target.closest('#ca-reessayer')) etat.erreur?.reessayer?.(); });
 
-  pageActive = { afficher, majCarte, focusVille: () => elVille.focus() };
+  pageActive = { afficher, majCarte, progression, focusVille: () => elVille.focus() };
   afficher();
   if (etat.centre) majCarte(true);
 }

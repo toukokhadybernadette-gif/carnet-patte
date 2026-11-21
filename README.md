@@ -13,4 +13,4 @@ Ouvrir `index.html` par double-clic ne fonctionne pas (les modules JS exigent un
 - `js/` : cœur de l'appli (stockage, routeur, interface, sauvegarde)
 - `css/` : styles communs
 - `modules/<nom>/` : un dossier par module (`animaux`, `toxique` et `carte` sont réalisés ; les fiches de « Toxique ? » sont dans `modules/toxique/donnees.js`)
-- `assets/leaflet/` : Leaflet 1.9.4 (licence BSD-2), hébergé ici et chargé seulement sur la page Carte. Fond de carte et lieux : © contributeurs d'OpenStreetMap (ODbL). Le module Carte contacte `overpass-api.de` (lieux), `nominatim.openstreetmap.org` (ville ou code postal) et `tile.openstreetmap.org` (fond de carte), une recherche à la fois.
+- `assets/leaflet/` : Leaflet 1.9.4 (licence BSD-2), hébergé ici et chargé seulement sur la page Carte. Fond de carte et lieux : © contributeurs d'OpenStreetMap (ODbL). Le module Carte contacte `nominatim.openstreetmap.org` (ville ou code postal), `tile.openstreetmap.org` (fond de carte) et des serveurs Overpass publics pour les lieux (liste `SERVEURS_OVERPASS` dans `modules/carte/carte-donnees.js` : `overpass-api.de`, puis des secours), une recherche à la fois.

@@ -162,10 +162,10 @@ await taille(390, 844); await aller2('#/accueil'); await sleep(900);
 // actions rapides : grands cercles de verre gris-mauve translucide, reflet clair en haut, icônes blanches
 const cercle = await ev(`(() => { const r = document.querySelector('.app-plus__rond'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, rayon: s.borderRadius, fond: s.backgroundColor, flou: s.backdropFilter, bord: s.borderTopColor, bordLarg: s.borderTopWidth, couleurTheme: (() => { const p = document.createElement("i"); p.style.color = "var(--cc-fond)"; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; })(), ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color }; })()`);
 const fondCercle = rgbaDe(cercle.fond);
-verifier(cercle.w === cercle.h && cercle.w >= 56 && cercle.rayon === '50%', `bouton « + » : cercle de ${cercle.w} px`);
+verifier(cercle.w === cercle.h && cercle.w >= 24 && cercle.w <= 28 && cercle.rayon === '50%', `bouton « + » : cercle de ${cercle.w} px`);
 verifier(fondCercle[0] === 255 && fondCercle[1] === 255 && fondCercle[2] === 255, `bouton « + » : fond blanc (${cercle.fond})`);
 verifier(cercle.flou === 'none', `bord net : aucun flou sur le cercle (${cercle.flou})`);
-verifier(cercle.bordLarg === '0px' && !/inset/.test(cercle.ombre), 'sans anneau : aucun bord ni reflet, ombre douce seulement (' + cercle.ombre + ')');
+verifier(cercle.bordLarg === '0px' && !/inset/.test(cercle.ombre), 'sans anneau : aucun bord, reflet ni ombre, bouton à plat (' + cercle.ombre + ')');
 verifier(cercle.icone !== 'rgb(255, 255, 255)' && cercle.icone === cercle.couleurTheme, 'icône « + » à la couleur du thème (' + cercle.icone + ')');
 // contraste de l'icône « + » (couleur du thème) sur le fond blanc du bouton
 const lumRgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number).map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }).reduce((t, x, i) => t + x * [0.2126, 0.7152, 0.0722][i], 0);

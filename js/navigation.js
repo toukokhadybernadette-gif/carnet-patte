@@ -83,7 +83,7 @@ export function construireNavigation() {
   // Barre du bas : le bouton rond « + » est au centre (2 entrées de chaque côté)
   const basEntrees = NAV.filter((n) => n.bas).map(itemBas);
   const milieu = Math.ceil(basEntrees.length / 2);
-  const boutonPlus = `<button type="button" class="app-plus" id="ajout-bouton" aria-haspopup="dialog" aria-label="Ajouter"><span class="app-plus__rond" aria-hidden="true">${icone('plus', { taille: 28 })}</span></button>`;
+  const boutonPlus = `<button type="button" class="app-plus" id="ajout-bouton" aria-haspopup="dialog" aria-label="Ajouter"><span class="app-plus__rond" aria-hidden="true">${icone('plus', { taille: 16 })}</span></button>`;
   el('nav-bas').innerHTML = `<div class="cp-nav-bas">${[...basEntrees.slice(0, milieu), boutonPlus, ...basEntrees.slice(milieu)].join('')}</div>`;
 
   el('barre-haut').innerHTML = `

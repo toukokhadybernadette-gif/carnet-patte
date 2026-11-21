@@ -35,6 +35,11 @@
 .ca-statut[hidden], #ca-vide[hidden], #ca-zone[hidden], .ca-fiche[hidden], .ca-filtres[hidden], .ca-plus[hidden] { display: none; }
 .ca-erreur { display: grid; gap: var(--cp-espace-2); justify-items: start; }
 .ca-erreur .cp-alerte { width: 100%; }
+.ca-details { width: 100%; font-size: var(--cp-taille-xs); line-height: var(--cp-interligne-xs); color: var(--cp-texte-doux); }
+.ca-details summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.ca-details summary:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.ca-details ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.ca-details li { overflow-wrap: anywhere; }
 #ca-vide { padding: var(--cp-espace-4); }
 
 /* ----- Pastilles de filtre : la couleur de la catégorie est dans la puce ronde ----- */

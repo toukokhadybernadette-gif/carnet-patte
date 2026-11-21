@@ -63,12 +63,13 @@ const attendus = (centre, rayonKm) => ELEMENTS.map((e) => ({ id: `${e.type}/${e.
 const VILLES = { rennes: { lat: C.lat, lon: C.lon, display_name: 'Rennes, Ille-et-Vilaine, Bretagne, France métropolitaine, France' }, '35000': { lat: C.lat, lon: C.lon, display_name: '35000, Rennes, Ille-et-Vilaine, Bretagne, France' },
   brest: { lat: 48.39, lon: -4.486, display_name: 'Brest, Finistère, Bretagne, France' }, nantes: { lat: 47.2184, lon: -1.5536, display_name: 'Nantes, Loire-Atlantique, Pays de la Loire, France' },
   toulouse: { lat: 43.6045, lon: 1.4442, display_name: 'Toulouse, Haute-Garonne, Occitanie, France' },
+  paris: { lat: 48.8566, lon: 2.3522, display_name: 'Paris, Île-de-France, France' }, lille: { lat: 50.6292, lon: 3.0573, display_name: 'Lille, Nord, Hauts-de-France, France' },
   lyon: { lat: 45.764, lon: 4.8357, display_name: 'Lyon, Métropole de Lyon, Rhône, France' }, marseille: { lat: 43.2965, lon: 5.3698, display_name: 'Marseille, Bouches-du-Rhône, France' } };
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
 
 const appels = [];                 // chaque requête vers Overpass ou Nominatim : { t, type, ... }
 let tuiles = 0, enCours = 0, maxEnCours = 0, mode = 'ok';
-await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
+await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*overpass.kumi.systems*' }, { urlPattern: '*overpass.private.coffee*' }, { urlPattern: '*maps.mail.ru*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
 const repondre = (requestId, { status = 200, type = 'application/json', corps = '' }) => send('Fetch.fulfillRequest', { requestId, responseCode: status, responseHeaders: [{ name: 'Content-Type', value: type }, { name: 'Access-Control-Allow-Origin', value: '*' }], body: Buffer.from(corps).toString('base64') });
 ws.addEventListener('message', async (m) => {
   const d = JSON.parse(m.data);
@@ -86,8 +87,9 @@ ws.addEventListener('message', async (m) => {
     } else {
       const requete = new URLSearchParams(request.postData ?? '').get('data') ?? '';
       const [, r, lat, lon] = requete.match(/around:(\d+),([-\d.]+),([-\d.]+)/) ?? [];
-      appels.push({ t: Date.now(), type: 'overpass', rayon: +r, lat, lon, methode: request.method, requete });
-      if (mode === 'hors-ligne') await send('Fetch.failRequest', { requestId, errorReason: 'InternetDisconnected' });
+      appels.push({ t: Date.now(), type: 'overpass', serveur: u.hostname, rayon: +r, lat, lon, methode: request.method, requete });
+      if (mode === 'principal-en-panne' && u.hostname === 'overpass-api.de') await repondre(requestId, { status: 502, type: 'text/html', corps: '<html><body><h1>502 Bad Gateway</h1></body></html>' });
+      else if (mode === 'hors-ligne') await send('Fetch.failRequest', { requestId, errorReason: 'InternetDisconnected' });
       else if (mode === 'serveur') await repondre(requestId, { status: 504, type: 'text/plain', corps: 'Gateway Timeout' });
       else if (mode === 'remarque') await repondre(requestId, { corps: JSON.stringify({ elements: [], remark: 'runtime error: Query timed out in "query" at line 1 after 26 seconds.' }) });
       else {
@@ -116,7 +118,7 @@ const donnees = () => ev(`import('/js/storage.js').then(m => m.exporter())`);
 const sansHorodatage = (t) => { const o = JSON.parse(t); delete o.exporteLe; return JSON.stringify(o); };
 const importer = (t) => ev(`import('/js/storage.js').then(m => m.importer(${JSON.stringify(t)}))`);
 const A = (id, nom, espece, extra = {}) => ({ id, nom, espece, especeAutre: '', race: '', naissance: '', photo: '', ...extra });
-const erreursAttendues = (avant) => { const n = erreurs.length - avant; const dernieres = erreurs.slice(avant); const ok = dernieres.every((e) => /overpass-api|Failed to load resource|ERR_|504/.test(e)); erreurs.splice(avant); return ok ? n : -1; };
+const erreursAttendues = (avant) => { const n = erreurs.length - avant; const dernieres = erreurs.slice(avant); const ok = dernieres.every((e) => /overpass|maps\.mail\.ru|Failed to load resource|ERR_|50[24]|\[Carte Patte\]/.test(e)); erreurs.splice(avant); return ok ? n : -1; };
 
 await send('Page.navigate', { url: URL }); await sleep(1800); await taille(1280, 900); await aller2('#/accueil'); await ev(axeSrc);
 await importer(JSON.stringify({ version: 1, exemplesAjoutes: true, animaux: [A('c', 'Moka', 'chien'), A('b', 'Mimi', 'chat')], soins: [], pesees: [] }));
@@ -301,11 +303,13 @@ await cliquer('#ca-reessayer');
 verifier(await attendre(`/autour de Lyon/.test(document.querySelector('#ca-statut').textContent)`, 25000) && await ev(`!document.querySelector('#ca-erreur .cp-alerte')`), '« Réessayer » relance la même recherche : l\'erreur disparaît');
 mode = 'serveur';
 await chercherVille('Marseille');
-verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent)`, 25000) && await ev(`!!document.querySelector('#ca-reessayer')`), 'serveur en erreur (504) : message clair + « Réessayer »');
+verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent)`, 40000) && await ev(`!!document.querySelector('#ca-reessayer')`), 'serveur en erreur (504) : message clair + « Réessayer »');
+const detailsTech = await ev(`document.querySelector('.ca-details').textContent.replace(/\\s+/g, ' ').trim()`);
+verifier(/overpass-api\.de/.test(detailsTech) && /overpass\.kumi\.systems/.test(detailsTech) && /overpass\.private\.coffee/.test(detailsTech) && /maps\.mail\.ru/.test(detailsTech) && (detailsTech.match(/HTTP 504/g) ?? []).length === 4, `erreur : « Détails techniques » avec la vraie raison de CHAQUE serveur essayé (${detailsTech})`);
+verifier(erreurs.some((e) => /\[Carte Patte\] overpass-api\.de : HTTP 504/.test(e)) && erreurs.some((e) => /\[Carte Patte\] maps\.mail\.ru : HTTP 504/.test(e)), 'la vraie raison est écrite dans la console (« [Carte Patte] serveur : HTTP 504 … »)');
 mode = 'remarque';
 await cliquer('#ca-reessayer');
 verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent) && !document.querySelector('#ca-statut').textContent.includes('Recherche en cours')`, 25000), 'réponse « Query timed out » d\'Overpass : traitée comme une erreur, pas comme « aucun lieu »');
-verifier(erreursAttendues(avantE) >= 0, 'seules les erreurs réseau simulées apparaissent dans la console (retirées du compte)');
 mode = 'ok';
 await send('Network.enable');
 await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
@@ -315,6 +319,19 @@ verifier(await attendre(`/Pas de connexion internet/.test(document.querySelector
 await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
 await cliquer('#ca-reessayer');
 verifier(await attendre(`/autour de Toulouse/.test(document.querySelector('#ca-statut').textContent)`, 25000), 'connexion revenue : « Réessayer » fonctionne');
+
+log('=== SERVEUR OVERPASS DE SECOURS ===');
+mode = 'principal-en-panne';
+const avantS = appels.length;
+await chercherVille('Paris');
+verifier(await attendre(`/autour de Paris/.test(document.querySelector('#ca-statut').textContent)`, 40000) && await ev(`!document.querySelector('#ca-erreur .cp-alerte')`), 'serveur principal en panne (502) : la recherche réussit quand même grâce au serveur de secours, sans message d\'erreur');
+verifier(appels.slice(avantS).filter((a) => a.type === 'overpass').map((a) => a.serveur).join() === 'overpass-api.de,overpass.kumi.systems', 'ordre des essais : le principal, puis le premier secours');
+const avantL = appels.length;
+await chercherVille('Lille');
+verifier(await attendre(`/autour de Lille/.test(document.querySelector('#ca-statut').textContent)`, 40000), 'recherche suivante réussie');
+verifier(appels.slice(avantL).filter((a) => a.type === 'overpass').map((a) => a.serveur).join() === 'overpass.kumi.systems', 'la recherche suivante commence directement par le serveur qui répond (pas d\'attente inutile sur celui en panne)');
+mode = 'ok';
+verifier(erreursAttendues(avantE) >= 0, 'seules les erreurs réseau simulées apparaissent dans la console (retirées du compte)');
 
 log('=== AFFICHAGE SUR 375 px (iPhone), PAGE RECHARGÉE ===');
 await taille(375, 812);
