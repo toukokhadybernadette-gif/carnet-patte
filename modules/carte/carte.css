@@ -146,3 +146,6 @@ path.ca-cercle { stroke: var(--cp-foret); fill: var(--cp-foret); }
 #ca-suggestion[hidden] { display: none; }
 .ca-suggestion { display: grid; gap: var(--cp-espace-2); justify-items: start; }
 .ca-suggestion .cp-alerte { width: 100%; }
+
+/* ----- Fiche ouverte : la carte se resserre pour que la carte ET le début de la fiche tiennent à l'écran ----- */
+#ca-zone.ca-zone--fiche .ca-carte { height: clamp(220px, 36vh, 360px); }
