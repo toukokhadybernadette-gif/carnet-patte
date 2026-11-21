@@ -505,6 +505,7 @@ const niveauZoom = () => ev(`Math.max(...[...document.querySelectorAll('.leaflet
 const zoomAvant = await niveauZoom();
 const grosse = Math.max(...mm.bulles);
 await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].sort((a, b) => +b.querySelector('.ca-groupe__n').textContent - +a.querySelector('.ca-groupe__n').textContent)[0].click()`); await sleep(600);
+await attendre(`(() => { const b = [...document.querySelectorAll('.leaflet-marker-icon.ca-groupe')].map((g) => +g.querySelector('.ca-groupe__n').textContent); return b.length === 0 || Math.max(...b) < ${grosse}; })()`, 15000); // le zoom est animé : on attend sa vraie fin, pas un délai fixe
 const apresZoom = await marqueurs();
 log(`  zoom de la carte : ${zoomAvant} -> ${await niveauZoom()}`);
 verifier(apresZoom.bulles.length === 0 || Math.max(...apresZoom.bulles) < grosse, `toucher la plus grosse bulle (${grosse} lieux) zoome : elle se défait, les lieux deviennent assez espacés pour s'afficher un à un (${apresZoom.iso} isolés, bulles ${apresZoom.bulles.join(', ') || 'aucune'})`);
