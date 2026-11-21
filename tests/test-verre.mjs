@@ -160,21 +160,17 @@ log('=== STYLE « CENTRE DE CONTRÔLE » (boutons ronds, capsules, barre flottan
 const rgbaDe = (c) => (c ?? '').match(/[\d.]+/g)?.map(Number) ?? [];
 await taille(390, 844); await aller2('#/accueil'); await sleep(900);
 // actions rapides : grands cercles de verre gris-mauve translucide, reflet clair en haut, icônes blanches
-const cercle = await ev(`(() => { const r = document.querySelector('.app-plus__rond'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, rayon: s.borderRadius, fond: s.backgroundColor, flou: s.backdropFilter, bord: s.borderTopColor, ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color }; })()`);
+const cercle = await ev(`(() => { const r = document.querySelector('.app-plus__rond'); const s = getComputedStyle(r); const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, rayon: s.borderRadius, fond: s.backgroundColor, flou: s.backdropFilter, bord: s.borderTopColor, bordLarg: s.borderTopWidth, couleurTheme: (() => { const p = document.createElement("i"); p.style.color = "var(--cc-fond)"; document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c; })(), ombre: s.boxShadow, icone: getComputedStyle(r.querySelector('svg')).color }; })()`);
 const fondCercle = rgbaDe(cercle.fond);
 verifier(cercle.w === cercle.h && cercle.w >= 56 && cercle.rayon === '50%', `bouton « + » : cercle de ${cercle.w} px`);
-verifier(fondCercle[0] < 140 && fondCercle[1] > fondCercle[2] && fondCercle[1] >= fondCercle[0], `cercle kaki plein, pas blanc (${cercle.fond})`);
+verifier(fondCercle[0] === 255 && fondCercle[1] === 255 && fondCercle[2] === 255, `bouton « + » : fond blanc (${cercle.fond})`);
 verifier(cercle.flou === 'none', `bord net : aucun flou sur le cercle (${cercle.flou})`);
-verifier((rgbaDe(cercle.bord)[3] ?? 1) === 1 && /inset/.test(cercle.ombre) && !/ 0px 0px 0px [1-9]px/.test(cercle.ombre.replace(/inset[^,]*/g, '')) && !/ 0px 0px 0px [1-9]px inset/.test(cercle.ombre), 'un seul bord net, reflet léger en haut à l\'intérieur, aucun anneau supplémentaire');
-verifier(cercle.icone === 'rgb(255, 255, 255)', 'icônes blanches');
-// contraste de l'icône blanche sur le verre : on masque les icônes, on capture, on lit le pixel au centre de chaque cercle
-await ev(`(() => { const s = document.createElement('style'); s.id = 'sans-icones'; s.textContent = 'svg { visibility: hidden !important; }'; document.head.append(s); })()`); await sleep(200);
-const capCercles = await send('Page.captureScreenshot', { format: 'png' });
-await ev(`document.getElementById('sans-icones').remove()`);
-const contrasteIcones = await ev(`(async () => { const img = new Image(); img.src = 'data:image/png;base64,${capCercles.result.data}'; await img.decode(); const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
-  const lum = ([r, gg, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(gg) + 0.0722 * f(b); };
-  return [...document.querySelectorAll('.app-plus__rond')].map((r) => { const b = r.getBoundingClientRect(); const px = g.getImageData(Math.floor(b.left + b.width / 2), Math.floor(b.top + b.height / 2), 1, 1).data; return (1.05) / (lum([px[0], px[1], px[2]]) + 0.05); }); })()`);
-verifier(contrasteIcones.length === 1 && contrasteIcones.every((c) => c >= 3), `icône blanche sur le verre : contraste >= 3:1 (minimum ${Math.min(...contrasteIcones).toFixed(2)}:1, seuil WCAG des pictogrammes)`);
+verifier(cercle.bordLarg === '0px' && !/inset/.test(cercle.ombre), 'sans anneau : aucun bord ni reflet, ombre douce seulement (' + cercle.ombre + ')');
+verifier(cercle.icone !== 'rgb(255, 255, 255)' && cercle.icone === cercle.couleurTheme, 'icône « + » à la couleur du thème (' + cercle.icone + ')');
+// contraste de l'icône « + » (couleur du thème) sur le fond blanc du bouton
+const lumRgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number).map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }).reduce((t, x, i) => t + x * [0.2126, 0.7152, 0.0722][i], 0);
+const contrastePlus = 1.05 / (lumRgb(cercle.icone) + 0.05);
+verifier(contrastePlus >= 3, `icône « + » sur fond blanc : contraste ${contrastePlus.toFixed(2)}:1 (seuil WCAG des pictogrammes : 3:1)`);
 // barre du bas : capsule flottante détachée des bords
 const barre = await ev(`(() => { const e = document.querySelector('.app-nav-bas'); const s = getComputedStyle(e); const b = e.getBoundingClientRect(); return { gauche: b.left, droite: innerWidth - b.right, bas: innerHeight - b.bottom, h: b.height, rayon: parseFloat(s.borderTopLeftRadius), fond: s.backgroundColor, flou: s.backdropFilter, position: s.position, actif: (() => { const a = e.querySelector('[aria-current="page"]'); const t = getComputedStyle(a); return { fond: t.backgroundColor, texte: t.color }; })() }; })()`);
 verifier(barre.position === 'fixed' && barre.gauche >= 12 && barre.droite >= 12 && barre.bas >= 8, `barre du bas flottante, détachée des bords (${Math.round(barre.gauche)} px à gauche, ${Math.round(barre.droite)} à droite, ${Math.round(barre.bas)} du bas)`);

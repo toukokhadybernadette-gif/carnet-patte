@@ -137,6 +137,8 @@ log('=== TOXIQUE ? à 375 px : noms entiers, numéros l\'un sous l\'autre ===');
 await aller2('#/toxique');
 const tel = await ev(`(() => { const t = [...document.querySelectorAll('.tx-urgence--haut .tx-tel')].map((a) => a.getBoundingClientRect()); const u = document.querySelector('.tx-urgence--haut').getBoundingClientRect(); return { n: t.length, dessous: t[1].top >= t[0].bottom - 1, dedans: t.every((r) => r.left >= u.left - 1 && r.right <= u.right + 1), memeLargeur: Math.abs(t[0].width - t[1].width) < 2 }; })()`);
 verifier(tel.n === 2 && tel.dessous && tel.dedans, 'les 2 numéros d\'urgence sont l\'un sous l\'autre, dans le cadre, sans se chevaucher');
+const ecartTx = await ev(`Math.round(document.querySelector('.tx-especes').getBoundingClientRect().top - document.querySelector('.tx-urgence--haut').getBoundingClientRect().bottom)`);
+verifier(ecartTx > 0 && ecartTx <= 20, `Toxique ? : écart entre le bloc d'urgence et les pastilles d'espèces réduit (${ecartTx} px)`);
 await controler('Toxique ? (haut de page)');
 for (const g of D.ESPECES_TOXIQUE) {
   await ev(`document.querySelector('input[name=tx-espece][value=${g.id}]').click()`); await sleep(250);
@@ -197,7 +199,8 @@ await aller2('#/accueil'); await ev(`window.scrollTo(0, 0)`);
 const plus = await ev(`(() => { const b = document.querySelector('#ajout-bouton'); const r = b.querySelector('.app-plus__rond').getBoundingClientRect(); const items = [...document.querySelectorAll('.app-nav-bas .cp-nav-bas__item')].map((a) => a.getBoundingClientRect()); const bar = document.querySelector('.app-nav-bas').getBoundingClientRect(); const fond = getComputedStyle(b.querySelector('.app-plus__rond')).backgroundColor; const theme = getComputedStyle(document.documentElement).getPropertyValue('--cc-fond').trim(); return { centre: Math.round(r.left + r.width / 2), ecran: innerWidth / 2, taille: Math.round(r.width), nb: items.length, gauche: items.filter((i) => i.right <= r.left + 1).length, droite: items.filter((i) => i.left >= r.right - 1).length, dedans: r.left >= bar.left && r.right <= bar.right, fond, theme }; })()`);
 verifier(Math.abs(plus.centre - plus.ecran) <= 2 && plus.taille >= 56 && plus.nb === 4 && plus.gauche === 2 && plus.droite === 2 && plus.dedans, `« + » rond au centre (${plus.taille} px, centre ${plus.centre} px / écran ${plus.ecran} px), 2 entrées de chaque côté`);
 const hexTheme = await ev(`getComputedStyle(document.documentElement).getPropertyValue('--cc-fond').trim()`);
-verifier(plus.fond === `rgb(${[1, 3, 5].map((i) => parseInt(hexTheme.slice(i, i + 2), 16)).join(', ')})`, `« + » à la couleur du thème (${plus.fond})`);
+const iconePlus = await ev(`getComputedStyle(document.querySelector('.app-plus__rond svg')).color`);
+verifier(plus.fond === 'rgb(255, 255, 255)' && iconePlus === `rgb(${[1, 3, 5].map((i) => parseInt(hexTheme.slice(i, i + 2), 16)).join(', ')})`, `« + » : fond blanc (${plus.fond}), icône à la couleur du thème (${iconePlus})`);
 await ecran('barre-plus');
 await ev(`document.querySelector('#ajout-bouton').click()`); await sleep(500);
 const ajout = await ev(`(() => { const d = document.querySelector('dialog[open]'); return [...d.querySelectorAll('.ar-choix__titre')].map((t) => t.textContent.trim()).join(' | '); })()`);

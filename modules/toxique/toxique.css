@@ -113,3 +113,7 @@
   .tx-carte__tete, .tx-carte__fleche, .tx-tel { transition-duration: 1ms; }
   .tx-carte__tete:active, .tx-tel:active { transform: none; }
 }
+
+/* Moins d'espace entre le bloc d'urgence et les pastilles d'espèces */
+.pg.pg--toxique { gap: var(--cp-espace-3); }
+.pg--toxique .tx-especes legend { margin-bottom: 4px; }
