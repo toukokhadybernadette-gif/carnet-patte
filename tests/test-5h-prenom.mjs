@@ -77,7 +77,7 @@ verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=rappels]') &
 verifier(await ev(`document.querySelectorAll('.pg-tuile').length === 0 && ![...document.querySelectorAll('#contenu a')].some(a => ['Mes animaux','Rappels','Sauvegarde'].includes(a.textContent.trim()) && a.closest('.pg-raccourcis'))`), 'Accueil : plus de boutons Mes animaux / Rappels / Sauvegarde');
 verifier(await ev(`!document.querySelector('.pg-bientot')`), 'Accueil : le bloc « Bientôt » n\'y est plus');
 await aller2('#/profil');
-verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===5 && a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 5 liens (modules + « Et d\'autres modules »)');
+verifier(await ev(`(()=>{const a=[...document.querySelectorAll('.pg-bientot a')];return a.length===4 && a.some(x=>x.getAttribute('href')==='#/boutique') && a.some(x=>x.getAttribute('href')==='#/bientot') && document.querySelector('.pg-bientot').getBoundingClientRect().height < 120})()`), 'Profil : « Bientôt sur Carnet Patte » en une petite ligne de 4 liens (3 modules + « Et d\'autres modules » ; la Carte Patte n\'est plus « bientôt »)');
 await aller2('#/accueil');
 await importer(JSON.stringify({ ...JSON.parse(ancienExport), soins: [{ id: 's1', animalId: 'a', type: 'vermifuge', titre: '', date: '2025-01-01', notes: '', rappel: '2025-02-01', rappelFait: false }] }));
 await aller2('#/animaux');

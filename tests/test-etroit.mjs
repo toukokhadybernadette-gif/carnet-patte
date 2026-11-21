@@ -168,7 +168,7 @@ verifier(await ev(`(() => { const b = document.querySelector('#menu-bouton').get
 await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
 const menu = await ev(`(() => { const d = document.querySelector('dialog.app-menu[open]'); if (!d) return null; const r = d.getBoundingClientRect(); const cs = getComputedStyle(d); return { gauche: Math.round(r.left), largeur: Math.round(r.width), hauteur: Math.round(r.height), flou: cs.backdropFilter, fond: cs.backgroundColor, entrees: [...d.querySelectorAll('.app-menu__titre')].map((t) => t.textContent.trim()), expanded: document.querySelector('#menu-bouton').getAttribute('aria-expanded'), anim: cs.animationName }; })()`);
 verifier(menu && menu.gauche === 0 && menu.largeur <= 360 && menu.hauteur >= 700 && /blur/.test(menu.flou) && /rgba/.test(menu.fond), `panneau à gauche, en verre (${menu?.largeur} px de large, flou ${menu?.flou})`);
-verifier(menu && menu.entrees.join(' | ') === "Toxique ? | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
+verifier(menu && menu.entrees.join(' | ') === "Carte Patte | Toxique ? | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
 await controler('Menu ☰', `document.querySelector('dialog.app-menu')`);
 await axe('dialog.app-menu', 'Menu ☰'); await ecran('menu');
 await ev(`document.querySelector('.app-menu [data-menu=toxique]').click()`); await sleep(700);
