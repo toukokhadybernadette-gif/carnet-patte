@@ -1,11 +1,13 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]     (sans argument : tous les tests)
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit]
+//   sans argument : tous les tests, 4 à la fois (--jobs=N change le nombre de tests simultanés)
+//   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
 // Résultats complets : tests/sortie/<test>.txt · captures d'écran : tests/sortie/shots/
 
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -30,10 +32,51 @@ const TESTS = {
 };
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 
-const choisis = process.argv.slice(2);
-const aLancer = choisis.length ? choisis : Object.keys(TESTS);
+// Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
+const REGLES = [
+  [/^tests\/lancer\.mjs$|\.md$|^\.github\/|^\.gitignore$|^assets\/|^tests\/sortie\//, []],
+  [/^tests\/test-(.+)\.mjs$/, (m) => [Object.keys(TESTS).find((k) => TESTS[k] === `test-${m[1]}.mjs`)].filter(Boolean)],
+  [/^css\/verre\.css$|^js\/fond\.js$/, ['verre', 'etroit']],
+  [/^css\/(refonte|themes)\.css$|^js\/(theme|couleurs-theme|illustrations)\.js$/, ['refonte', 'couleurs', 'verre', 'etroit']],
+  [/^modules\/toxique\/|^js\/bientot\.js$/, ['toxique', 'etroit']],
+  [/^modules\/animaux\/soins\.js$/, ['5e', '5f', 'finitions', 'etroit']],
+  [/^modules\/animaux\/rappels\.js$/, ['5f', '5e', 'finitions', 'etroit']],
+  [/^modules\/animaux\/pesees\.js$/, ['5g', 'graphique', 'finitions']],
+  [/^modules\/animaux\/(fiche|animaux|commun|exemples)\.js$|^modules\/animaux\/animaux\.css$/, ['5e', '5f', '5g', '5h', 'finitions', 'retouches', 'etroit']],
+  [/^js\/conseils\.js$/, ['5h', 'verre']],
+  [/^modules\/(accueil|boutique|carte|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit']],
+];
+
+function testsLiesAuxModifications() {
+  const git = (...a) => spawnSync('git', a, { cwd: RACINE, encoding: 'utf8' }).stdout ?? '';
+  const fichiers = new Set([
+    ...git('diff', '--name-only', 'main...HEAD').split('\n'),
+    ...git('status', '--porcelain', '-uall').split('\n').map((l) => l.slice(3).replace(/^"|"$/g, '').split(' -> ').pop()),
+  ].map((f) => f.trim()).filter(Boolean));
+  const tests = new Set();
+  const centraux = [];
+  for (const f of fichiers) {
+    const regle = REGLES.find(([re]) => re.test(f));
+    if (!regle) { centraux.push(f); continue; }
+    const r = typeof regle[1] === 'function' ? regle[1](f.match(regle[0])) : regle[1];
+    r.forEach((t) => tests.add(t));
+  }
+  if (centraux.length) {
+    console.log(`Fichier(s) central(aux) modifié(s) (${centraux.join(', ')}) : ils touchent toute l'application, tous les tests sont lancés.`);
+    return Object.keys(TESTS);
+  }
+  console.log(`Fichiers modifiés : ${fichiers.size}. Tests concernés : ${[...tests].join(', ') || 'aucun'}.`);
+  return Object.keys(TESTS).filter((t) => tests.has(t));
+}
+
+const args = process.argv.slice(2);
+const rapide = args.includes('--rapide');
+const jobs = Math.max(1, Number((args.find((a) => a.startsWith('--jobs=')) ?? '').slice(7)) || 4);
+const choisis = args.filter((a) => !a.startsWith('--'));
+const aLancer = choisis.length ? choisis : rapide ? testsLiesAuxModifications() : Object.keys(TESTS);
 const inconnus = aLancer.filter((t) => !TESTS[t]);
 if (inconnus.length) { console.error(`Test inconnu : ${inconnus.join(', ')}. Choix possibles : ${Object.keys(TESTS).join(', ')}`); process.exit(2); }
+if (!aLancer.length) { console.log('Rien à tester : aucun fichier modifié ne concerne les tests.'); process.exit(0); }
 
 fs.rmSync(path.join(SORTIE, 'shots'), { recursive: true, force: true });
 fs.mkdirSync(SORTIE, { recursive: true });
@@ -47,33 +90,47 @@ const serveur = http.createServer((req, res) => {
 });
 await new Promise((ok) => serveur.listen(0, '127.0.0.1', ok));
 const url = `http://127.0.0.1:${serveur.address().port}/index.html`;
-console.log(`Serveur local : ${url}\n`);
+console.log(`Serveur local : ${url} · ${aLancer.length} test(s), ${Math.min(jobs, aLancer.length)} à la fois\n`);
 
-let echecs = 0;
+const debut = Date.now();
+const duree = (ms) => { const s = Math.round(ms / 1000); return s >= 60 ? `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s` : `${s} s`; };
+const resultats = [];
 let port = 9400;
-for (const nom of aLancer) {
+
+// Un test = un processus séparé (le serveur doit rester libre de répondre). Port de débogage et profil Edge propres à chaque test : pas de collision en parallèle.
+function lance(nom) {
   const script = path.join(ICI, TESTS[nom]);
   const sortie = path.join(SORTIE, `${nom}.txt`);
-  // spawnSync bloquerait le serveur : on lance le test dans un processus séparé et on attend sa fin de façon asynchrone
-  const { spawn } = await import('node:child_process');
-  const code = await new Promise((fini) => {
+  const t0 = Date.now();
+  return new Promise((fini) => {
     const enfant = spawn(process.execPath, [script, SORTIE, url, nom], { env: { ...process.env, PORT: String(port++), NO_COLOR: '1', FORCE_COLOR: '0' } });
     let texte = '';
     enfant.stdout.on('data', (d) => { texte += d; });
     enfant.stderr.on('data', (d) => { texte += d; });
-    const limite = setTimeout(() => enfant.kill(), 280000);
-    enfant.on('close', (c) => { clearTimeout(limite); fs.writeFileSync(sortie, texte); fini({ c, texte }); });
+    const limite = setTimeout(() => enfant.kill(), 420000);
+    enfant.on('close', (c) => {
+      clearTimeout(limite);
+      fs.writeFileSync(sortie, texte);
+      const t = texte.replace(/\u001b\[[0-9;]*m/g, ''); // certains terminaux imposent des couleurs : on les retire avant de lire les résultats
+      const violations = (t.match(/VIOLATIONS/g) ?? []).length;
+      const axeOk = (t.match(/ 0 violation/g) ?? []).length;
+      const consoleOk = /ERREURS CONSOLE : aucune/.test(t);
+      const allerRetour = /identique : true/.test(t);
+      const echecsVerif = Number((t.match(/VÉRIFICATIONS EN ÉCHEC : (\d+)/) ?? [])[1] ?? 0);
+      const ok = c === 0 && violations === 0 && consoleOk && allerRetour && echecsVerif === 0;
+      resultats.push({ nom, ok });
+      console.log(`${ok ? 'OK    ' : 'ÉCHEC '} ${nom.padEnd(10)} ${axeOk} contrôles d'accessibilité à 0 violation, ${violations} avec violations · console ${consoleOk ? 'propre' : 'AVEC ERREURS'} · export/import ${allerRetour ? 'identique' : 'DIFFÉRENT'}${echecsVerif ? ` · ${echecsVerif} vérification(s) en échec` : ''}${c === 0 ? '' : ` · le script s'est arrêté (code ${c})`} · ${duree(Date.now() - t0)}`);
+      fini();
+    });
   });
-  const t = code.texte.replace(/\u001b\[[0-9;]*m/g, ''); // certains terminaux imposent des couleurs : on les retire avant de lire les résultats
-  const violations = (t.match(/VIOLATIONS/g) ?? []).length;
-  const axeOk = (t.match(/ 0 violation/g) ?? []).length;
-  const consoleOk = /ERREURS CONSOLE : aucune/.test(t);
-  const allerRetour = /identique : true/.test(t);
-  const echecsVerif = Number((t.match(/VÉRIFICATIONS EN ÉCHEC : (\d+)/) ?? [])[1] ?? 0);
-  const ok = code.c === 0 && violations === 0 && consoleOk && allerRetour && echecsVerif === 0;
-  if (!ok) echecs++;
-  console.log(`${ok ? 'OK    ' : 'ÉCHEC '} ${nom.padEnd(10)} ${axeOk} contrôles d'accessibilité à 0 violation, ${violations} avec violations · console ${consoleOk ? 'propre' : 'AVEC ERREURS'} · export/import ${allerRetour ? 'identique' : 'DIFFÉRENT'}${echecsVerif ? ` · ${echecsVerif} vérification(s) en échec` : ''}${code.c === 0 ? '' : ` · le script s'est arrêté (code ${code.c})`}`);
 }
+
+const file = [...aLancer];
+await Promise.all(Array.from({ length: Math.min(jobs, file.length) }, async () => { while (file.length) await lance(file.shift()); }));
 serveur.close();
-console.log(`\n${echecs ? `${echecs} test(s) en échec : voir tests/sortie/<test>.txt` : 'Tous les tests passent.'} (lisez aussi les lignes « = false » dans les fichiers de sortie : chaque test affiche ses vérifications.)`);
-process.exit(echecs ? 1 : 0);
+
+const echecs = resultats.filter((r) => !r.ok);
+console.log(`\n=== RÉSUMÉ ===\n${resultats.length - echecs.length} test(s) OK sur ${resultats.length} · ${echecs.length} échec(s)${echecs.length ? ` : ${echecs.map((r) => r.nom).join(', ')}` : ''} · durée totale ${duree(Date.now() - debut)}`);
+if (echecs.length) console.log(`Détails : ${echecs.map((r) => `tests/sortie/${r.nom}.txt`).join(', ')}`);
+console.log('(Lisez aussi les lignes « = false » dans les fichiers de sortie : chaque test affiche ses vérifications.)');
+process.exit(echecs.length ? 1 : 0);
