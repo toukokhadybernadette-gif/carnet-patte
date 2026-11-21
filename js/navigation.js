@@ -25,7 +25,7 @@ export const NAV = [
   { id: 'carte', titre: 'Carte Patte', court: 'Carte', icone: 'map-pin', href: '#/carte', bas: true, actif: (s) => s[0] === 'carte' },
   // Rappels : adresse inchangée (#/animaux/rappels) pour ne casser aucun lien. La cloche de la barre du haut y mène aussi.
   { id: 'rappels', titre: 'Rappels', court: 'Rappels', icone: 'bell', href: '#/animaux/rappels', bas: true, compteurRetards: true, actif: (s) => s[0] === 'animaux' && s[1] === 'rappels' },
-  { id: 'boutique', titre: 'Boutique', court: 'Boutique', icone: 'shopping-bag', href: '#/boutique', bientot: true, actif: (s) => s[0] === 'boutique' },
+  { id: 'boutique', titre: 'Boutique', court: 'Boutique', icone: 'shopping-bag', href: '#/boutique', actif: (s) => s[0] === 'boutique' },
   { id: 'communaute', titre: 'Communauté', court: 'Communauté', icone: 'users', href: '#/communaute', bientot: true, actif: (s) => s[0] === 'communaute' },
   { id: 'pro', titre: 'Professionnels', court: 'Pro', icone: 'briefcase-business', href: '#/pro', bientot: true, actif: (s) => s[0] === 'pro' },
   // Le Profil est en bas de la barre latérale ; la page Sauvegarde en dépend

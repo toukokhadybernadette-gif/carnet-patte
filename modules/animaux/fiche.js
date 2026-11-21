@@ -11,6 +11,7 @@ import { calculerRappels } from './rappels.js';
 import { formulaireAnimal, choisirCouleur } from './animaux.js';
 import * as soins from './soins.js';
 import * as pesees from './pesees.js';
+import { blocPourAnimal } from '../boutique/blocs.js';
 
 // Onglet affiché : mémorisé pendant la visite, pour ne pas revenir à « Santé » après une modification
 let memoire = { id: null, onglet: 'sante' };
@@ -219,6 +220,8 @@ export function rendre(zone, id, soinCible = '') {
           })}</section>
         </div>
       </div>
+
+      ${blocPourAnimal(animal)}
     </div>`;
 
   soins.rendre(zone.querySelector('#zone-soins'), animal);

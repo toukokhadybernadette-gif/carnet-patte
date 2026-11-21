@@ -1,3 +1,19 @@
+# Module 4 « Boutique » : en cours (branche `boutique`, pas encore publié)
+
+Version d'avant : `main` (tag `avant-carte` = avant le module 3). Retour arrière après publication : `git revert -m 1 <commit de merge>` puis `git push origin main`.
+
+## Ce que c'est
+Une sélection de 37 accessoires du quotidien (`modules/boutique/produits.js`) : liens vers des sites marchands (Animalis, Maxi Zoo, Zooplus), jamais de vente directe. Rangement par espèce et par besoin, bloc « Pour [nom] » sur la fiche d'un animal, alternative sûre sous un aliment dangereux dans « Toxique ? ».
+
+## À relire à la main avant de publier
+- **La sélection est éditoriale** : j'ai choisi des TYPES de produits (harnais, litière, cage…) et des pages de catégories des sites marchands, chacune vérifiée le 2026-11-21 (page trouvée, pas de renvoi vers l'accueil). Les phrases « pourquoi » sont des conseils généraux, jamais des promesses sur une marque. Un seul produit nomme une marque (Kong Classic). À vous de garder, retirer ou compléter.
+- **Aucun lien n'est encore affilié** (`lienAffilie` vide). Il faut d'abord s'inscrire aux programmes d'affiliation des marchands ; l'affiliation est refusée ou soumise à conditions chez certains. Tant que `lienAffilie` est vide, les liens sont normaux, mais la mention « Liens affiliés… » est déjà affichée : à vérifier avec vous (elle est exigée dès qu'un lien rapporte une commission, pas avant).
+- Pas de prix, pas de note, pas d'avis : à ne jamais ajouter sans source.
+- Les sites marchands changent leurs adresses : `node tests/lancer.mjs boutique-liens` (à la main) revérifie les 37 liens. Wanimo, essayé au départ, bloque les contrôles automatiques (429) : retiré.
+
+## À vérifier à la main (non testé automatiquement)
+Safari sur iPhone : ouverture d'un lien dans un nouvel onglet (« Voir le prix »), défilement des deux rangées de pastilles au doigt, lisibilité de la mention d'affiliation.
+
 # Module 3 « Carte Patte » : en cours (branche `carte`, pas encore publié)
 
 Version d'avant : `main` (avant la fusion de la branche `carte`). Retour arrière après publication : `git revert -m 1 <commit de merge>` puis `git push origin main`.

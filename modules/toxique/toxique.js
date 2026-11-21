@@ -7,6 +7,7 @@ import { icone } from '../../js/icons.js';
 import { echapper } from '../../js/utils.js';
 import { badge, vide } from '../../js/composants.js';
 import { infosEspece } from '../animaux/commun.js';
+import { blocAlternative } from '../boutique/blocs.js';
 import { FICHES, ESPECES_TOXIQUE, NOTES_ESPECE, NOMS_CATEGORIES, CENTRES_ANTIPOISON, PHRASE_DOUTE, DATE_VERIFICATION } from './donnees.js';
 
 // ----- Les 4 niveaux : couleur d'urgence + FORME de l'icône (la couleur ne porte jamais seule l'information) -----
@@ -89,6 +90,7 @@ function detail(fiche, groupe) {
     <ol class="tx-etapes">${etapes.map((e) => `<li>${e}</li>`).join('')}</ol>
     ${fiche.conseil ? `<p class="tx-conseil">${icone('info', { taille: 16 })}<span>${echapper(fiche.conseil)}</span></p>` : ''}
     ${urgent ? blocUrgence('tx-urgence--dans-fiche') : `<div class="tx-urgence tx-urgence--dans-fiche"><p class="tx-urgence__phrase"><strong>${echapper(PHRASE_DOUTE)}.</strong></p><div class="tx-urgence__numeros">${numeros()}</div></div>`}
+    ${urgent ? blocAlternative(fiche.id, groupe.id) : ''}
     ${sources}`;
 }
 

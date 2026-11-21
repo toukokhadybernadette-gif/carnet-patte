@@ -168,7 +168,7 @@ verifier(await ev(`(() => { const b = document.querySelector('#menu-bouton').get
 await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
 const menu = await ev(`(() => { const d = document.querySelector('dialog.app-menu[open]'); if (!d) return null; const r = d.getBoundingClientRect(); const cs = getComputedStyle(d); return { gauche: Math.round(r.left), largeur: Math.round(r.width), hauteur: Math.round(r.height), flou: cs.backdropFilter, fond: cs.backgroundColor, entrees: [...d.querySelectorAll('.app-menu__titre')].map((t) => t.textContent.trim()), expanded: document.querySelector('#menu-bouton').getAttribute('aria-expanded'), anim: cs.animationName }; })()`);
 verifier(menu && menu.gauche === 0 && menu.largeur <= 360 && menu.hauteur >= 700 && /blur/.test(menu.flou) && /rgba/.test(menu.fond), `panneau à gauche, en verre (${menu?.largeur} px de large, flou ${menu?.flou})`);
-verifier(menu && menu.entrees.join(' | ') === "Toxique ? | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
+verifier(menu && menu.entrees.join(' | ') === "Toxique ? | Boutique | Sauvegarde | Couleur de l'appli | Bientôt sur Carnet Patte | À propos" && menu.expanded === 'true', `entrées : ${menu?.entrees.join(' | ')}`);
 await controler('Menu ☰', `document.querySelector('dialog.app-menu')`);
 await axe('dialog.app-menu', 'Menu ☰'); await ecran('menu');
 await ev(`document.querySelector('.app-menu [data-menu=toxique]').click()`); await sleep(700);
@@ -261,7 +261,7 @@ for (const [w, h, nom] of [[820, 1000, 'tablette'], [1280, 900, 'ordinateur']]) 
   verifier(await ev(`document.querySelectorAll('dialog[open] .ar-choix').length`) === 3, `${nom} : « Ajouter » ouvre la même petite fenêtre`);
   await ev(`document.querySelector('dialog[open] [data-fermer]').click()`); await sleep(300);
   await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
-  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 5, `${nom} : le menu ☰ a ses 5 entrées (plus de « Carte Patte » : elle est dans la barre du bas)`);
+  verifier(await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6, `${nom} : le menu ☰ a ses 6 entrées (Boutique ajoutée ; plus de « Carte Patte » : elle est dans la barre du bas)`);
   await ev(`document.querySelector('dialog.app-menu [data-fermer]').click()`); await sleep(500);
   verifier(await sansDebord(), `${nom} : pas de défilement horizontal`);
 }

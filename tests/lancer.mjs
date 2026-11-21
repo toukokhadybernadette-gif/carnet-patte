@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [carte-reel]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens]
 //   « carte-reel » appelle les VRAIS serveurs OpenStreetMap : il n'est jamais lancé par la suite automatique ni par --rapide, seulement à la main (node tests/lancer.mjs carte-reel)
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
@@ -31,15 +31,18 @@ const TESTS = {
   refonte: 'test-refonte.mjs',
   etroit: 'test-etroit.mjs',
   carte: 'test-carte.mjs',
+  boutique: 'test-boutique.mjs',
   'carte-reel': 'test-carte-reel.mjs',
+  'boutique-liens': 'test-boutique-liens.mjs',
 };
-const MANUELS = new Set(['carte-reel']); // jamais dans « tous les tests » (internet et serveurs publics requis)
+const MANUELS = new Set(['carte-reel', 'boutique-liens']); // jamais dans « tous les tests » (internet et serveurs publics requis)
 const AUTOMATIQUES = Object.keys(TESTS).filter((t) => !MANUELS.has(t));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
   [/^modules\/carte\/|^assets\/leaflet\//, ['carte', 'etroit']],
+  [/^modules\/boutique\//, ['boutique', 'finitions', 'etroit']],
   [/^donnees\/|^outils\/|^\.github\/workflows\/(lieux-mensuel|pages)\.yml$/, ['carte']],
   [/^tests\/lancer\.mjs$|\.md$|^\.github\/|^\.gitignore$|^assets\/|^tests\/sortie\//, []],
   [/^tests\/test-(.+)\.mjs$/, (m) => [Object.keys(TESTS).find((k) => TESTS[k] === `test-${m[1]}.mjs`)].filter(Boolean)],
