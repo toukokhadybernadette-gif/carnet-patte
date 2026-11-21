@@ -23,5 +23,5 @@
 ## Boutique (liens vers des sites marchands)
 
 - `modules/boutique/produits.js` ne contient JAMAIS de médicament, antiparasitaire, vermifuge ni complément de santé, ni prix, ni note, ni avis inventés (testé par `tests/test-boutique.mjs`).
-- La mention « Liens affiliés : Carnet Patte peut toucher une petite commission… » reste visible sur la page Boutique et dans chaque bloc de liens (fiche animal, Toxique ?). Les liens s'ouvrent dans un nouvel onglet avec `rel="sponsored noopener"`.
+- Une mention reste visible sur la page Boutique et dans chaque bloc de liens (fiche animal, Toxique ?), et elle est AUTOMATIQUE : « Sélection indépendante : Carnet Patte ne touche aucune commission sur ces liens pour l'instant. » tant qu'aucun `lienAffilie` n'est rempli, « Liens affiliés : Carnet Patte peut toucher une petite commission… » dès qu'un seul l'est (`mentionCourante()` dans `produits.js`). Les liens s'ouvrent dans un nouvel onglet avec `rel="sponsored noopener"`.
 - N'ajouter un produit qu'avec un lien dont la page a été vérifiée (`node tests/lancer.mjs boutique-liens`, à la main).

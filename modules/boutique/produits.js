@@ -8,11 +8,13 @@
 //
 // POUR AJOUTER UN PRODUIT : copier une ligne, changer l'`id` (unique), le nom, la `categorie` (un besoin de BESOINS), les `especes`
 //   (des identifiants de modules/toxique/donnees.js : chien, chat, lapin, rongeur, oiseau, poule, cheval), le `pourquoi`, le `marchand` et le `lien`.
-// LIENS AFFILIÉS : quand vous aurez un compte d'affiliation, écrivez l'adresse affiliée dans `lienAffilie` : elle sera utilisée à la place de `lien`.
+// LIENS AFFILIÉS : quand vous aurez un compte d'affiliation, écrivez l'adresse affiliée dans `lienAffilie` : elle sera utilisée à la place de `lien`,
+//   et la mention change toute seule (voir mentionCourante) : « Sélection indépendante… » tant qu'aucun lien affilié n'existe, « Liens affiliés… » dès le premier.
 // `saison` (facultatif) : 'ete' ou 'hiver' : sur la fiche d'un animal, le produit n'est proposé que dans la bonne saison (la page Boutique les montre toujours).
 // `remplace` (facultatif) : les identifiants des fiches « Toxique ? » dont ce produit est une alternative sûre (ex. friandises pour chien pour « chocolat »).
 
 export const MENTION_AFFILIATION = 'Liens affiliés : Carnet Patte peut toucher une petite commission si vous achetez, sans surcoût pour vous. Nos choix restent indépendants.';
+export const MENTION_INDEPENDANTE = "Sélection indépendante : Carnet Patte ne touche aucune commission sur ces liens pour l'instant.";
 
 /** Les besoins (rangement « Pour quoi ? »). */
 export const BESOINS = [
@@ -157,7 +159,16 @@ export const PRODUITS = [
 ];
 
 /** Le lien à ouvrir : le lien affilié s'il est rempli, sinon le lien normal. */
-export const lienFinal = (p) => p.lienAffilie || p.lien;
+export const lienFinal = (p) => String(p.lienAffilie ?? '').trim() || p.lien;
+
+/** Vrai dès qu'UN lien affilié est rempli, où que ce soit dans la sélection. */
+export const selectionAffiliee = () => PRODUITS.some((p) => String(p.lienAffilie ?? '').trim() !== '');
+
+/**
+ * La mention à afficher, automatique : tant qu'aucun `lienAffilie` n'est rempli, « Sélection indépendante… » ;
+ * dès qu'un seul l'est, la mention d'affiliation, sur la page Boutique ET dans tous les blocs de liens (règle volontairement prudente : un seul lien affilié suffit).
+ */
+export const mentionCourante = () => (selectionAffiliee() ? MENTION_AFFILIATION : MENTION_INDEPENDANTE);
 
 /** Le groupe de l'espèce d'un animal (Rongeurs = cochon d'Inde + hamster), comme dans « Toxique ? » : null si aucun produit ne la concerne. */
 export function produitsPourEspece(groupeId) {

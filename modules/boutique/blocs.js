@@ -2,12 +2,12 @@
 //   - carteProduit()      : une carte de produit, avec le bouton « Voir le prix » ;
 //   - blocPourAnimal()    : « Pour [nom] », trois produits de l'espèce de l'animal ;
 //   - blocAlternative()   : sous un aliment dangereux, une alternative sûre quand c'est pertinent.
-// Tous les liens s'ouvrent dans un nouvel onglet avec rel="sponsored noopener" ; la mention d'affiliation accompagne chaque bloc de liens.
+// Tous les liens s'ouvrent dans un nouvel onglet avec rel="sponsored noopener" ; la mention (indépendante ou d'affiliation, automatique) accompagne chaque bloc de liens.
 
 import { echapper } from '../../js/utils.js';
 import { icone } from '../../js/icons.js';
 import { ESPECES_TOXIQUE } from '../toxique/donnees.js';
-import { PRODUITS, BESOINS, MENTION_AFFILIATION, lienFinal, produitsPourEspece } from './produits.js';
+import { PRODUITS, BESOINS, mentionCourante, selectionAffiliee, lienFinal, produitsPourEspece } from './produits.js';
 
 export const besoin = (id) => BESOINS.find((b) => b.id === id);
 export const groupeEspece = (id) => ESPECES_TOXIQUE.find((g) => g.id === id);
@@ -19,7 +19,8 @@ export function lienProduit(p, { classe = 'cp-btn cp-btn--secondaire' } = {}) {
   return `<a class="${classe}" href="${echapper(lienFinal(p))}" target="_blank" rel="sponsored noopener" aria-label="${echapper(`Voir le prix : ${p.nom}, chez ${p.marchand} (s'ouvre dans un nouvel onglet)`)}">${icone('external-link', { taille: 16 })}<span>Voir le prix</span></a>`;
 }
 
-export const mentionHtml = (classe = '') => `<p class="bq-mention${classe ? ` ${classe}` : ''}" role="note">${icone('info', { taille: 16 })}<span>${echapper(MENTION_AFFILIATION)}</span></p>`;
+/** La mention (automatique) : indépendante tant qu'aucun lien n'est affilié, sinon la mention d'affiliation. */
+export const mentionHtml = (classe = '') => `<p class="bq-mention${classe ? ` ${classe}` : ''}" role="note" data-mention="${selectionAffiliee() ? 'affiliation' : 'independante'}">${icone('info', { taille: 16 })}<span>${echapper(mentionCourante())}</span></p>`;
 
 /** Une carte de produit. Aucun prix, aucune note, aucun avis : seulement ce que Carnet Patte écrit lui-même. */
 export function carteProduit(p) {

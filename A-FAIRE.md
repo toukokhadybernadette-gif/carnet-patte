@@ -7,7 +7,7 @@ Une sélection de 37 accessoires du quotidien (`modules/boutique/produits.js`) :
 
 ## À relire à la main avant de publier
 - **La sélection est éditoriale** : j'ai choisi des TYPES de produits (harnais, litière, cage…) et des pages de catégories des sites marchands, chacune vérifiée le 2026-11-21 (page trouvée, pas de renvoi vers l'accueil). Les phrases « pourquoi » sont des conseils généraux, jamais des promesses sur une marque. Un seul produit nomme une marque (Kong Classic). À vous de garder, retirer ou compléter.
-- **Aucun lien n'est encore affilié** (`lienAffilie` vide). Il faut d'abord s'inscrire aux programmes d'affiliation des marchands ; l'affiliation est refusée ou soumise à conditions chez certains. Tant que `lienAffilie` est vide, les liens sont normaux, mais la mention « Liens affiliés… » est déjà affichée : à vérifier avec vous (elle est exigée dès qu'un lien rapporte une commission, pas avant).
+- **Aucun lien n'est encore affilié** (`lienAffilie` vide). Il faut d'abord s'inscrire aux programmes d'affiliation des marchands ; l'affiliation est refusée ou soumise à conditions chez certains. La mention est AUTOMATIQUE : « Sélection indépendante : Carnet Patte ne touche aucune commission sur ces liens pour l'instant. » tant qu'aucun `lienAffilie` n'est rempli ; dès qu'un seul l'est, « Liens affiliés : … » s'affiche sur la page et dans tous les blocs.
 - Pas de prix, pas de note, pas d'avis : à ne jamais ajouter sans source.
 - Les sites marchands changent leurs adresses : `node tests/lancer.mjs boutique-liens` (à la main) revérifie les 37 liens. Wanimo, essayé au départ, bloque les contrôles automatiques (429) : retiré.
 

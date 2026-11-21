@@ -38,17 +38,22 @@ const sansDebord = () => ev(`document.documentElement.scrollWidth<=innerWidth`);
 const texte = (sel) => ev(`(document.querySelector(${JSON.stringify(sel)})?.innerText ?? 'ABSENT').replace(/\\s+/g,' ').trim()`);
 
 
-const MENTION = 'Liens affiliés : Carnet Patte peut toucher une petite commission si vous achetez, sans surcoût pour vous. Nos choix restent indépendants.';
+const MENTION_AFF = 'Liens affiliés : Carnet Patte peut toucher une petite commission si vous achetez, sans surcoût pour vous. Nos choix restent indépendants.';
+const MENTION_IND = 'Sélection indépendante : Carnet Patte ne touche aucune commission sur ces liens pour l\'instant.';
+const MENTION = MENTION_IND; // la mention de départ : aucun lien n'est encore affilié
 
 // ===== 1. LES DONNÉES (lues sur le disque) : modules/boutique/produits.js =====
 log('=== DONNÉES : modules/boutique/produits.js ===');
 const M = await import(pathToFileURL(path.join(RACINE, 'modules/boutique/produits.js')).href);
 const T = await import(pathToFileURL(path.join(RACINE, 'modules/toxique/donnees.js')).href);
-const { PRODUITS, BESOINS, MARCHANDS, MENTION_AFFILIATION } = M;
+const { PRODUITS, BESOINS, MARCHANDS, MENTION_AFFILIATION, MENTION_INDEPENDANTE } = M;
 const GROUPES = T.ESPECES_TOXIQUE.map((g) => g.id);
 const HOTES = { Animalis: 'www.animalis.com', 'Maxi Zoo': 'www.maxizoo.fr', Zooplus: 'www.zooplus.fr' };
 verifier(PRODUITS.length >= 30 && PRODUITS.length <= 40, `entre 30 et 40 produits de départ (${PRODUITS.length})`);
-verifier(MENTION_AFFILIATION === MENTION, 'la mention d\'affiliation est exactement celle demandée');
+verifier(MENTION_AFFILIATION === MENTION_AFF && MENTION_INDEPENDANTE === MENTION_IND, 'les deux mentions sont exactement celles demandées (indépendante / affiliation)');
+verifier(M.mentionCourante() === MENTION_IND && !M.selectionAffiliee(), 'mention automatique : tant qu\'aucun lienAffilie n\'est rempli, « Sélection indépendante… »');
+PRODUITS[5].lienAffilie = 'https://affilie.example/un'; const avecUn = M.mentionCourante(); PRODUITS[5].lienAffilie = '   '; const blanc = M.mentionCourante(); PRODUITS[5].lienAffilie = '';
+verifier(avecUn === MENTION_AFF && blanc === MENTION_IND && M.mentionCourante() === MENTION_IND, 'dès qu\'UN lienAffilie est rempli (n\'importe lequel) : la mention d\'affiliation ; un champ rempli d\'espaces ne compte pas ; vide de nouveau : retour à « indépendante »');
 verifier(new Set(PRODUITS.map((p) => p.id)).size === PRODUITS.length && PRODUITS.every((p) => /^[a-z0-9-]+$/.test(p.id)), 'identifiants uniques');
 verifier(PRODUITS.every((p) => [p.nom, p.categorie, p.pourquoi, p.marchand, p.lien].every((x) => typeof x === 'string' && x.trim()) && Array.isArray(p.especes) && p.especes.length > 0 && 'lienAffilie' in p), 'chaque produit : nom, catégorie, espèces, « pourquoi », marchand, lien, et le champ lienAffilie');
 verifier(PRODUITS.every((p) => BESOINS.some((b) => b.id === p.categorie) && p.especes.every((e) => GROUPES.includes(e))), 'catégories et espèces valides (mêmes espèces que « Toxique ? »)');
@@ -105,7 +110,7 @@ await aller2('#/profil'); verifier(await ev(`document.querySelectorAll('.pg-bien
 
 log('=== LA PAGE BOUTIQUE ===');
 await aller2('#/boutique');
-verifier((await texte('.pg--boutique > .bq-mention')).includes(MENTION), `mention d'affiliation exacte : « ${MENTION} »`);
+verifier((await texte('.pg--boutique > .bq-mention')).includes(MENTION), `mention exacte (aucun lien affilié) : « ${MENTION} »`);
 verifier(await ev(`(() => { const r = document.querySelector('.pg--boutique > .bq-mention').getBoundingClientRect(); return r.width > 150 && r.height > 20 && r.top < innerHeight && getComputedStyle(document.querySelector('.pg--boutique > .bq-mention')).visibility === 'visible'; })()`), 'la mention est visible dès l\'arrivée sur la page (pas cachée, pas repliée)');
 let s0 = await lire();
 verifier(s0.ids.length === PRODUITS.length && s0.statut === `${PRODUITS.length} produits.` && s0.esp[0].v === 'toutes' && s0.esp[0].p === 'true' && s0.bes[0].v === 'tous' && s0.bes[0].p === 'true', `au départ : les ${PRODUITS.length} produits, « Toutes » et « Tous » actifs`);
@@ -168,7 +173,7 @@ const blocDe = async (id) => { await aller2(`#/animaux/${id}`); await sleep(400)
 const bMoka = await blocDe('moka');
 verifier(bMoka && bMoka.titre === 'Pour Moka' && bMoka.ids.length === 3 && new Set(bMoka.cats).size === 3, `fiche de Moka : « ${bMoka?.titre} » avec 3 produits de besoins différents (${bMoka?.ids.join(', ')})`);
 verifier(bMoka.ids.every((id) => PRODUITS.find((p) => p.id === id).especes.includes('chien')), 'les 3 produits sont des produits pour chien');
-verifier(bMoka.mention === MENTION && bMoka.liens.every((l) => l === '_blank|sponsored noopener') && bMoka.apresOnglets, 'le bloc porte la mention d\'affiliation, ses liens sont sponsored noopener, et il est sous les onglets de la fiche');
+verifier(bMoka.mention === MENTION && bMoka.liens.every((l) => l === '_blank|sponsored noopener') && bMoka.apresOnglets, 'le bloc porte la mention (indépendante tant qu\'aucun lien n\'est affilié), ses liens sont sponsored noopener, et il est sous les onglets de la fiche');
 verifier(bMoka.tout === '#/boutique/chien', '« Toute la sélection » mène à la Boutique, espèce chien');
 const bMoka2 = await blocDe('moka');
 verifier(JSON.stringify(bMoka2.ids) === JSON.stringify(bMoka.ids), 'le choix est stable : même animal, mêmes produits');
@@ -213,6 +218,28 @@ verifier(await sansDebord(), '« Toxique ? » avec l\'alternative sur 375 px : r
 await ev(`document.querySelector('.bq-alternative').scrollIntoView({ block: 'center' })`); await sleep(300); await ecran('375-toxique-alternative');
 await axe('#contenu', 'Toxique ? avec alternative, 375 px');
 await taille(1280, 900); await sleep(300);
+
+log('=== LA MENTION BASCULE TOUTE SEULE DÈS QU\'UN LIEN AFFILIÉ EST REMPLI ===');
+const lireMentions = () => ev(`[...document.querySelectorAll('.bq-mention')].map((m) => ({ type: m.dataset.mention, texte: m.textContent.trim() }))`);
+await aller2('#/boutique');
+let mm0 = await lireMentions();
+verifier(mm0.length === 1 && mm0[0].type === 'independante' && mm0[0].texte === MENTION_IND, `page Boutique, aucun lien affilié : « ${mm0[0]?.texte} »`);
+await ev(`import('/modules/boutique/produits.js').then((m) => { window.__p = m.PRODUITS[20]; window.__l = window.__p.lienAffilie; window.__p.lienAffilie = 'https://affilie.example/bascule'; })`);
+await aller2('#/boutique');
+let mm1 = await lireMentions();
+verifier(mm1.length === 1 && mm1[0].type === 'affiliation' && mm1[0].texte === MENTION_AFF, `un seul lien affilié rempli (le produit n° 21) : la page affiche « ${mm1[0]?.texte.slice(0, 40)}… »`);
+await filtre('espece', 'poule');
+verifier((await lireMentions())[0].type === 'affiliation', 'elle ne change pas quand on filtre (règle prudente : un lien affilié suffit pour toute la page)');
+const blocAff = await blocDe('moka');
+verifier(blocAff.mention === MENTION_AFF, 'fiche d\'un animal : la même mention d\'affiliation dans le bloc « Pour Moka »');
+const toxAff = await ouvrirFiche('chien', 'chocolat');
+verifier(toxAff.alt && toxAff.mention === MENTION_AFF, '« Toxique ? » : la même mention d\'affiliation sous l\'alternative');
+await ev(`window.__p.lienAffilie = window.__l`);
+await aller2('#/boutique');
+verifier((await lireMentions())[0].type === 'independante', 'lien affilié retiré : la page revient toute seule à « Sélection indépendante »');
+const blocInd = await blocDe('moka');
+verifier(blocInd.mention === MENTION_IND, 'et le bloc de la fiche aussi');
+await axe('#contenu', 'fiche animal, mention indépendante');
 
 log('=== DONNÉES DE L\'UTILISATEUR INTACTES ===');
 await aller2('#/boutique'); await aller2('#/animaux/moka'); await aller2('#/toxique');
