@@ -1,6 +1,6 @@
 # Met à jour chaque mois les lieux utiles aux animaux (donnees/lieux/) depuis un extrait OpenStreetMap.
 # Le résultat n'est JAMAIS publié tout seul : le workflow ouvre une Pull Request (avec le nombre de lieux ajoutés et retirés)
-# que vous relisez puis fusionnez ; le déploiement du site (pages.yml) se fait alors comme d'habitude.
+# que vous relisez puis fusionnez ; le déploiement du site se fait alors tout seul (Cloudflare Pages dès la fusion sur main, et l'ancienne adresse GitHub Pages via pages.yml).
 #
 # À activer une fois dans GitHub : Settings > Actions > General > « Allow GitHub Actions to create and approve pull requests ».
 # À lancer à la main si besoin : onglet Actions > « Lieux : mise à jour mensuelle » > Run workflow.

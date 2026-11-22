@@ -1,3 +1,4 @@
+# ANCIENNE ADRESSE (GitHub Pages) : elle reste ouverte jusqu'à votre accord ; le site principal est sur Cloudflare Pages (carnetpatte.com, voir DEPLOIEMENT-CLOUDFLARE.md).
 # Publie SEULEMENT ce qui sert au site (pas tests/, outils/, README, notes, captures). donnees/ = lieux préparés à l'avance (licence ODbL).
 name: Publier le site
 on:
@@ -20,12 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Assembler le site
+        # Le même script que Cloudflare Pages (outils/assembler-site.mjs) : seulement ce qui sert au site, avec la version du commit dans sw.js
         run: |
-          mkdir _site
-          cp -r index.html manifest.webmanifest sw.js assets css js modules donnees _site/
-          # Appli hors ligne : sw.js reçoit la version (le commit) et la liste des fichiers à mettre en cache
-          node outils/preparer-sw.mjs _site "${GITHUB_SHA::12}"
-          touch _site/.nojekyll
+          node outils/assembler-site.mjs --sortie=_site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

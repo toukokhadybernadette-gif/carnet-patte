@@ -81,9 +81,11 @@ self.addEventListener('fetch', (evenement) => {
 
   evenement.respondWith((async () => {
     const cache = await caches.open(CACHE_APP);
-    // Une adresse d'ouverture de l'appli (/ ou /index.html, avec ou sans paramètres) donne la page
-    const cible = requete.mode === 'navigate' ? page : requete;
-    const copie = await cache.match(cible, { ignoreSearch: true });
+    // La racine de l'appli (/) donne la page ; une autre page du site (demenagement.html, ou /demenagement sans « .html » comme sur Cloudflare Pages) donne SA page
+    const navigation = requete.mode === 'navigate';
+    const chemin = url.pathname.replace(/\/$/, '');
+    let copie = await cache.match(navigation && chemin === racine.pathname.replace(/\/$/, '') ? page : requete, { ignoreSearch: true });
+    if (!copie && navigation && !/\.[a-z0-9]+$/i.test(chemin)) copie = await cache.match(new URL(`${chemin}.html`, url.origin), { ignoreSearch: true });
     if (copie) return copie;
     try {
       const reponse = await fetch(requete);

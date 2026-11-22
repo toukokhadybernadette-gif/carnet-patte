@@ -122,6 +122,7 @@ export function rendre(zone) {
         <ul class="cp-liste">
           ${ligne({ icone: 'users', titre: 'Communauté', texte: 'Échanger avec d\'autres passionnés.', href: '#/communaute', bientot: true })}
           ${ligne({ icone: 'briefcase-business', titre: 'Professionnels', texte: 'Outils pour éleveurs et professionnels.', href: '#/pro', bientot: true })}
+          ${ligne({ icone: 'info', titre: 'À propos', texte: 'Mentions légales, sources et licences.', href: '#/apropos' })}
           ${ligne({ icone: 'compass', titre: 'Autres modules à venir', texte: 'Basse-cour, perdus / trouvés, refuges.', href: '#/bientot' })}
         </ul>
       </section>

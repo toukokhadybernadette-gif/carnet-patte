@@ -15,3 +15,9 @@
 .pwa-aide__illu { display: block; width: 100%; max-width: 320px; height: auto; margin-inline: auto; color: var(--cp-foret-texte, var(--cp-texte)); }
 .pwa-aide__etapes { margin: 0; padding-left: 1.4em; display: grid; gap: var(--cp-espace-2); }
 .pwa-aide p { margin: 0; }
+
+/* Ancienne adresse : bandeau « Carnet Patte a déménagé » (js/adresse.js) */
+.pwa-demenage { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-3); flex-wrap: wrap; padding: calc(var(--cp-espace-2) + env(safe-area-inset-top)) var(--cp-marge-page) var(--cp-espace-2);
+  background: var(--cp-vert-clair); color: var(--cp-texte); border-bottom: 1px solid var(--cp-bordure); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); }
+.pwa-demenage__texte { margin: 0; flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.pwa-demenage .cp-btn { flex: none; text-decoration: none; }

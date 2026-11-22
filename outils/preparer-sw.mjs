@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const FICHIERS_RACINE = ['index.html', 'manifest.webmanifest'];
+const FICHIERS_RACINE = ['index.html', 'demenagement.html', 'manifest.webmanifest'];
 const DOSSIERS = ['css', 'js', 'modules', 'assets'];
 const EXTENSIONS = new Set(['.html', '.css', '.js', '.json', '.png', '.svg', '.woff2', '.webmanifest']);
 const A_EXCLURE = [/\/demarrage-[^/]+\.png$/]; // écrans de démarrage iPhone : lus par iOS, pas par l'appli
