@@ -405,3 +405,22 @@ export function activerFiltres(racine, quandChange) {
     if (quandChange) quandChange([...racine.querySelectorAll('.cp-filtre[aria-pressed="true"]')].map((x) => x.dataset.valeur));
   });
 }
+
+/**
+ * Petite bulle d'information en verre (flou léger, coins arrondis, couleur du thème) : une icône, la valeur en gros, un détail discret.
+ * À poser dans un conteneur `.bulles` (grille : les bulles sont séparées par un espace, jamais par un trait). `libelle` : nom de l'info pour les
+ * lecteurs d'écran (« Âge »). `vide` : texte affiché à la place de la valeur quand l'info n'est pas renseignée. `ton` : 'retard' | 'semaine'.
+ * Le détail tient sur UNE ligne (« … » s'il est trop long, le texte entier reste dans l'infobulle et pour les lecteurs d'écran).
+ */
+export function bulleInfo({ libelle, icone: nomIcone, valeur = '', detail = '', vide: texteVide = '', ton = '', classe = '' } = {}) {
+  return `
+    <div class="bulle${ton ? ` bulle--${ton}` : ''}${classe ? ` ${classe}` : ''}" role="group" aria-label="${echapper(libelle)}">
+      <span class="bulle__icone" aria-hidden="true">${icone(nomIcone, { taille: 20 })}</span>
+      <span class="bulle__corps">
+        <span class="cp-sr">${echapper(libelle)} : </span>
+        ${valeur ? `<span class="bulle__valeur">${echapper(valeur)}</span>` : `<span class="bulle__valeur bulle__valeur--vide">${echapper(texteVide)}</span>`}
+        ${detail ? `<span class="bulle__detail" title="${echapper(detail)}">${echapper(detail)}</span>` : ''}
+      </span>
+    </div>`;
+}
+

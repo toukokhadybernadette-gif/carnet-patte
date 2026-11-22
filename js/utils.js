@@ -117,3 +117,16 @@ export function formatTaille(octets) {
   if (octets < 1024 * 1024) return `${Math.round(octets / 1024)} Ko`;
   return `${(octets / 1048576).toFixed(octets < 10 * 1048576 ? 1 : 0).replace('.', ',')} Mo`;
 }
+
+/** « 8 nov. » pour l'année en cours, « 8 nov. 2025 » sinon : une date courte pour les petites bulles. */
+export function formatDateCourte(iso) {
+  if (!iso) return '';
+  const complete = formatDate(iso);
+  return iso.slice(0, 4) === aujourdhui().slice(0, 4) ? complete.replace(/\s+\d{4}$/, '') : complete;
+}
+
+/** « 22/09/2023 » */
+export function formatDateNumerique(iso) {
+  return iso ? lireISO(iso).toLocaleDateString('fr-FR') : '';
+}
+

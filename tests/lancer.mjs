@@ -48,6 +48,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
+  [/^css\/bulles\.css$/, ['finitions', '5e', '5f', '5g', '5h', 'ferme', 'retouches', 'verre', 'sombre', 'etroit']],
   [/^demenagement\.html$|^_headers$|^js\/(adresse|mentions-config)\.js$|^modules\/apropos\/|^outils\/assembler-site\.mjs$/, ['demenagement', 'installable', 'etroit']],
   [/^css\/(sombre|themes-sombre)\.css$|^js\/couleurs-sombre\.js$/, ['sombre', 'refonte', 'couleurs', 'verre', 'etroit']],
   [/^modules\/ferme\//, ['ferme', '5e', '5f', 'finitions', 'etroit', 'retouches']],
