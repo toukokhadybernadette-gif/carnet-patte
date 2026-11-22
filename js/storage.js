@@ -126,6 +126,7 @@ export function supprimer(collection, id) {
   if (collection === 'animaux') {
     donnees.soins = donnees.soins.filter((s) => s.animalId !== id);
     donnees.pesees = donnees.pesees.filter((p) => p.animalId !== id);
+    window.dispatchEvent(new CustomEvent('animal-supprime', { detail: { id } })); // ses documents (js/documents-db.js) partent aussi
   }
   sauver();
 }
@@ -202,4 +203,5 @@ export function toutEffacer() {
   donnees = vide();
   donnees.exemplesAjoutes = true;
   sauver();
+  window.dispatchEvent(new Event('donnees-effacees')); // les documents (js/documents-db.js) sont effacés aussi
 }

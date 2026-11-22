@@ -312,3 +312,20 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .ps-ligne-info { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .ps-ligne-info .ic { flex: none; width: 14px; height: 14px; }
+
+/* ---------- Documents (onglet de la fiche) ---------- */
+.dc { display: grid; gap: var(--cp-espace-4); }
+.dc-espace { margin: 0; }
+.dc-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+.dc-carte { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--cp-espace-3); align-items: start; padding: var(--cp-espace-3); }
+.dc-vignette { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--cp-rayon-champ); overflow: hidden; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
+.dc-vignette__img { width: 100%; height: 100%; object-fit: cover; }
+.dc-vignette__pdf { display: grid; justify-items: center; font-size: var(--cp-taille-xs); line-height: 1; gap: 2px; }
+.dc-carte__corps { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.dc-carte__titre { overflow-wrap: anywhere; }
+.dc-carte__meta { color: var(--cp-texte-doux); font-size: var(--cp-taille-s); }
+.dc-carte__actions { grid-column: 2; display: flex; align-items: center; gap: var(--cp-espace-2); }
+.dc-carte__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
+.dc-grande { display: block; max-width: 100%; max-height: 70dvh; margin-inline: auto; border-radius: var(--cp-rayon-champ); }
+.dc-form__actions { display: flex; gap: var(--cp-espace-3); justify-content: flex-end; flex-wrap: wrap; }
+.dn-taille { margin: 0; color: var(--cp-texte-doux); }

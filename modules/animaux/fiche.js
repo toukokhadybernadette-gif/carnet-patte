@@ -11,6 +11,8 @@ import { calculerRappels } from './rappels.js';
 import { formulaireAnimal, choisirCouleur } from './animaux.js';
 import * as soins from './soins.js';
 import * as pesees from './pesees.js';
+import * as documents from './documents.js';
+import { listerDocuments } from '../../js/documents-db.js';
 import { blocPourAnimal } from '../boutique/blocs.js';
 
 // Onglet affiché : mémorisé pendant la visite, pour ne pas revenir à « Santé » après une modification
@@ -213,11 +215,7 @@ export function rendre(zone, id, soinCible = '') {
           <section class="cp-carte fi-historique"><h2>Historique</h2><div data-historique></div></section>
         </div>
         <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('documents')}" aria-labelledby="${idOnglet('documents')}" tabindex="0" hidden>
-          <section class="cp-carte">${vide({
-            niveau: 2, icone: 'image', titre: 'Documents',
-            texte: "Cette section n'est pas encore disponible.",
-            action: badge({ texte: 'Bientôt disponible', variante: 'bientot' }),
-          })}</section>
+          <div id="zone-documents"></div>
         </div>
       </div>
 
@@ -241,6 +239,7 @@ export function rendre(zone, id, soinCible = '') {
     }
   }
   pesees.rendre(zone.querySelector('#zone-pesees'), animal);
+  documents.rendre(zone.querySelector('#zone-documents'), animal);
 
   // Onglets
   const racineOnglets = zone.querySelector('[data-onglets]');
@@ -282,7 +281,8 @@ export function rendre(zone, id, soinCible = '') {
       // Comportement inchangé : storage.supprimer retire l'animal ET ses soins et pesées. On le dit précisément.
       const nbSoins = soinsDe(animal).length;
       const nbPesees = peseesDe(animal).length;
-      const liees = [nbSoins && pluriel(nbSoins, 'soin'), nbPesees && pluriel(nbPesees, 'pesée')].filter(Boolean).join(' et ');
+      const nbDocs = await listerDocuments(animal.id).then((l) => l.length, () => 0);
+      const liees = [nbSoins && pluriel(nbSoins, 'soin'), nbPesees && pluriel(nbPesees, 'pesée'), nbDocs && pluriel(nbDocs, 'document')].filter(Boolean).join(', ');
       const message = `Supprimer ${animal.nom} ? ${liees ? `Seront aussi supprimés : ${liees}.` : 'Aucun soin ni pesée ne lui est associé.'} Cette action est définitive.`;
       if (await confirmer(message)) {
         storage.supprimer('animaux', animal.id);

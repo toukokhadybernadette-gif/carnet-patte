@@ -110,3 +110,10 @@ export function redimensionnerPhoto(fichier, tailleMax = 400) {
     lecteur.readAsDataURL(fichier);
   });
 }
+
+/** « 850 Ko », « 3,2 Mo » : une taille de fichier lisible. */
+export function formatTaille(octets) {
+  if (octets < 1024) return `${octets} o`;
+  if (octets < 1024 * 1024) return `${Math.round(octets / 1024)} Ko`;
+  return `${(octets / 1048576).toFixed(octets < 10 * 1048576 ? 1 : 0).replace('.', ',')} Mo`;
+}
