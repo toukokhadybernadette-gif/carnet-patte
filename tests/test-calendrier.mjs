@@ -118,10 +118,24 @@ f = lire(await dernier(4));
 verifier(f.lignesBrutes.some((l) => l.startsWith(' ')) && f.lignesBrutes.every((l) => Buffer.byteLength(l, 'utf8') <= 75), 'titre très long : ligne repliée (suite commençant par une espace), 75 octets au plus');
 verifier(f.valeur(f.evenements[0], 'SUMMARY') === 'Contrôle annuel chez la vétérinaire de la clinique des Écureuils à Saint-Étienne-du-Rouvray — Moka', 'après dépliage, le titre long est exact (aucun accent coupé en deux)');
 
+// ===== 3 bis. Rappel EN RETARD : l'événement est créé DEMAIN, avec « (en retard) » =====
+log('--- 3 bis. Rappel en retard ---');
+const demain = (() => { const d = new Date(); d.setDate(d.getDate() + 1); const p = (x) => String(x).padStart(2, '0'); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`; })();
+await clic('[data-cal="s-retard"]');
+f = lire(await dernier(5));
+const er = f.evenements[0];
+verifier(f.valeur(er, 'SUMMARY') === 'CHPL — Moka (en retard)', `titre : « ${f.valeur(er, 'SUMMARY')} »`);
+verifier(er.includes(`DTSTART;VALUE=DATE:${demain}`) && er.includes(`DTEND;VALUE=DATE:${lendemain(jour(1))}`), `placé demain (${demain}), pas dans le passé (rappel prévu le ${jour(-6)})`);
+verifier(f.valeur(er, 'DESCRIPTION').includes('(en retard)') && f.valeur(er, 'DESCRIPTION').includes('Rappel prévu le'), 'la note rappelle la date prévue et « (en retard) »');
+verifier((f.lignes.join('\n').match(/BEGIN:VALARM/g) ?? []).length === 2 && f.lignes.join('\n').includes('TRIGGER:-PT6H') && f.lignes.join('\n').includes('TRIGGER:PT9H'), 'les deux alertes sont gardées (la veille à 18 h, le jour même à 9 h)');
+verifier(f.valeur(er, 'UID') === 'rappel-s-retard@carnet-patte', 'identifiant stable');
+verifier(await ev(`document.querySelector('[data-cal="s-retard"]').getAttribute('aria-label')`) === 'Ajouter au calendrier : CHPL — Moka (en retard)', 'le nom du bouton annonce « (en retard) »');
+verifier(await ev(`document.querySelector('[data-cal="s-verm"]').getAttribute('aria-label')`) === 'Ajouter au calendrier : Vermifuge — Moka', 'un rappel à venir n’a pas de « (en retard) »');
+
 // ===== 4. Plusieurs rappels : « Tout ajouter » =====
 log('--- 4. Tout ajouter ---');
 await clic('[data-cal-tout]');
-f = lire(await dernier(5));
+f = lire(await dernier(6));
 verifier(f.evenements.length === 4, `4 rappels à venir dans un seul fichier (${f.evenements.length}) : ni le retard, ni le rappel effectué, ni l’animal disparu`);
 const dates = f.evenements.map((e) => f.valeur(e, 'DTSTART'));
 verifier(JSON.stringify(dates) === JSON.stringify([jour(3), jour(10), jour(40), jour(100)].map(compact)), `rappels rangés par date : ${dates}`);

@@ -387,3 +387,14 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .fe-form__actions { display: flex; gap: var(--cp-espace-3); justify-content: flex-end; flex-wrap: wrap; }
 .fe-alerte { display: flex; text-decoration: none; color: inherit; margin-block: var(--cp-espace-3); }
 .sn-suggestions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); align-items: center; margin: 0; }
+
+
+/* Onglets de la fiche sur téléphone : de l'air entre les libellés ; si cinq onglets (groupe) ne tiennent pas, la rangée défile proprement */
+@media (max-width: 599px) {
+  .fi-onglets .cp-onglets { overflow-x: auto; gap: var(--cp-espace-1); scroll-snap-type: x proximity; }
+  .fi-onglets .cp-onglet { flex: 1 0 auto; min-width: max-content; padding-inline: var(--cp-espace-3); scroll-snap-align: center; }
+}
+
+/* Aperçu des thèmes dans Profil, en sombre : contour visible, case cochée visible, nom lisible */
+:root[data-mode="dark"] .pf-theme__carte { border-color: var(--cp-bordure-forte); }
+:root[data-mode="dark"] .pf-theme input:checked + .pf-theme__carte { border-color: var(--cp-texte); box-shadow: 0 0 0 2px var(--pastille), var(--cp-ombre-s); }

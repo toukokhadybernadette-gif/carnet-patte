@@ -49,22 +49,23 @@ export function paletteSombre(t) {
   const survol = f ? lire(f.survol) : hsl(h, s, Math.max(lForet - 4, 6));
   const actif = f ? lire(f.actif) : hsl(h, s, Math.max(lForet - 8, 5));
   const bord = f ? lire(f.bord) : hsl(h, s, Math.max(lForet - 6, 5));
-  const fond = hsl(h, 22, 8.5);
-  const carte = hsl(h, 20, 12.5);
-  const surface2 = hsl(h, 18, 17);
-  const degrade = hsl(h, Math.min(45, Math.round(s * 0.8) + 5), 14);
-  const vertClair = hsl(h, Math.min(40, Math.round(s * 0.5) + 6), 20);
+  // Gris anthracite légèrement teinté (jamais proche du noir : fond >= #1C1B22 environ), cartes plus claires que le fond
+  const fond = hsl(h, 14, 12);
+  const carte = hsl(h, 14, 17.5);
+  const surface2 = hsl(h, 14, 22);
+  const degrade = hsl(h, Math.min(40, Math.round(s * 0.7) + 5), 19);
+  const vertClair = hsl(h, Math.min(36, Math.round(s * 0.45) + 6), 25);
   const sauge = hsl(h, Math.round(s * 0.5), 40);
-  const bulles = [hsl(h, Math.min(50, s + 6), 21), hsl((h + 28) % 360, Math.min(40, s), 19), hsl((h + 330) % 360, Math.min(36, s), 20)];
+  const bulles = [hsl(h, Math.min(50, s + 6), 26), hsl((h + 28) % 360, Math.min(40, s), 24), hsl((h + 330) % 360, Math.min(36, s), 25)];
   return {
     foret, survol, actif, bord, fond, carte, surface2, degrade, vertClair, sauge, bulles,
-    foretTexte: hsl(h, Math.min(s + 8, 80), 79), focus: hsl(h, Math.min(s + 8, 80), 70),
-    texte: hsl(h, 20, 94), texteDoux: hsl(h, 12, 75), placeholder: hsl(h, 8, 66),
-    bordure: hsl(h, 14, 25), bordureForte: hsl(h, 12, 36), bordureChamp: hsl(h, 10, 60),
-    champ: hsl(h, 18, 15),
-    neutre: hsl(h, 16, 19), neutreSurvol: hsl(h, 16, 24), neutreActif: hsl(h, 16, 28), contour: hsl(h, 10, 42), pilule: hsl(h, 16, 18),
-    desactiveFond: hsl(h, 10, 19), desactiveTexte: hsl(h, 6, 64),
-    navActif: hsl(h, 22, 9),
+    foretTexte: hsl(h, Math.min(s + 8, 80), 80), focus: hsl(h, Math.min(s + 8, 80), 72),
+    texte: hsl(h, 20, 95), texteDoux: hsl(h, 14, 82), placeholder: hsl(h, 8, 72),
+    bordure: hsl(h, 12, 30), bordureForte: hsl(h, 11, 41), bordureChamp: hsl(h, 10, 65),
+    champ: hsl(h, 14, 21),
+    neutre: hsl(h, 14, 24), neutreSurvol: hsl(h, 14, 29), neutreActif: hsl(h, 14, 33), contour: hsl(h, 10, 47), pilule: hsl(h, 14, 23),
+    desactiveFond: hsl(h, 10, 24), desactiveTexte: hsl(h, 6, 68),
+    navActif: hsl(h, 16, 12),
   };
 }
 
@@ -98,7 +99,7 @@ export function variablesThemeSombre(t) {
     '--cp-verre-fond': H(poser(p.carte, 0.97, p.fond)), '--cp-verre-fond-fort': H(p.carte), '--cp-sauge-verre': H(p.vertClair), '--cp-sauge-verre-fort': H(poser(p.sauge, 0.5, p.vertClair)),
     '--cp-verre-barre-haut': H(p.fond), '--cp-verre-barre-laterale': H(p.surface2), '--cp-verre-barre-bas': H(p.fond), '--cp-verre-fenetre': H(p.carte), '--cp-verre-menu': H(p.carte),
   };
-  const apercu = { pastille: H(p.foret), degrade: H(p.degrade), fond: H(p.fond) };
+  const apercu = { pastille: H(p.foret), degrade: H(p.degrade), fond: H(p.fond) }; // aperçu du thème dans Profil, en sombre
   return { vars, solide, apercu };
 }
 

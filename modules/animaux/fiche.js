@@ -26,7 +26,7 @@ const ONGLETS = [
 ];
 // Un groupe (basse-cour) n'a pas de pesées : il a, selon l'espèce, un suivi de ponte, et toujours un stock de nourriture
 const ONGLET_PONTE = { id: 'ponte', nom: 'Ponte', icone: 'trending-up' };
-const ONGLET_ALIMENTATION = { id: 'alimentation', nom: 'Alimentation', icone: 'wheat' };
+const ONGLET_ALIMENTATION = { id: 'alimentation', nom: 'Repas', icone: 'wheat' }; // « Repas » : assez court pour tenir avec les autres onglets
 const ongletsPour = (animal) => !estGroupe(animal) ? ONGLETS
   : [ONGLETS[0], ...(pondeuse(animal) ? [ONGLET_PONTE] : []), ONGLET_ALIMENTATION, ONGLETS[2], ONGLETS[3]];
 const num = (n, d = 1) => n.toLocaleString('fr-FR', { maximumFractionDigits: d });

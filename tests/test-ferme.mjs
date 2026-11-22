@@ -43,7 +43,7 @@ await ecran('liste-groupe');
 log('--- 2. Fiche du groupe ---');
 await allerR(`#/animaux/${poules.id}`); await dort(500);
 const onglets = await ev(`[...document.querySelectorAll('[role=tab]')].map((t) => t.textContent.trim())`);
-verifier(JSON.stringify(onglets) === JSON.stringify(['Santé', 'Ponte', 'Alimentation', 'Historique', 'Documents']), `onglets : ${onglets.join(', ')} (pas de Poids)`);
+verifier(JSON.stringify(onglets) === JSON.stringify(['Santé', 'Ponte', 'Repas', 'Historique', 'Documents']), `onglets : ${onglets.join(', ')} (pas de Poids)`);
 verifier((await texte('.fi-entete')).includes('Groupe · 6 poules') && !(await texte('#contenu')).includes('Fiche de garde'), 'en-tête « Groupe · 6 poules », pas de fiche de garde');
 verifier((await texte('.fi-chiffres')).includes('Effectif') && (await texte('.fi-chiffres')).includes('6'), 'chiffre clé : effectif 6');
 await cliquer('.fi-entete [data-act=modifier]'); await dort(500);
@@ -106,6 +106,8 @@ verifier(stats.serie.length === 30 && stats.saisis === 20 && stats.max === 6 && 
 const g = await ev(`(() => { const s = document.querySelector('.fe-graphe'); return { barres: s.querySelectorAll('.fe-barre').length, vides: s.querySelectorAll('.fe-vide').length, label: s.getAttribute('aria-label'), role: s.getAttribute('role'), largeur: s.getBoundingClientRect().width, parent: s.parentElement.getBoundingClientRect().width }; })()`);
 verifier(g.role === 'img' && g.barres === 20 && g.vides === 10 && g.label.includes(`moyenne ${fr(moy)}`) && g.label.includes('maximum 6'), `graphique : 20 barres, 10 jours sans saisie, nom accessible : « ${g.label} »`);
 verifier(g.largeur <= g.parent, 'le graphique tient dans son cadre à 375 px');
+const axe5 = await ev(`(() => { const s = document.querySelector('.fe-graphe'); const W = s.viewBox.baseVal.width; return [...s.querySelectorAll('text.fe-axe[data-axe=y]')].map((t) => ({ texte: t.textContent, g: t.getBBox().x, d: t.getBBox().x + t.getBBox().width, W })); })()`);
+verifier(axe5.length >= 3 && axe5.every((t) => /^[0-9]+$/.test(t.texte)) && axe5.every((t) => t.g >= 2 && t.d <= t.W), `axe : seulement des nombres entiers (${axe5.map((t) => t.texte).join(', ')}), chiffres entiers visibles (marge gauche ≥ 2 px)`);
 await controler('onglet Ponte à 375 px'); await ecran('ponte'); await axe('#fi-panneau-ponte', 'onglet Ponte');
 await cliquer('#fi-panneau-ponte [data-supprimer="o0"]'); await dort(400);
 verifier((await texte('dialog[open]')).includes('Supprimer la saisie du'), 'supprimer une saisie : confirmation');
@@ -162,7 +164,7 @@ verifier(await ev(`!document.querySelector('[data-alerte-stock]')`), 'Accueil : 
 await importer({ ...base, animaux: [...base.animaux, poules, { id: 'ch', nom: 'Mes chèvres', espece: 'chevre', especeAutre: '', groupe: true, effectif: 3, race: '', naissance: '', photo: '' }], oeufs: jeu, stocks: (await lire()).stocks });
 await allerR('#/animaux/ch'); await dort(500);
 const onglets2 = await ev(`[...document.querySelectorAll('[role=tab]')].map((t) => t.textContent.trim())`);
-verifier(JSON.stringify(onglets2) === JSON.stringify(['Santé', 'Alimentation', 'Historique', 'Documents']), `groupe de chèvres : pas d’onglet Ponte (${onglets2.join(', ')})`);
+verifier(JSON.stringify(onglets2) === JSON.stringify(['Santé', 'Repas', 'Historique', 'Documents']), `groupe de chèvres : pas d’onglet Ponte (${onglets2.join(', ')})`);
 verifier((await texte('.fi-entete')).includes('Groupe · 3 chèvres') && (await texte('.fi-chiffres')).includes('Nourriture'), '« 3 chèvres », chiffre « Nourriture »');
 await cliquer('#fi-panneau-sante [data-act=ajouter]'); await dort(400);
 verifier(await texte('dialog[open] [data-suggestion]') === "Nettoyage de l'enclos", 'idée adaptée : « Nettoyage de l\'enclos »');

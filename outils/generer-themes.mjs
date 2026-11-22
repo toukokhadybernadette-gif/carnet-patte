@@ -42,11 +42,12 @@ function bloc(t) {
 
 /** Bloc du mode sombre d'un thème (css/themes-sombre.css) : mêmes variables, posées quand <html data-mode="dark">. */
 function blocSombre(t) {
-  const { vars, solide } = variablesThemeSombre(t);
+  const { vars, solide, apercu } = variablesThemeSombre(t);
   const lignes = Object.entries(vars).map(([k, v]) => `  ${k}: ${v};`).join('\n');
   const sel = t.id === 'kaki' ? ':root[data-mode="dark"], :root[data-mode="dark"][data-theme="kaki"]' : `:root[data-mode="dark"][data-theme="${t.id}"]`;
   const sans = `@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\n  ${sel} {\n${Object.entries(solide).map(([k, v]) => `    ${k}: ${v};`).join('\n')}\n  }\n}`;
-  return `/* ----- ${t.nom} (sombre) ----- */\n${sel} {\n${lignes}\n}\n${sans}\n`;
+  const pastille = `:root[data-mode="dark"] .pf-theme--${t.id} { --pastille: ${apercu.pastille}; --pf-degrade: ${apercu.degrade}; --pf-fond: ${apercu.fond}; } /* aperçu du thème dans Profil, en sombre */`;
+  return `/* ----- ${t.nom} (sombre) ----- */\n${sel} {\n${lignes}\n}\n${sans}\n${pastille}\n`;
 }
 
 // ----- Programme principal -----

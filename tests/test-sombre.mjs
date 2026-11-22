@@ -31,8 +31,24 @@ log('--- 1. Profil : Apparence ---');
 await aller('#/profil'); await dort(500);
 verifier((await texte('#pf-mode')) === 'Apparence', 'section « Apparence » dans Profil');
 const options = await ev(`[...document.querySelectorAll('input[name=mode]')].map((i) => i.value + ':' + i.nextElementSibling.textContent.trim() + (i.checked ? '*' : ''))`);
-verifier(JSON.stringify(options) === JSON.stringify(['clair:Clair*', 'sombre:Sombre', 'auto:Automatique']), `trois choix, « Clair » par défaut : ${options.join(' | ')}`);
-verifier(await mode() === 'light' && await variable('--cp-fond') === '#F9FAF5', 'mode clair : couleurs d’origine (fond #F9FAF5), rien n’a changé');
+verifier(JSON.stringify(options) === JSON.stringify(['clair:Clair', 'sombre:Sombre', 'auto:Automatique*']), `trois choix, « Automatique » par défaut (nouvel utilisateur) : ${options.join(' | ')}`);
+verifier(await mode() === 'light' && await variable('--cp-fond') === '#F9FAF5', 'appareil clair + Automatique : mode clair, couleurs d’origine (fond #F9FAF5), rien n’a changé');
+// Nouvel utilisateur (aucun choix mémorisé) : Automatique, donc sombre si l'appareil l'est ; un choix déjà fait est gardé
+await ev(`localStorage.removeItem('carnetpatte.mode')`);
+await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+await send('Page.reload'); await dort(1800);
+verifier(await mode() === 'dark', 'nouvel utilisateur (aucun choix) + appareil sombre : sombre, sans rien toucher');
+await ev(`localStorage.setItem('carnetpatte.mode', 'clair')`);
+await send('Page.reload'); await dort(1800);
+verifier(await mode() === 'light', 'un utilisateur qui avait choisi « Clair » le garde, même avec un appareil sombre');
+await ev(`localStorage.setItem('carnetpatte.mode', 'sombre')`);
+await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
+await send('Page.reload'); await dort(1800);
+verifier(await mode() === 'dark', 'un utilisateur qui avait choisi « Sombre » le garde, même avec un appareil clair');
+await ev(`localStorage.removeItem('carnetpatte.mode')`);
+await send('Emulation.setEmulatedMedia', { features: [] });
+await send('Page.reload'); await dort(1800);
+await aller('#/profil'); await dort(400);
 const clair = await ev(`(() => { const c = getComputedStyle(document.querySelector('.cp-carte')); return { fond: c.backgroundColor, flou: c.backdropFilter || c.webkitBackdropFilter }; })()`);
 await ecran('profil-clair');
 await controler('Profil en clair à 375 px');
@@ -89,6 +105,11 @@ const MESURE = `(() => {
   const out = [];
   for (const [nf, f] of Object.entries(fonds)) for (const t of ['--cp-texte', '--cp-texte-doux', '--cp-foret-texte']) out.push([t + ' / ' + nf, ctr(rgb(t), f), 4.5]);
   for (const k of ['--cp-foret', '--cp-foret-survol', '--cp-foret-actif']) out.push(['blanc / ' + k, ctr([255, 255, 255], rgb(k)), 4.5]);
+  const moy = (c) => (c[0] + c[1] + c[2]) / 3;
+  out.push(['fond pas trop sombre (canal le plus bas >= 24, moyenne >= 28, comme #1C1B22)', Math.min(...fond) >= 24 && moy(fond) >= 28 ? 9 : 0, 4.5]);
+  out.push(['cartes plus claires que le fond', lum(rgb('--cp-carte')) > lum(fond) ? 9 : 0, 4.5]);
+  out.push(['texte secondaire bien clair / carte (7:1)', ctr(rgb('--cp-texte-doux'), rgb('--cp-carte')), 7]);
+  out.push(['texte secondaire bien clair / fond (7:1)', ctr(rgb('--cp-texte-doux'), fond), 7]);
   out.push(['foret-texte / nav-actif', ctr(rgb('--cp-foret-texte'), rgb('--cp-nav-actif')), 4.5]);
   for (const [t, f] of [['--cp-terre', '--cp-terre-pale'], ['--cp-ambre', '--cp-ambre-pale'], ['--cp-succes-texte', '--cp-succes-pale'], ['--cp-terre', '--cp-neutre-bouton'],
     ['--cp-type-vaccin-texte', '--cp-type-vaccin-fond'], ['--cp-type-vermifuge-texte', '--cp-type-vermifuge-fond'], ['--cp-type-antiparasitaire-texte', '--cp-type-antiparasitaire-fond'], ['--cp-type-veto-texte', '--cp-type-veto-fond'], ['--cp-type-autre-texte', '--cp-type-autre-fond'],
@@ -157,6 +178,31 @@ if (axeSrc) {
   verifier(v.length === 0, `Carte en sombre : contraste ${v.length ? v.slice(0, 3).join(' || ') : 'conforme (axe color-contrast)'}`);
 }
 await controler('Carte en sombre à 375 px');
+
+// ===== 6 bis. Profil > Couleur de l'appli en sombre : cartes de thèmes, case cochée, nuancier =====
+log('--- 6 bis. Profil : couleur de l\'appli en sombre ---');
+for (const theme of ['kaki', 'bleu-ciel', 'lavande']) {
+  await aller('#/profil'); await dort(500);
+  await ev(`document.querySelector('input[name=theme][value=${theme}]').click()`); await dort(300); // le vrai clic de l’utilisateur
+  await ev(`document.querySelector('input[name=theme]:checked').closest('.pf-theme').scrollIntoView({ block: 'center' })`); await dort(300);
+  const t = await ev(`(() => { const cartes = [...document.querySelectorAll('.pf-theme')].map((l) => { const c = l.querySelector('.pf-theme__carte'); const cs = getComputedStyle(c); const nom = getComputedStyle(l.querySelector('.pf-theme__nom')); const coche = getComputedStyle(l.querySelector('.pf-theme__pastille .ic')); return { id: l.className, fond: cs.backgroundImage.includes('gradient'), bord: cs.borderTopColor, nomCouleur: nom.color, coche: coche.opacity, choisie: l.querySelector('input').checked }; }); return cartes; })()`);
+  const choisie = t.find((c) => c.choisie);
+  const autre = t.find((c) => !c.choisie);
+  const lumHex = (css) => { const m = css.match(/[0-9.]+/g).map(Number); const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]); };
+  verifier(t.length === 13 && t.every((c) => lumHex(c.nomCouleur) > 0.5), `${theme} : 13 cartes (12 thèmes + perso), noms en texte clair`);
+  verifier(choisie && choisie.coche === '1' && autre.coche === '0' && choisie.bord !== autre.bord, `${theme} : la carte choisie se voit (case cochée visible, contour ${choisie?.bord} contre ${autre?.bord})`);
+  await ecran(`profil-sombre-${theme}`);
+}
+await ev(`import('/js/theme.js').then((m) => m.appliquerTheme('kaki'))`);
+await aller('#/profil'); await dort(400);
+const apercuPerso = await ev(`(() => { const e = document.querySelector('[data-perso-carte]'); return { style: e.getAttribute('style'), fond: getComputedStyle(e.querySelector('.pf-theme__carte')).backgroundImage }; })()`);
+const fondPerso0 = apercuPerso.style.match(/--pf-fond: (#[0-9A-Fa-f]{6})/)[1];
+verifier(Number.parseInt(fondPerso0.slice(1, 3), 16) < 90 && /gradient/.test(apercuPerso.fond), `carte « Couleur personnalisée » en sombre : aperçu sombre (${fondPerso0})`);
+const nuancier = await ev(`(() => { const n = document.querySelector('.pf-perso__nuancier'); const cs = getComputedStyle(n); const e = getComputedStyle(document.querySelector('.pf-perso__etiquette')); return { bord: cs.borderTopColor, fond: cs.backgroundColor, scheme: cs.colorScheme, etiquette: e.color }; })()`);
+verifier(nuancier.scheme === 'dark' && nuancier.bord !== nuancier.fond, `nuancier : contour visible (${nuancier.bord} sur ${nuancier.fond}), contrôles natifs sombres`);
+await ev(`document.querySelector('.pf-perso').scrollIntoView({ block: 'center' })`); await dort(300);
+await ecran('profil-sombre-nuancier');
+await controler('Profil (couleurs) en sombre à 375 px');
 
 // ===== 7. Couleur personnalisée en sombre, rechargement =====
 log('--- 7. Couleur personnalisée ---');

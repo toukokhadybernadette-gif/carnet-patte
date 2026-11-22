@@ -16,7 +16,7 @@ export const MODES = [
   { id: 'sombre', nom: 'Sombre' },
   { id: 'auto', nom: 'Automatique' },
 ];
-export const MODE_DEFAUT = 'clair';
+export const MODE_DEFAUT = 'auto'; // nouveaux utilisateurs : l'appli suit l'appareil ; un choix déjà fait (clair, sombre ou auto) est gardé
 export const CLE_MODE = 'carnetpatte.mode';
 export const CLE_PERSO_VARIABLES_SOMBRE = 'carnetpatte.themePersoVarsSombre'; // variables de la couleur personnalisée en mode sombre (lues par le script de index.html)
 
@@ -85,7 +85,7 @@ function variablesPerso(couleur) {
   const sansFlou = typeof CSS !== 'undefined' && !CSS.supports('backdrop-filter', 'blur(1px)') && !CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
   const clair = variablesTheme(theme);
   const sombre = variablesThemeSombre(theme);
-  return { clair: { ...clair.vars, ...(sansFlou ? clair.solide : {}) }, sombre: { ...sombre.vars, ...(sansFlou ? sombre.solide : {}) }, apercu: clair.apercu };
+  return { clair: { ...clair.vars, ...(sansFlou ? clair.solide : {}) }, sombre: { ...sombre.vars, ...(sansFlou ? sombre.solide : {}) }, apercu: clair.apercu, apercuSombre: sombre.apercu };
 }
 
 /**
@@ -137,7 +137,7 @@ export function appliquerPerso(couleur, { memoriser = true } = {}) {
   majBarreEtat();
   // Les deux jeux de variables sont gardés : le script de index.html choisit le bon avant l'affichage (clair ou sombre), sans flash
   if (memoriser) { ecrire(CLE_THEME, PERSO); ecrire(CLE_PERSO, choisie); ecrire(CLE_PERSO_VARIABLES, JSON.stringify(v.clair)); ecrire(CLE_PERSO_VARIABLES_SOMBRE, JSON.stringify(v.sombre)); }
-  return { choisie, utilisee, ajustee, apercu: v.apercu, variables: toutes };
+  return { choisie, utilisee, ajustee, apercu: sombreActif() ? v.apercuSombre : v.apercu, variables: toutes };
 }
 
 export function themeActuel() {

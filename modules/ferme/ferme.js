@@ -91,21 +91,23 @@ export function statsPonte(groupe, { jours = 30, auj = aujourdhui() } = {}) {
   return { serie, saisis: saisis.length, total, moyenne, parAnimal: moyenne === null ? null : moyenne / effectifDe(groupe), max: Math.max(0, ...saisis.map((j) => j.nombre)), aujourdhui: parDate.has(auj) ? parDate.get(auj) : null };
 }
 
-const arrondiHaut = (v) => { if (v <= 5) return 5; const p = 10 ** Math.floor(Math.log10(v)); return [1, 2, 5, 10].map((k) => k * p).find((k) => k >= v); };
+/** Pas des graduations : un nombre ENTIER (des œufs ne se coupent pas en deux), pour au plus 5 repères. */
+const pasEntier = (max) => [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 5000].find((p) => Math.ceil(Math.max(max, 1) / p) <= 5) ?? 10000;
 const jourCourt = (iso) => { const d = lireISO(iso); return `${d.getDate()}/${String(d.getMonth() + 1).padStart(2, '0')}`; };
 
 /** Graphique en barres sur 30 jours (SVG). `largeur` : largeur réelle disponible : le dessin est fait à cette taille. */
 export function graphiquePonte(stats, { largeur = 600 } = {}) {
   const L = Math.max(260, Math.round(largeur));
   const H = L < 460 ? 200 : 240;
-  const haut = arrondiHaut(stats.max);
-  const marge = { g: 8 + 7 * String(haut).length, d: 8, h: 14, b: 24 };
+  const pasGrad = pasEntier(stats.max);
+  const haut = Math.max(Math.ceil(stats.max / pasGrad) * pasGrad, pasGrad * 2);
+  const marge = { g: 22 + 7 * String(haut).length, d: 10, h: 14, b: 24 }; // la place des chiffres de l'axe, avec de l'air autour
   const w = L - marge.g - marge.d;
   const h = H - marge.h - marge.b;
   const pas = w / stats.serie.length;
   const y = (v) => marge.h + (1 - v / haut) * h;
-  const graduations = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * haut * 10) / 10).filter((v, i, t) => t.indexOf(v) === i);
-  const lignes = graduations.map((v) => `<line class="fe-grille" x1="${marge.g}" x2="${L - marge.d}" y1="${y(v)}" y2="${y(v)}"/><text class="fe-axe" x="${marge.g - 5}" y="${y(v) + 4}" text-anchor="end">${num(v)}</text>`).join('');
+  const graduations = Array.from({ length: haut / pasGrad + 1 }, (_, i) => i * pasGrad);
+  const lignes = graduations.map((v) => `<line class="fe-grille" x1="${marge.g}" x2="${L - marge.d}" y1="${y(v)}" y2="${y(v)}"/><text class="fe-axe" data-axe="y" x="${marge.g - 5}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('');
   const barres = stats.serie.map((j, i) => {
     const x = marge.g + i * pas + pas * 0.15;
     const l = Math.max(2, pas * 0.7);

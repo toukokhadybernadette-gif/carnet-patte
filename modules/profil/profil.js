@@ -8,8 +8,9 @@ import { toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { NAV } from '../../js/navigation.js';
 import { echapper } from '../../js/utils.js';
-import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso, MODES, modeMemorise, appliquerMode } from '../../js/theme.js';
+import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso, MODES, modeMemorise, appliquerMode, sombreActif } from '../../js/theme.js';
 import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
+import { variablesThemeSombre } from '../../js/couleurs-sombre.js';
 import { estInstallee } from '../../js/pwa.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
@@ -33,7 +34,7 @@ function ligneBientot() {
 }
 
 /** Variables de la pastille d'un thème dans Profil (carte « Couleur personnalisée »). */
-const styleApercu = (couleur) => { const a = variablesTheme(themeDepuisCouleur(couleur).theme).apercu; return `--pastille: ${a.pastille}; --pf-degrade: ${a.degrade}; --pf-fond: ${a.fond};`; };
+const styleApercu = (couleur) => { const { theme } = themeDepuisCouleur(couleur); const a = (sombreActif() ? variablesThemeSombre(theme) : variablesTheme(theme)).apercu; return `--pastille: ${a.pastille}; --pf-degrade: ${a.degrade}; --pf-fond: ${a.fond};`; };
 
 /** Aide « Installer sur votre iPhone » : seulement si l'appli n'est pas déjà ouverte depuis l'écran d'accueil. */
 const aideInstallation = () => estInstallee() ? '' : `

@@ -29,6 +29,7 @@ function carteHtml(d) {
       </div>
       <div class="dc-carte__actions">
         ${bouton({ texte: 'Ouvrir', variante: 'secondaire', taille: 's', icone: 'eye', attrs: { 'data-act': 'ouvrir', 'data-id': d.id, 'aria-label': `Ouvrir ${d.titre}` } })}
+        ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'pencil', titre: `Modifier ${d.titre}`, attrs: { 'data-act': 'modifier', 'data-id': d.id } })}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'download', titre: `Télécharger ${d.titre}`, attrs: { 'data-act': 'telecharger', 'data-id': d.id } })}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${d.titre}`, attrs: { 'data-act': 'supprimer', 'data-id': d.id } })}
       </div>
@@ -106,6 +107,38 @@ function formulaire(animal, apres) {
   });
 }
 
+/** Fenêtre « Modifier le document » : titre, date et type (le fichier ne change pas). */
+function formulaireModifier(d, apres) {
+  const html = `
+    <form class="cp-formulaire dc-form" novalidate>
+      ${champ({ id: 'doc-titre', label: 'Titre', valeur: d.titre, requis: true, attrs: { maxlength: 120, autocomplete: 'off' } })}
+      ${champ({ id: 'doc-date', label: 'Date du document', type: 'date', valeur: d.date, attrs: { max: aujourdhui() } })}
+      ${selecteur({ id: 'doc-type', label: 'Type', options: docs.TYPES_DOCUMENT.map((t) => ({ valeur: t.id, texte: t.nom })), valeur: d.type })}
+      <div class="dc-form__actions">
+        ${bouton({ texte: 'Annuler', variante: 'secondaire', attrs: { 'data-annuler': true } })}
+        ${bouton({ texte: 'Enregistrer', type: 'submit', icone: 'check' })}
+      </div>
+    </form>`;
+  modale('Modifier le document', html, (dlg) => {
+    const form = dlg.querySelector('form');
+    dlg.querySelector('[data-annuler]').addEventListener('click', () => dlg.close());
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titre = form.querySelector('#doc-titre').value.trim();
+      const date = form.querySelector('#doc-date').value;
+      form.querySelectorAll('[aria-invalid]').forEach((c) => erreurChamp(c, ''));
+      const problemes = [];
+      if (!titre) problemes.push([form.querySelector('#doc-titre'), 'Donnez un titre au document.']);
+      if (!date || date > aujourdhui()) problemes.push([form.querySelector('#doc-date'), date ? 'La date ne peut pas être dans le futur.' : 'Indiquez la date du document.']);
+      if (problemes.length) { problemes.forEach(([c, m]) => erreurChamp(c, m)); problemes[0][0].focus(); return; }
+      await docs.modifierDocument(d.id, { titre, date, type: form.querySelector('#doc-type').value });
+      dlg.close();
+      toast('Document modifié');
+      apres();
+    });
+  });
+}
+
 /** Affiche l'onglet dans `zone`. Se réaffiche tout seul après chaque modification. */
 export async function rendre(zone, animal) {
   adresses.forEach((u) => URL.revokeObjectURL(u));
@@ -140,6 +173,7 @@ export async function rendre(zone, animal) {
     const d = liste.find((x) => x.id === declencheur.dataset.id);
     if (!d) return;
     if (declencheur.dataset.act === 'ouvrir') ouvrir(d);
+    else if (declencheur.dataset.act === 'modifier') formulaireModifier(d, rerendre);
     else if (declencheur.dataset.act === 'telecharger') telecharger(d);
     else if (declencheur.dataset.act === 'supprimer' && await confirmer(`Supprimer « ${d.titre} » ? Le fichier sera effacé de cet appareil.`)) {
       await docs.supprimerDocument(d.id);

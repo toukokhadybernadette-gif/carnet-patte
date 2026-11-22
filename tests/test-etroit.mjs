@@ -148,7 +148,40 @@ for (const largeur of [375, 390]) {
 }
 await taille(375, 812);
 
-log('=== ACCUEIL : carrousel, diapositive « Ajouter », plus d\'« Actions rapides » ===');
+log('=== GROUPE (basse-cour) : onglets et graphique de ponte à 375 px ET 390 px ===');
+const jourN = (n) => dans(n);
+const oeufsDe = (nombres) => nombres.map((n, i) => ({ id: 'oe' + i, animalId: 'g', date: jourN(-(i + 1)), nombre: n }));
+const donneesGroupe = (nombres) => ({ ...donnees, animaux: [...donnees.animaux, { id: 'g', nom: 'Mes poules de la Fontaine-aux-Oies', espece: 'poule', especeAutre: '', groupe: true, effectif: 12, race: '', naissance: '', photo: '' }], oeufs: oeufsDe(nombres),
+  stocks: [{ id: 'st', animalId: 'g', nom: 'Mélange de céréales et de graines', quantiteKg: 4, consoJourKg: 0.9, seuilJours: 7, date: dans(-1) }] });
+for (const largeur of [375, 390]) {
+  await taille(largeur, 844);
+  for (const [nombres, attendu] of [[[6, 4, 5, 6, 3, 0, 5, 4, 6, 5, 4, 6], 'max 6'], [[17, 12, 15, 9, 14], 'max 17'], [[1, 0, 1], 'max 1'], [[130, 90, 120], 'max 130']]) {
+    await importer(JSON.stringify(donneesGroupe(nombres)));
+    await aller2('#/animaux/g'); await sleep(500);
+    const noms = await ev(`[...document.querySelectorAll('[role=tab]')].map((t) => t.textContent.trim())`);
+    const tabs = await ev(`(() => { const L = [...document.querySelectorAll('[role=tab]')].map((t) => { const r = t.getBoundingClientRect(); const s = t.querySelector('span:last-child'); const rs = document.createRange(); rs.selectNodeContents(s); const tr = rs.getBoundingClientRect(); return { nom: t.textContent.trim(), g: r.left, d: r.right, tg: tr.left, td: tr.right }; });
+      const liste = document.querySelector('[role=tablist]'); return { L, defile: liste.scrollWidth > liste.clientWidth + 1, ecart: L.slice(1).map((t, i) => Math.round(t.g - L[i].d)), texteDans: L.every((t) => t.tg >= t.g - 1 && t.td <= t.d + 1), cote: Math.round(liste.getBoundingClientRect().width) }; })()`);
+    verifier(JSON.stringify(noms) === JSON.stringify(['Santé', 'Ponte', 'Repas', 'Historique', 'Documents']), `${largeur} px : onglets du groupe ${noms.join(' · ')}`);
+    verifier(tabs.ecart.every((e) => e >= 3) && tabs.texteDans, `${largeur} px : les libellés des onglets ne se collent pas (espaces entre onglets : ${tabs.ecart.join(', ')} px) et chaque texte reste dans son onglet`);
+    // le dernier onglet est atteignable : on le touche, la rangée défile et il est entièrement visible
+    await ev(`document.querySelector('[data-onglet=documents]').click()`); await sleep(500);
+    const dernier = await ev(`(() => { const r = document.querySelector('[data-onglet=documents]').getBoundingClientRect(); return { g: Math.round(r.left), d: Math.round(r.right), L: innerWidth }; })()`);
+    verifier(dernier.g >= 0 && dernier.d <= dernier.L + 1, `${largeur} px : le dernier onglet est entièrement visible quand on le choisit${tabs.defile ? ' (la rangée défile)' : ''}`);
+    await ev(`document.querySelector('[data-onglet=ponte]').click()`); await sleep(500);
+    const g = await ev(`(() => { const s = document.querySelector('.fe-graphe'); const W = s.viewBox.baseVal.width; const sb = s.getBoundingClientRect(); const axe = [...s.querySelectorAll('text.fe-axe')].map((t) => { const b = t.getBBox(); return { texte: t.textContent, g: b.x, d: b.x + b.width, fin: t.getAttribute('data-axe') === 'y' }; }); return { W, axe, debord: sb.right > innerWidth + 1 || sb.left < -1 }; })()`);
+    const y = g.axe.filter((t) => t.fin);
+    verifier(y.length >= 3 && y.every((t) => /^[0-9]+$/.test(t.texte)) && y.every((t) => t.g >= 2 && t.d <= g.W) && g.axe.every((t) => t.g >= 0 && t.d <= g.W + 1) && !g.debord,
+      `${largeur} px · graphique (${attendu}) : axe en nombres entiers (${y.map((t) => t.texte).join(', ')}), aucun chiffre coupé, rien ne déborde`);
+    await ev(OUTILS);
+    const m = await ev(`__controles.boutons(document.querySelector('#contenu'))`);
+    verifier(m.length === 0, `${largeur} px · onglet Ponte : aucun bouton ne chevauche un autre${m.length ? ' → ' + m.join(' | ') : ''}`);
+    if (largeur === 375 && attendu === 'max 6') await ecran('groupe-ponte', true);
+  }
+}
+await importer(JSON.stringify(donnees));
+await taille(375, 812);
+
+log('=== ACCUEIL : carrousel, diapositive « Ajouter », plus d\'« Actions rapides » ==='),
 await aller2('#/accueil'); await ev(`window.scrollTo(0, 0)`);
 verifier(await ev(`!document.querySelector('.ac-actions, .ac-action, #ac-actions')`) && !(await texte('#contenu')).includes('Actions rapides'), 'la section « Actions rapides » est supprimée');
 await ev(`document.querySelector('[data-piste]').scrollTo({ left: 99999 })`); await sleep(600);

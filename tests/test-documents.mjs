@@ -94,6 +94,23 @@ await ev(`document.querySelector('.dc-carte [data-act=telecharger][aria-label*="
 const tel = await ev(`window.__telechargements`);
 verifier(tel.length === 1 && /\.jpg$/.test(tel[0]) && tel[0].startsWith('Analyse'), `téléchargement : ${tel[0]}`);
 
+// ===== 4 bis. Modifier titre, date et type =====
+log('--- 4 bis. Modifier un document ---');
+const avantModif = (await lister()).find((d) => d.mime === 'application/pdf');
+await ev(`document.querySelector('.dc-carte [data-act=modifier][aria-label*="ordonnance"]').click()`); await dort(500);
+verifier(await ev(`document.querySelector('dialog[open] #doc-titre').value`) === 'ordonnance dr martin' && await ev(`document.querySelector('dialog[open] #doc-type').value`) === 'ordonnance', 'la fenêtre propose le titre, la date et le type actuels');
+await ev(`document.querySelector('dialog[open] #doc-titre').value = ''; document.querySelector('dialog[open] #doc-date').value = '${jour(9)}'; document.querySelector('dialog[open] form').requestSubmit()`); await dort(400);
+verifier((await texte('dialog[open]')).includes('Donnez un titre au document.') && (await texte('dialog[open]')).includes('dans le futur'), 'titre vide et date future : messages clairs');
+await controler('fenêtre Modifier à 375 px', 'dialog[open]');
+await ev(`document.querySelector('dialog[open] #doc-titre').value = 'Ordonnance Dr Martin'; document.querySelector('dialog[open] #doc-date').value = '${jour(-30)}'; document.querySelector('dialog[open] #doc-type').value = 'analyse'; document.querySelector('dialog[open] form').requestSubmit()`); await dort(700);
+const apresModif = (await lister()).find((d) => d.id === avantModif.id);
+verifier(apresModif.titre === 'Ordonnance Dr Martin' && apresModif.date === jour(-30) && apresModif.type === 'analyse', `modifié : ${apresModif.titre}, ${apresModif.date}, ${apresModif.type}`);
+verifier(apresModif.taille === avantModif.taille && apresModif.mime === 'application/pdf', 'le fichier lui-même n’a pas changé (même taille)');
+verifier((await texte('.dc-carte[data-doc="' + avantModif.id + '"]')).includes('Ordonnance Dr Martin') && await ev(`document.querySelectorAll('.dc-carte').length`) === 2, 'la carte est mise à jour dans la liste');
+await controler('onglet Documents (4 boutons par carte) à 375 px');
+await ev(`import('/js/documents-db.js').then((d) => d.modifierDocument('${avantModif.id}', { titre: 'ordonnance dr martin', date: '${avantModif.date}', type: 'ordonnance' }))`);
+await ouvrirOnglet('a');
+
 // ===== 5. Les documents sont ceux de l'animal =====
 log('--- 5. Un animal à la fois ---');
 await ouvrirOnglet('b');

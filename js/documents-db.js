@@ -67,6 +67,15 @@ export async function ajouterDocument({ animalId, titre, date, type, blob, nom }
   return doc;
 }
 
+/** Change le titre, la date ou le type d'un document (le fichier lui-même ne change pas). */
+export async function modifierDocument(id, { titre, date, type }) {
+  const doc = await lireDocument(id);
+  if (!doc) return null;
+  const nouveau = { ...doc, titre: String(titre).trim().slice(0, 120) || doc.titre, date: /^\d{4}-\d{2}-\d{2}$/.test(date ?? '') ? date : doc.date, type: TYPES_DOCUMENT.some((t) => t.id === type) ? type : doc.type };
+  await transaction('readwrite', (m) => m.put(nouveau));
+  return nouveau;
+}
+
 export const supprimerDocument = (id) => transaction('readwrite', (m) => m.delete(id));
 
 export async function supprimerDocumentsAnimal(animalId) {
