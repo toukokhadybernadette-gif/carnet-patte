@@ -83,9 +83,9 @@ function carteHtml({ soin, animal, statut }) {
       <div class="rp-carte__etat">${statut ? badgeEcheance(statut) : badgeSoin(soin)}</div>
       <div class="rp-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${quoi}` } }) : ''}
-        ${statut ? boutonCalendrier(soin, animal, { variante: 'secondaire' }) : ''}
         ${bouton({ texte: 'Voir le soin', variante: 'secondaire', icone: 'chevron-right', taille: 's', href: lienSoin(soin, animal), attrs: { 'aria-label': `Voir le soin ${quoi}` } })}
       </div>
+      ${statut ? boutonCalendrier(soin, animal) : ''}
     </li>`;
 }
 

@@ -53,7 +53,7 @@ function blocAFaire(urgent) {
         <span class="ac-afaire__meta">${dateCourte(soin.rappel)} ${badgeEcheance(statut)}</span>
       </div>
       ${bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${nom}, ${animal.nom}` } })}
-      <div class="ac-afaire__cal">${boutonCalendrier(soin, animal)}</div>
+      ${boutonCalendrier(soin, animal)}
     </div>`;
 }
 

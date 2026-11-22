@@ -25,10 +25,13 @@ export function rappelPourCalendrier(soin, animal) {
 
 const slug = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
 
-/** Bouton « Ajouter au calendrier » d'un rappel en attente. */
-export function boutonCalendrier(soin, animal, { taille = 's', variante = 'discret' } = {}) {
-  return bouton({ texte: 'Ajouter au calendrier', icone: 'calendar-plus', variante, taille,
-    attrs: { 'data-cal': soin.id, 'aria-label': `Ajouter au calendrier : ${titreEvenement(soin, animal)}` } });
+/**
+ * « Ajouter au calendrier » d'un rappel en attente : un petit lien avec icône, toujours SOUS les boutons de la carte
+ * (jamais dans leur rangée : à 375 px, trois boutons côte à côte se chevauchaient). Voir `.cal-lien` dans css/pages.css.
+ */
+export function boutonCalendrier(soin, animal) {
+  return `<div class="cal-lien">${bouton({ texte: 'Ajouter au calendrier', icone: 'calendar-plus', variante: 'discret', taille: 's',
+    attrs: { 'data-cal': soin.id, 'aria-label': `Ajouter au calendrier : ${titreEvenement(soin, animal)}` } })}</div>`;
 }
 
 /** Rappels à venir (aujourd'hui et après), pour « Tout ajouter ». */
