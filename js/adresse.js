@@ -3,8 +3,9 @@
 // (explications, sauvegarde en un geste, marche à suivre). Sur la nouvelle adresse, ce bandeau n'apparaît jamais.
 // Le jour où l'ancienne adresse est fermée, on retire l'appel à afficherBandeauDemenagement() dans js/app.js.
 
-export const NOUVELLE_ADRESSE = 'https://carnet-patte.pages.dev/';
-export const NOUVEAU_NOM = 'carnet-patte.pages.dev';
+// L'adresse définitive. L'adresse technique fournie par Cloudflare ne doit JAMAIS apparaître dans le site (testé : tests/test-demenagement.mjs).
+export const NOUVELLE_ADRESSE = 'https://carnetpatte.com/';
+export const NOUVEAU_NOM = 'carnetpatte.com';
 
 /** Est-on sur l'ancienne adresse (GitHub Pages) ? `hote` ne sert qu'aux tests. */
 export const estAncienneAdresse = (hote = location.hostname) => /\.github\.io$/i.test(hote);

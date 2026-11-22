@@ -9,7 +9,7 @@ export const EDITEUR = {
   nom: '',                         // Nom et prénom de l'éditeur (c'est aussi le directeur de la publication)
   statut: 'Micro-entreprise',      // Statut juridique
   siret: '',                       // 14 chiffres, sur l'avis de situation INSEE
-  email: '',                       // Adresse e-mail de contact (droits sur les données, questions, signalements)
+  email: 'contact@carnetpatte.com', // Adresse e-mail de contact (droits sur les données, questions, signalements)
   adresse: '',                     // NE PAS REMPLIR sans décision de votre part : n'est affichée que si ce champ est rempli
 };
 

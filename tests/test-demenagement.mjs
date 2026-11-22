@@ -38,11 +38,13 @@ log('--- 2. Aucun nom, aucun lien absolu ---');
 const textes = []; const parcourir = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) parcourir(p); else if (/\.(html|js|css|json|webmanifest|txt|md)$|^_headers$/.test(e.name)) textes.push([path.relative(SITE, p).replaceAll('\\', '/'), fs.readFileSync(p, 'utf8')]); } };
 parcourir(SITE);
 verifier(textes.length > 80 && !textes.some(([, t]) => /toukokhadybernadette/i.test(t)), `${textes.length} fichiers publiés lus : le nom du compte n’apparaît nulle part`);
+verifier(!textes.some(([, t]) => /pages\.dev/i.test(t)), 'l’adresse technique de Cloudflare (*.pages.dev) n’apparaît dans AUCUN fichier du site : les utilisateurs ne voient que carnetpatte.com');
+verifier(textes.some(([f, t]) => f === 'js/adresse.js' && t.includes("'https://carnetpatte.com/'")) && textes.some(([f, t]) => f === 'demenagement.html' && t.includes('https://carnetpatte.com/')), 'la nouvelle adresse est https://carnetpatte.com/ (bandeau et page de déménagement)');
 const github = textes.filter(([, t]) => /github\.io/i.test(t)).map(([f]) => f);
 verifier(JSON.stringify(github) === JSON.stringify(['js/adresse.js']), `« github.io » seulement dans js/adresse.js (détection de l'ancienne adresse) : ${github.join(', ')}`);
 verifier(!textes.some(([, t]) => /https?:\/\/[^'"\s)]*\/carnet-patte\//i.test(t)), 'aucun lien absolu vers un sous-dossier /carnet-patte/');
 const manifeste = JSON.parse(fs.readFileSync(path.join(SITE, 'manifest.webmanifest'), 'utf8'));
-for (const [nom, base, attendu] of [['Cloudflare', 'https://carnet-patte.pages.dev/manifest.webmanifest', '/'], ['GitHub Pages', 'https://exemple.github.io/carnet-patte/manifest.webmanifest', '/carnet-patte/']]) {
+for (const [nom, base, attendu] of [['Cloudflare', 'https://carnetpatte.com/manifest.webmanifest', '/'], ['GitHub Pages', 'https://exemple.github.io/carnet-patte/manifest.webmanifest', '/carnet-patte/']]) {
   const chemins = [manifeste.scope, manifeste.start_url, manifeste.id].map((u) => new URL(u, base).pathname);
   verifier(chemins.every((c) => c === attendu) && manifeste.icons.every((i) => new URL(i.src, base).pathname.startsWith(attendu)), `manifeste sur ${nom} : portée, démarrage, identifiant et icônes sous ${attendu}`);
 }
@@ -65,13 +67,13 @@ await taille(375, 812);
 
 // ===== 3. Bandeau sur l'ancienne adresse seulement =====
 log('--- 3. Bandeau « Carnet Patte a déménagé » ---');
-const hotes = await ev(`import('/js/adresse.js').then((m) => ['quelquun.github.io', 'QUELQUUN.GitHub.io', 'carnet-patte.pages.dev', 'github.io.evil.example', 'github.io', '127.0.0.1', 'localhost'].map((h) => [h, m.estAncienneAdresse(h)]))`);
-verifier(JSON.stringify(hotes.map(([, v]) => v)) === JSON.stringify([true, true, false, false, false, false, false]), `reconnaît *.github.io et rien d'autre : ${hotes.map(([h, v]) => h + '=' + v).join(', ')}`);
+const hotes = await ev(`import('/js/adresse.js').then((m) => ['quelquun.github.io', 'QUELQUUN.GitHub.io', 'carnetpatte.com', 'www.carnetpatte.com', 'carnet-patte.pages.dev', 'github.io.evil.example', 'github.io', '127.0.0.1', 'localhost'].map((h) => [h, m.estAncienneAdresse(h)]))`);
+verifier(JSON.stringify(hotes.map(([, v]) => v)) === JSON.stringify([true, true, false, false, false, false, false, false, false]), `reconnaît *.github.io et rien d'autre : ${hotes.map(([h, v]) => h + '=' + v).join(', ')}`);
 verifier(await ev(`!document.querySelector('.pwa-demenage')`), 'sur la nouvelle adresse (ici 127.0.0.1) : aucun bandeau');
 await ev(`import('/js/adresse.js').then((m) => { m.afficherBandeauDemenagement({ hote: 'quelquun.github.io' }); m.afficherBandeauDemenagement({ hote: 'quelquun.github.io' }); })`);
 verifier(await ev(`document.querySelectorAll('.pwa-demenage').length`) === 1, 'sur *.github.io : un seul bandeau (pas de doublon)');
 const t = await texte('.pwa-demenage');
-verifier(t.includes('Carnet Patte a déménagé') && t.includes('carnet-patte.pages.dev') && await ev(`document.querySelector('.pwa-demenage a').getAttribute('href')`) === 'demenagement.html' && await ev(`document.querySelector('.pwa-demenage').getAttribute('role')`) === 'region', `bandeau : « ${t} » → demenagement.html`);
+verifier(t.includes('Carnet Patte a déménagé') && t.includes('carnetpatte.com') && !t.includes('pages.dev') && await ev(`document.querySelector('.pwa-demenage a').getAttribute('href')`) === 'demenagement.html' && await ev(`document.querySelector('.pwa-demenage').getAttribute('role')`) === 'region', `bandeau : « ${t} » → demenagement.html`);
 await controler('bandeau à 375 px', '.pwa-demenage'); await ecran('bandeau');
 await taille(390, 844); await controler('bandeau à 390 px', '.pwa-demenage'); await taille(375, 812);
 await ev(`document.querySelector('.pwa-demenage').remove()`);
@@ -85,7 +87,7 @@ await importer(fichier);
 await ev(`import('/js/documents-db.js').then((d) => d.ajouterDocument({ animalId: 'a', titre: 'Carnet', date: '2026-02-02', type: 'vaccination', blob: new Blob(['%PDF-1.4 essai'], { type: 'application/pdf' }), nom: 'c.pdf' }))`);
 await send('Page.navigate', { url: `${BASE}/demenagement.html` }); await dort(1800);
 verifier(await texte('h1') === 'Carnet Patte a déménagé' && await ev(`!document.querySelector('#contenu')`), 'la page de déménagement s’affiche (et non l’appli), même avec le service worker actif');
-verifier(await ev(`document.querySelector('[data-lien-nouvelle]').href`) === 'https://carnet-patte.pages.dev/' && (await texte('[data-nouvelle]')) === 'carnet-patte.pages.dev', 'bouton « Ouvrir la nouvelle adresse » → https://carnet-patte.pages.dev/');
+verifier(await ev(`document.querySelector('[data-lien-nouvelle]').href`) === 'https://carnetpatte.com/' && (await texte('[data-nouvelle]')) === 'carnetpatte.com', 'bouton « Ouvrir la nouvelle adresse » → https://carnetpatte.com/');
 const etapes = await ev(`[...document.querySelectorAll('ol > li')].map((l) => l.textContent.replace(/\\s+/g, ' ').trim())`);
 verifier(etapes.length === 4 && /^Exporter ici/.test(etapes[0]) && /^Ouvrir la nouvelle adresse/.test(etapes[1]) && /^Importer là-bas.*Profil → Sauvegarde.*Choisir un fichier/.test(etapes[2]) && /^Réinstaller l'appli.*Sur l'écran d'accueil/.test(etapes[3]), 'quatre étapes : Exporter ici → ouvrir → Importer là-bas (Profil → Sauvegarde) → réinstaller');
 await dort(600);
@@ -135,7 +137,8 @@ await controler('À propos à 375 px'); await axe('#contenu', 'À propos');
 await aller('#/mentions'); await dort(500);
 verifier(await texte('h1') === 'Mentions légales', 'page Mentions légales');
 const vides = await ev(`[...document.querySelectorAll('[data-champ]')].filter((e) => e.querySelector('.ap-vide')).map((e) => e.dataset.champ)`);
-verifier(JSON.stringify(vides) === JSON.stringify(['nom', 'siret', 'email', 'directeur']), `champs encore à remplir (dans js/mentions-config.js) : ${vides.join(', ')} → « [à compléter] »`);
+verifier(JSON.stringify(vides) === JSON.stringify(['nom', 'siret', 'directeur']), `champs encore à remplir (dans js/mentions-config.js) : ${vides.join(', ')} → « [à compléter] »`);
+verifier(await ev(`document.querySelector('[data-champ=email] a')?.getAttribute('href')`) === 'mailto:contact@carnetpatte.com' && (await texte('[aria-labelledby=ml-donnees]')).includes('contact@carnetpatte.com'), 'e-mail de contact : contact@carnetpatte.com (éditeur et droits sur les données) ; nom et SIRET restent « [à compléter] »');
 verifier(await texte('[data-champ=statut]') === 'Micro-entreprise' && await ev(`!document.querySelector('[data-champ=adresse]')`), 'statut « Micro-entreprise » ; AUCUNE adresse postale affichée pour l’éditeur');
 verifier(await texte('[data-champ=hebergeur]') === 'Cloudflare, Inc.' && (await texte('[aria-labelledby=ml-hebergeur]')).includes('101 Townsend Street'), 'hébergeur : Cloudflare, Inc. et son adresse');
 verifier((await texte('[aria-labelledby=ml-donnees]')).includes('Pas de compte, pas de suivi') && (await texte('[aria-labelledby=ml-donnees]')).includes('OpenStreetMap') && (await texte('[aria-labelledby=ml-donnees]')).includes('Tout effacer'), 'données personnelles : rien collecté, ce qui sort de l’appareil, comment tout effacer');

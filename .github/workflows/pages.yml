@@ -1,4 +1,4 @@
-# ANCIENNE ADRESSE (GitHub Pages) : elle reste ouverte jusqu'à votre accord ; le site principal est sur Cloudflare Pages (carnet-patte.pages.dev, voir DEPLOIEMENT-CLOUDFLARE.md).
+# ANCIENNE ADRESSE (GitHub Pages) : elle reste ouverte jusqu'à votre accord ; le site principal est sur Cloudflare Pages (carnetpatte.com, voir DEPLOIEMENT-CLOUDFLARE.md).
 # Publie SEULEMENT ce qui sert au site (pas tests/, outils/, README, notes, captures). donnees/ = lieux préparés à l'avance (licence ODbL).
 name: Publier le site
 on:
