@@ -70,6 +70,21 @@ const OUTILS = `(() => {
       }
       return [...new Set(out)].slice(0, 6);
     },
+    // 4. boutons : deux boutons (ou liens-boutons) qui se recouvrent, ou un texte de bouton qui dépasse de son bouton
+    boutons(racine = document.body) {
+      const out = []; const bs = [...racine.querySelectorAll('.cp-btn')].filter((e) => visible(e) && !e.closest('svg, .cp-sr, [hidden]'));
+      const etiquette = (e) => (e.innerText || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
+        const ra = bs[i].getBoundingClientRect(); const rb = bs[j].getBoundingClientRect();
+        const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left); const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+        if (w > 1 && h > 1) out.push('se chevauchent : « ' + etiquette(bs[i]) + ' » / « ' + etiquette(bs[j]) + ' »');
+      }
+      for (const b of bs) {
+        const br = b.getBoundingClientRect(); const r = document.createRange(); r.selectNodeContents(b); const t = r.getBoundingClientRect();
+        if (b.scrollWidth > b.clientWidth + 1 || t.left < br.left - 1 || t.right > br.right + 1 || t.top < br.top - 1 || t.bottom > br.bottom + 1) out.push('texte qui déborde : « ' + etiquette(b) + ' »');
+      }
+      return [...new Set(out)].slice(0, 8);
+    },
     motsCoupes(racine = document.body) {
       const out = [];
       for (const e of textes(racine)) for (const n of e.childNodes) {
@@ -117,6 +132,21 @@ for (const onglet of ['poids', 'historique', 'sante']) {
   await controler(`Fiche · ${onglet}`);
 }
 await axe('#app', 'Fiche (375 px, noms longs)');
+
+log('=== BOUTONS à 375 px ET 390 px : aucun ne chevauche un autre, aucun texte ne déborde ===');
+for (const largeur of [375, 390]) {
+  await taille(largeur, 844);
+  for (const [nom, pg, onglet] of [['Rappels', '#/animaux/rappels'], ['Fiche · Santé', '#/animaux/a', 'sante'], ['Fiche · Santé (espèce longue)', '#/animaux/b', 'sante'], ['Accueil', '#/accueil']]) {
+    await aller2(pg); if (onglet) { await ev(`document.querySelector('[data-onglet=${onglet}]').click()`); await sleep(400); }
+    await ev(OUTILS);
+    const nb = await ev(`document.querySelectorAll('#contenu .cp-btn').length`);
+    const b = await ev(`__controles.boutons(document.querySelector('#contenu'))`);
+    verifier(nb > 3 && b.length === 0, `${largeur} px · ${nom} : ${nb} boutons, aucun ne chevauche un autre, aucun texte ne déborde${b.length ? ' → ' + b.join(' | ') : ''}`);
+    verifier(await sansDebord(), `${largeur} px · ${nom} : pas de défilement horizontal`);
+    if (largeur === 375) await ecran(`boutons-${nom.toLowerCase().replace(/[^a-z]+/g, '-')}`, true);
+  }
+}
+await taille(375, 812);
 
 log('=== ACCUEIL : carrousel, diapositive « Ajouter », plus d\'« Actions rapides » ===');
 await aller2('#/accueil'); await ev(`window.scrollTo(0, 0)`);

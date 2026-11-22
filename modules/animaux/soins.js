@@ -96,10 +96,10 @@ function carteHtml(soin, animal) {
       </div>
       <div class="sn-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-act': 'fait', 'data-id': soin.id, 'aria-label': `Marquer le rappel « ${nom} » comme fait` } }) : ''}
-        ${statut ? boutonCalendrier(soin, animal, { variante: 'secondaire' }) : ''}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'pencil', titre: `Modifier ${nom}`, attrs: { 'data-act': 'modifier', 'data-id': soin.id } })}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${nom}`, attrs: { 'data-act': 'supprimer', 'data-id': soin.id } })}
       </div>
+      ${statut ? boutonCalendrier(soin, animal) : ''}
     </li>`;
 }
 
