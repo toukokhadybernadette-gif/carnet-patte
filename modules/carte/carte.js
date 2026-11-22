@@ -106,6 +106,7 @@ export function rendre(zone) {
         <div id="ca-vide" class="cp-carte">${vide({ niveau: 3, icone: 'map-pin', titre: 'Où êtes-vous ?', texte: 'Touchez « Autour de moi », ou entrez une ville ou un code postal : les lieux utiles apparaîtront sur la carte.' })}</div>
         <div id="ca-zone" hidden>
           <div class="ca-carte" id="ca-carte" role="region" aria-label="Carte des lieux"></div>
+          <p class="ca-absent ca-hors-ligne" id="ca-hors-ligne" role="status" hidden>${icone('triangle-alert', { taille: 18 })}<span>Carte indisponible hors connexion, la liste des lieux déjà chargés reste visible.</span></p>
         </div>
         <article class="cp-carte ca-fiche" id="ca-fiche" tabindex="-1" aria-label="Fiche du lieu" hidden></article>
         <ul class="ca-liste" id="ca-liste"></ul>
@@ -291,10 +292,17 @@ export function rendre(zone) {
     if (!vueCarte) {
       const map = L.map($('ca-carte'), { scrollWheelZoom: false, zoomControl: true });
       map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>');
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      const fond = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
       }).addTo(map);
+      // Hors connexion, les tuiles ne s'affichent pas : un message clair dit que la liste reste utilisable
+      let tuilesEnEchec = false;
+      const majHorsLigne = () => { const m = $('ca-hors-ligne'); if (m) m.hidden = navigator.onLine !== false && !tuilesEnEchec; };
+      fond.on('tileerror', () => { tuilesEnEchec = true; majHorsLigne(); });
+      fond.on('tileload', () => { tuilesEnEchec = false; majHorsLigne(); });
+      for (const nom of ['online', 'offline']) addEventListener(nom, () => { if (vivante()) majHorsLigne(); });
+      majHorsLigne();
       vueCarte = { map, marqueurs: groupeDeMarqueurs(L).addTo(map), parId: new Map(), cercle: null, centre: null };
       recentrer = true;
     }

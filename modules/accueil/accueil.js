@@ -9,6 +9,7 @@ import { vide, couleurAnimal, bouton } from '../../js/composants.js';
 import { illustration } from '../../js/illustrations.js';
 import { rafraichir } from '../../js/router.js';
 import { conseilDuMois, PHRASE_VETERINAIRE } from '../../js/conseils.js';
+import { brancherCalendrier, boutonCalendrier } from '../animaux/calendrier.js';
 import { calculerRappels } from '../animaux/rappels.js';
 import { formulaireAnimal } from '../animaux/animaux.js';
 import { infosEspece, nomEspece, infosType, classeType, badgeEcheance, nomCourtSoin, ouvrirRappelFait } from '../animaux/commun.js';
@@ -52,6 +53,7 @@ function blocAFaire(urgent) {
         <span class="ac-afaire__meta">${dateCourte(soin.rappel)} ${badgeEcheance(statut)}</span>
       </div>
       ${bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${nom}, ${animal.nom}` } })}
+      <div class="ac-afaire__cal">${boutonCalendrier(soin, animal)}</div>
     </div>`;
 }
 
@@ -175,6 +177,7 @@ export function rendre(zone) {
     majPoints();
   }
 
+  brancherCalendrier(zone);
   zone.addEventListener('click', (e) => {
     const fait = e.target.closest('[data-fait]');
     if (fait) { const soin = storage.trouver('soins', fait.dataset.fait); if (soin) ouvrirRappelFait(soin, rafraichir); return; }

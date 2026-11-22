@@ -22,7 +22,9 @@ jobs:
       - name: Assembler le site
         run: |
           mkdir _site
-          cp -r index.html assets css js modules donnees _site/
+          cp -r index.html manifest.webmanifest sw.js assets css js modules donnees _site/
+          # Appli hors ligne : sw.js reçoit la version (le commit) et la liste des fichiers à mettre en cache
+          node outils/preparer-sw.mjs _site "${GITHUB_SHA::12}"
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

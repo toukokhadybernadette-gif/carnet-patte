@@ -22,10 +22,14 @@ import { rendre as rendreBientot } from './bientot.js';
 import { afficherSecours } from './secours.js';
 import { mesurerEtAdapter } from './fond.js';
 import { initialiserTheme } from './theme.js';
+import { initialiserPwa } from './pwa.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
 
 // ----- Thème de couleur (mémorisé sur l'appareil) -----
 initialiserTheme();
+
+// ----- Appli installable et hors ligne (service worker, bannière de mise à jour) -----
+initialiserPwa();
 
 // ----- Routes -----
 route('accueil', rendreAccueil);

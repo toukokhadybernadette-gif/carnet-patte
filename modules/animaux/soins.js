@@ -5,6 +5,7 @@ import { echapper, aujourdhui, formatDate } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, choix, vide } from '../../js/composants.js';
+import { brancherCalendrier, boutonCalendrier, PHRASE_DATE } from './calendrier.js';
 import { TYPES_SOIN, classeType, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
 
 export function formulaireSoin(animal, soin, apres) {
@@ -67,7 +68,7 @@ export function formulaireSoin(animal, soin, apres) {
   });
 }
 
-function carteHtml(soin) {
+function carteHtml(soin, animal) {
   const type = infosType(soin.type);
   const statut = statutRappel(soin);
   const { categorie, nom: nomPrecis } = libellesSoin(soin);
@@ -95,6 +96,7 @@ function carteHtml(soin) {
       </div>
       <div class="sn-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-act': 'fait', 'data-id': soin.id, 'aria-label': `Marquer le rappel « ${nom} » comme fait` } }) : ''}
+        ${statut ? boutonCalendrier(soin, animal, { variante: 'secondaire' }) : ''}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'pencil', titre: `Modifier ${nom}`, attrs: { 'data-act': 'modifier', 'data-id': soin.id } })}
         ${bouton({ variante: 'secondaire', taille: 's', seul: true, icone: 'trash-2', titre: `Supprimer ${nom}`, attrs: { 'data-act': 'supprimer', 'data-id': soin.id } })}
       </div>
@@ -119,13 +121,14 @@ export function rendre(zone, animal) {
       ${bouton({ texte: 'Ajouter un soin', icone: 'plus', taille: 's', attrs: { 'data-act': 'ajouter' } })}
     </div>
     ${soins.length
-      ? `<ul class="sn-liste">${soins.map(carteHtml).join('')}</ul>`
+      ? `<ul class="sn-liste">${soins.map((s) => carteHtml(s, animal)).join('')}</ul>${soins.some((s) => statutRappel(s)) ? `<p class="cp-doux sn-calendrier-aide">${PHRASE_DATE}</p>` : ''}`
       : `<div class="cp-carte">${vide({
         niveau: 3, icone: 'stethoscope', titre: "Aucun soin noté pour l'instant",
         texte: 'Vaccins, vermifuges, visites chez le vétérinaire… notez-les ici pour ne rien oublier.',
         action: bouton({ texte: 'Ajouter un soin', icone: 'plus', attrs: { 'data-act': 'ajouter' } }),
       })}</div>`}`;
 
+  brancherCalendrier(section);
   section.addEventListener('click', async (e) => {
     const declencheur = e.target.closest('[data-act]');
     if (!declencheur) return;

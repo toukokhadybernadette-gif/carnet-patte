@@ -1,0 +1,17 @@
+/* Appli installable : bannière de mise à jour et aide « Installer sur votre iPhone » */
+
+.pwa-maj {
+  position: fixed; z-index: 120; left: var(--cp-espace-3); right: var(--cp-espace-3);
+  top: calc(env(safe-area-inset-top) + var(--cp-espace-3)); margin-inline: auto; max-width: 440px;
+  display: flex; align-items: center; gap: var(--cp-espace-2); flex-wrap: wrap;
+  padding: var(--cp-espace-2) var(--cp-espace-2) var(--cp-espace-2) var(--cp-espace-4);
+  border-radius: 999px; background: var(--cp-surface, #fff); color: var(--cp-texte);
+  border: 1px solid var(--cp-bordure); box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+}
+.pwa-maj__icone { display: inline-flex; color: var(--cp-foret-texte, var(--cp-texte)); }
+.pwa-maj__texte { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: var(--cp-taille-s); }
+
+.pwa-aide { display: grid; gap: var(--cp-espace-3); }
+.pwa-aide__illu { display: block; width: 100%; max-width: 320px; height: auto; margin-inline: auto; color: var(--cp-foret-texte, var(--cp-texte)); }
+.pwa-aide__etapes { margin: 0; padding-left: 1.4em; display: grid; gap: var(--cp-espace-2); }
+.pwa-aide p { margin: 0; }
