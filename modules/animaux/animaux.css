@@ -386,3 +386,12 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 /* Aperçu des thèmes dans Profil, en sombre : contour visible, case cochée visible, nom lisible */
 :root[data-mode="dark"] .pf-theme__carte { border-color: var(--cp-bordure-forte); }
 :root[data-mode="dark"] .pf-theme input:checked + .pf-theme__carte { border-color: var(--cp-texte); box-shadow: 0 0 0 2px var(--pastille), var(--cp-ombre-s); }
+
+/* Onglets d'un groupe (5) sur téléphone : ils TIENNENT sur l'écran (libellés un peu plus compacts) ; si l'écran est vraiment trop étroit, la rangée défile
+   et un fondu à droite montre qu'il y a une suite (jamais un onglet coupé sans indication). */
+@media (max-width: 599px) {
+  .fi-onglets .cp-onglets { gap: 2px; }
+  .fi-onglets .cp-onglet { padding-inline: 6px; font-size: 12.5px; }
+  .fi-onglets .cp-onglets.a-suite { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+}
+

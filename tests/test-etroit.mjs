@@ -160,9 +160,10 @@ for (const largeur of [375, 390]) {
     await aller2('#/animaux/g'); await sleep(500);
     const noms = await ev(`[...document.querySelectorAll('[role=tab]')].map((t) => t.textContent.trim())`);
     const tabs = await ev(`(() => { const L = [...document.querySelectorAll('[role=tab]')].map((t) => { const r = t.getBoundingClientRect(); const s = t.querySelector('span:last-child'); const rs = document.createRange(); rs.selectNodeContents(s); const tr = rs.getBoundingClientRect(); return { nom: t.textContent.trim(), g: r.left, d: r.right, tg: tr.left, td: tr.right }; });
-      const liste = document.querySelector('[role=tablist]'); return { L, defile: liste.scrollWidth > liste.clientWidth + 1, ecart: L.slice(1).map((t, i) => Math.round(t.g - L[i].d)), texteDans: L.every((t) => t.tg >= t.g - 1 && t.td <= t.d + 1), cote: Math.round(liste.getBoundingClientRect().width) }; })()`);
+      const liste = document.querySelector('[role=tablist]'); return { L, defile: liste.scrollWidth > liste.clientWidth + 1, ecart: L.slice(1).map((t, i) => Math.round(t.tg - L[i].td)), texteDans: L.every((t) => t.tg >= t.g - 1 && t.td <= t.d + 1), cote: Math.round(liste.getBoundingClientRect().width) }; })()`);
     verifier(JSON.stringify(noms) === JSON.stringify(['Santé', 'Ponte', 'Repas', 'Historique', 'Documents']), `${largeur} px : onglets du groupe ${noms.join(' · ')}`);
-    verifier(tabs.ecart.every((e) => e >= 3) && tabs.texteDans, `${largeur} px : les libellés des onglets ne se collent pas (espaces entre onglets : ${tabs.ecart.join(', ')} px) et chaque texte reste dans son onglet`);
+    verifier(tabs.ecart.every((e) => e >= 8) && tabs.texteDans, `${largeur} px : les libellés des onglets ne se collent pas (espaces entre libellés : ${tabs.ecart.join(', ')} px) et chaque texte reste dans son onglet`);
+    verifier(!tabs.defile, `${largeur} px : les 5 onglets du groupe TIENNENT sur l’écran, sans défiler (aucun onglet coupé)`);
     // le dernier onglet est atteignable : on le touche, la rangée défile et il est entièrement visible
     await ev(`document.querySelector('[data-onglet=documents]').click()`); await sleep(500);
     const dernier = await ev(`(() => { const r = document.querySelector('[data-onglet=documents]').getBoundingClientRect(); return { g: Math.round(r.left), d: Math.round(r.right), L: innerWidth }; })()`);
@@ -178,6 +179,14 @@ for (const largeur of [375, 390]) {
     if (largeur === 375 && attendu === 'max 6') await ecran('groupe-ponte', true);
   }
 }
+// Très petit écran (320 px, iPhone SE) : si les onglets ne tiennent pas, la rangée défile ET un fondu à droite l'annonce ; jamais un onglet coupé sans indication
+await importer(JSON.stringify(donneesGroupe([5, 4, 6])));
+await taille(320, 700); await aller2('#/animaux/g'); await sleep(500);
+const petitOnglets = await ev(`(() => { const l = document.querySelector('[role=tablist]'); const fin = l.scrollWidth - l.clientWidth; return { defile: fin > 1, fondu: l.classList.contains('a-suite') }; })()`);
+verifier(!petitOnglets.defile || petitOnglets.fondu, `320 px : les onglets ${petitOnglets.defile ? 'défilent, avec un fondu à droite qui annonce la suite' : 'tiennent sur l’écran'}`);
+await ev(`document.querySelector('[role=tablist]').scrollTo({ left: 9999 })`); await sleep(400);
+const finDefil = await ev(`(() => { const l = document.querySelector('[role=tablist]'); const t = [...l.querySelectorAll('[role=tab]')].pop().getBoundingClientRect(); return { fondu: l.classList.contains('a-suite'), droite: Math.round(t.right), largeur: innerWidth }; })()`);
+verifier(!finDefil.fondu && finDefil.droite <= finDefil.largeur, `320 px : au bout de la rangée, le fondu disparaît et « Documents » est entier (bord droit ${finDefil.droite} px sur ${finDefil.largeur})`);
 await importer(JSON.stringify(donnees));
 await taille(375, 812);
 

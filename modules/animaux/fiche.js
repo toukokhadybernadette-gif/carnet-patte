@@ -276,6 +276,12 @@ export function rendre(zone, id, soinCible = '') {
   // Onglets
   const racineOnglets = zone.querySelector('[data-onglets]');
   activerOnglets(racineOnglets);
+  // Si les onglets ne tiennent pas (très petit écran), la rangée défile : un fondu à droite montre qu'il y a une suite
+  const listeOnglets = racineOnglets.querySelector('[role="tablist"]');
+  const majSuite = () => listeOnglets.classList.toggle('a-suite', listeOnglets.scrollWidth - listeOnglets.clientWidth - listeOnglets.scrollLeft > 4);
+  listeOnglets.addEventListener('scroll', majSuite, { passive: true });
+  new ResizeObserver(majSuite).observe(listeOnglets); // disparaît avec la page : rien à nettoyer
+  majSuite();
   racineOnglets.querySelector('[role="tablist"]').addEventListener('click', (e) => {
     const o = e.target.closest('[data-onglet]');
     if (o) { memoire.onglet = o.dataset.onglet; o.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }
