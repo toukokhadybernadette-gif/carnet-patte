@@ -216,3 +216,6 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .rp-calendrier { display: grid; gap: var(--cp-espace-2); justify-items: start; margin-block: var(--cp-espace-3); }
 .rp-calendrier p { margin: 0; }
 .sn-calendrier-aide { margin: var(--cp-espace-3) 0 0; }
+
+/* Fiche d'un groupe : cinq onglets, ils ne s'écrasent plus (la rangée défile si l'écran est étroit) */
+.fi-onglets .cp-onglet { flex: 1 0 auto; }

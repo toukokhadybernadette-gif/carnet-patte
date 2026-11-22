@@ -68,7 +68,7 @@ export async function ouvrirEdge({ sortie, balise, port }) {
         if (b.scrollWidth > b.clientWidth + 1 || t.left < br.left - 1 || t.right > br.right + 1 || t.top < br.top - 1 || t.bottom > br.bottom + 1) out.push('texte de bouton qui déborde : « ' + etiquette(b) + ' »');
       }
       const textes = [...racine.querySelectorAll('*')].filter((e) => visible(e) && !defile(e) && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && !e.closest('svg, [hidden], .cp-sr, .cp-btn'));
-      const rect = (e) => { const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect(); };
+      const rect = (e) => { if (getComputedStyle(e).overflow !== 'visible') return e.getBoundingClientRect(); const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect(); };
       for (let i = 0; i < textes.length; i++) for (let j = i + 1; j < textes.length; j++) {
         const a = textes[i]; const b = textes[j];
         if (a.contains(b) || b.contains(a)) continue;

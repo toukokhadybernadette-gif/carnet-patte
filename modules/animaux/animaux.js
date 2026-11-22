@@ -17,6 +17,7 @@ import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
 import { rendre as rendreGarde } from './garde.js';
 import { ajouterExemples } from './exemples.js';
+import { estGroupe, libelleEffectif, formulaireGroupe, stocksARacheter, alerteStocksHtml } from '../ferme/ferme.js';
 
 export function rendre(zone, segments) {
   if (segments[0] === 'rappels') return rendreRappels(zone);
@@ -175,10 +176,11 @@ function carteHtml(animal, rappels) {
   let badges = '';
   if (retard) badges = badge({ texte: `${pluriel(retard, 'rappel')} en retard`, variante: 'alerte', icone: 'bell-ring' });
   else if (semaine) badges = badge({ texte: `${pluriel(semaine, 'rappel')} cette semaine`, variante: 'attention', icone: 'bell' });
+  if (!badges && estGroupe(animal) && stocksARacheter().some((x) => x.groupe.id === animal.id)) badges = badge({ texte: 'Nourriture à racheter', variante: 'attention', icone: 'shopping-cart' });
   return carteAnimal({
     nom: animal.nom,
-    espece: nomEspece(animal),
-    details: [animal.race, animal.naissance ? age(animal.naissance) : 'Âge inconnu'].filter(Boolean).join(' · '),
+    espece: estGroupe(animal) ? `Groupe · ${nomEspece(animal)}` : nomEspece(animal),
+    details: estGroupe(animal) ? libelleEffectif(animal) : [animal.race, animal.naissance ? age(animal.naissance) : 'Âge inconnu'].filter(Boolean).join(' · '),
     icone: infosEspece(animal).icone,
     photo: typeof animal.photo === 'string' && animal.photo.startsWith('data:image/') ? animal.photo : '',
     badges,
@@ -224,7 +226,7 @@ function rendreListe(zone) {
         <h1>Mes animaux</h1>
         <p>${animaux.length === 0 ? 'Le carnet de santé de vos compagnons, au même endroit.' : animaux.length === 1 ? '1 animal suivi' : `${animaux.length} animaux suivis`}</p>
       </div>
-      ${animaux.length ? bouton({ texte: 'Ajouter un animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } }) : ''}
+      ${animaux.length ? `<div class="al-entete__actions">${bouton({ texte: 'Ajouter un animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } })}${bouton({ texte: 'Créer un groupe', icone: 'wheat', variante: 'secondaire', attrs: { 'data-act': 'groupe' } })}</div>` : ''}
     </header>`;
 
   const videHtml = vide({
@@ -233,6 +235,7 @@ function rendreListe(zone) {
     titre: "Aucun animal pour l'instant",
     texte: 'Ajoutez votre premier compagnon pour suivre ses soins, ses pesées et ses rappels.',
     action: `${bouton({ texte: 'Ajouter mon premier animal', icone: 'plus', attrs: { 'data-act': 'ajouter' } })}
+             ${bouton({ texte: 'Créer un groupe (basse-cour)', icone: 'wheat', variante: 'secondaire', attrs: { 'data-act': 'groupe' } })}
              ${bouton({ texte: "Remettre les animaux d'exemple", variante: 'discret', attrs: { 'data-act': 'remettre-exemples' } })}`,
   });
 
@@ -268,6 +271,7 @@ function rendreListe(zone) {
       ${enteteHtml}
       ${animaux.length ? `
         ${resumeHtml(rappels)}
+        ${alerteStocksHtml()}
         ${aDesExemples ? `
           <p class="al-exemples">Les animaux « exemple » servent à découvrir l'appli. <button type="button" class="al-exemples__lien" data-act="effacer-exemples">Supprimer les exemples</button></p>` : ''}
         ${outilsHtml}
@@ -314,6 +318,9 @@ function rendreListe(zone) {
     switch (declencheur.dataset.act) {
       case 'ajouter':
         formulaireAnimal(null, rafraichir);
+        break;
+      case 'groupe':
+        formulaireGroupe(null, rafraichir);
         break;
       case 'remettre-exemples':
         ajouterExemples();

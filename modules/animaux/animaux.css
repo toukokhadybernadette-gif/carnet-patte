@@ -360,3 +360,30 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .gd-bloc--poison p { margin: 0 0 var(--cp-espace-2); }
 .gd-poison li { display: grid; justify-items: start; gap: 2px; }
 .gd-feuille__pied, .gd-vide { margin: 0; }
+
+/* ---------- Ferme / basse-cour ---------- */
+.al-entete__actions { display: flex; gap: var(--cp-espace-3); flex-wrap: wrap; }
+.fe { display: grid; gap: var(--cp-espace-4); }
+.fe-saisie { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); align-items: end; padding: var(--cp-espace-4); }
+.fe-saisie__actions { grid-column: 1 / -1; }
+.fe-moyenne { margin: 0; }
+.fe-graphique { padding: var(--cp-espace-4); overflow: hidden; }
+.fe-graphe { display: block; max-width: 100%; height: auto; }
+.fe-grille { stroke: var(--cp-bordure); stroke-width: 1; }
+.fe-axe { fill: var(--cp-texte-doux); font-size: 11px; font-family: var(--cp-police-texte); }
+.fe-barre { fill: var(--cp-foret); }
+.fe-vide { fill: var(--cp-bordure-forte, var(--cp-texte-doux)); }
+.fe-titre { margin: 0; font-size: var(--cp-taille-m); }
+.fe-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-2); }
+.fe-liste li { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-3); }
+.fe-stocks { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+.fe-stock { display: grid; gap: var(--cp-espace-3); padding: var(--cp-espace-4); }
+.fe-stock--alerte { border-color: var(--cp-attention-bord, var(--cp-bordure)); }
+.fe-stock__corps { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.fe-stock__nom { overflow-wrap: anywhere; }
+.fe-stock__meta { color: var(--cp-texte-doux); font-size: var(--cp-taille-s); }
+.fe-stock__actions { display: flex; align-items: center; gap: var(--cp-espace-2); }
+.fe-stock__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
+.fe-form__actions { display: flex; gap: var(--cp-espace-3); justify-content: flex-end; flex-wrap: wrap; }
+.fe-alerte { display: flex; text-decoration: none; color: inherit; margin-block: var(--cp-espace-3); }
+.sn-suggestions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); align-items: center; margin: 0; }
