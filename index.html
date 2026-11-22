@@ -6,6 +6,25 @@
   <meta name="theme-color" content="#EEF3D3">
   <script>(function(){try{var L=localStorage,t=L.getItem('carnetpatte.theme'),r=document.documentElement;if(t==='perso'){var v=JSON.parse(L.getItem('carnetpatte.themePersoVars'));for(var k in v)r.style.setProperty(k,v[k]);r.dataset.theme='perso'}else if(t&&/^[a-z-]+$/.test(t))r.dataset.theme=t}catch(e){}})()</script>
   <title>Carnet Patte</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/pwa/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Carnet Patte">
+  <!-- Barre d'état de l'iPhone : texte sombre sur fond clair (le fond suit la couleur du thème : js/theme.js met à jour theme-color) -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <!-- Écran de démarrage de l'iPhone (un par taille d'écran ; assets/icons/pwa/, refaits par outils/generer-icones-pwa.mjs) -->
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="assets/icons/pwa/demarrage-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%235B6334'%20stroke-width='1.75'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='11'%20cy='4'%20r='2'/%3E%3Ccircle%20cx='18'%20cy='8'%20r='2'/%3E%3Ccircle%20cx='20'%20cy='16'%20r='2'/%3E%3Cpath%20d='M9%2010a5%205%200%200%201%205%205v3.5a3.5%203.5%200%200%201-6.84%201.045Q6.52%2017.48%204.46%2016.84A3.5%203.5%200%200%201%205.5%2010Z'/%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="css/tokens.css">
@@ -26,6 +45,7 @@
   <link rel="stylesheet" href="css/refonte.css">
   <!-- Thèmes de couleur (fichier généré) : en tout dernier, pour redéfinir les variables de couleur -->
   <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/pwa.css">
 </head>
 <body>
   <button type="button" class="app-evitement" id="evitement">Aller au contenu</button>

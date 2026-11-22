@@ -5,6 +5,7 @@ import { echapper, formatDate } from '../../js/utils.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
 import { bouton, avatar, choix, selecteur, vide, couleurAnimal } from '../../js/composants.js';
+import { brancherCalendrier, boutonCalendrier, rappelsAVenir, PHRASE_DATE } from './calendrier.js';
 import { infosType, classeType, infosEspece, badgeEcheance, statutRappel, ouvrirRappelFait, badgeSoin, libellesSoin, nomCourtSoin, titreSoin } from './commun.js';
 
 /** Tous les rappels en attente, du plus urgent au plus lointain. */
@@ -82,6 +83,7 @@ function carteHtml({ soin, animal, statut }) {
       <div class="rp-carte__etat">${statut ? badgeEcheance(statut) : badgeSoin(soin)}</div>
       <div class="rp-carte__actions">
         ${statut ? bouton({ texte: 'Fait', icone: 'check', taille: 's', attrs: { 'data-fait': soin.id, 'aria-label': `Fait : ${quoi}` } }) : ''}
+        ${statut ? boutonCalendrier(soin, animal, { variante: 'secondaire' }) : ''}
         ${bouton({ texte: 'Voir le soin', variante: 'secondaire', icone: 'chevron-right', taille: 's', href: lienSoin(soin, animal), attrs: { 'aria-label': `Voir le soin ${quoi}` } })}
       </div>
     </li>`;
@@ -146,6 +148,7 @@ export function rendre(zone) {
         })}</div>` : ''}
       </div>
       <p class="cp-sr" data-resultat role="status"></p>
+      ${rappelsAVenir().length ? `<div class="rp-calendrier">${bouton({ texte: 'Tout ajouter au calendrier', icone: 'calendar-plus', variante: 'secondaire', taille: 's', attrs: { 'data-cal-tout': true } })}<p class="cp-doux">${PHRASE_DATE} Le fichier est créé sur votre appareil, rien n'est envoyé.</p></div>` : ''}
 
       <div class="rp-groupes" data-groupes></div>
     </div>`;
@@ -201,6 +204,7 @@ export function rendre(zone) {
     afficher();
   });
 
+  brancherCalendrier(zone);
   zone.addEventListener('click', (e) => {
     if (e.target.closest('[data-reinitialiser]')) {
       filtre = { statut: 'a-faire', animal: '' };

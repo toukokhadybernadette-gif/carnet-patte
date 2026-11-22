@@ -10,6 +10,7 @@ import { NAV } from '../../js/navigation.js';
 import { echapper } from '../../js/utils.js';
 import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso } from '../../js/theme.js';
 import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
+import { estInstallee } from '../../js/pwa.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
   <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">
@@ -33,6 +34,28 @@ function ligneBientot() {
 
 /** Variables de la pastille d'un thème dans Profil (carte « Couleur personnalisée »). */
 const styleApercu = (couleur) => { const a = variablesTheme(themeDepuisCouleur(couleur).theme).apercu; return `--pastille: ${a.pastille}; --pf-degrade: ${a.degrade}; --pf-fond: ${a.fond};`; };
+
+/** Aide « Installer sur votre iPhone » : seulement si l'appli n'est pas déjà ouverte depuis l'écran d'accueil. */
+const aideInstallation = () => estInstallee() ? '' : `
+      <section class="pg-section" aria-labelledby="pf-installer" data-installer>
+        <div class="pg-section__tete"><h2 id="pf-installer">Installer Carnet Patte sur votre iPhone</h2></div>
+        <div class="cp-carte pwa-aide">
+          <svg class="pwa-aide__illu" viewBox="0 0 320 108" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="6" y="6" width="140" height="96" rx="16" fill="var(--cp-surface-2, #f3f3ee)" stroke="none"/>
+        <path d="M76 66V24M63 36l13-13 13 13"/><path d="M60 46H54a6 6 0 0 0-6 6v30a6 6 0 0 0 6 6h44a6 6 0 0 0 6-6V52a6 6 0 0 0-6-6h-6"/>
+        <path d="M156 54h8M160 50l4 4-4 4"/>
+        <rect x="174" y="6" width="140" height="96" rx="16" fill="var(--cp-surface-2, #f3f3ee)" stroke="none"/>
+        <rect x="212" y="30" width="64" height="64" rx="14"/><path d="M244 48v28M230 62h28"/>
+      </svg>
+          <ol class="pwa-aide__etapes">
+            <li>Ouvrez Carnet Patte dans <strong>Safari</strong>.</li>
+            <li>Touchez <strong>Partager</strong> (le carré avec une flèche vers le haut, en bas de l'écran).</li>
+            <li>Faites défiler, puis touchez <strong>Sur l'écran d'accueil</strong>.</li>
+            <li>Touchez <strong>Ajouter</strong> : l'appli apparaît sur votre écran d'accueil.</li>
+          </ol>
+          <p class="cp-doux">Une fois installée, elle s'ouvre en plein écran et reste utilisable sans connexion. Vos animaux restent enregistrés sur cet appareil.</p>
+        </div>
+      </section>`;
 
 export function rendre(zone) {
   zone.classList.add('page-large');
@@ -81,6 +104,8 @@ export function rendre(zone) {
         <div class="pg-section__tete"><h2 id="pf-donnees">Mes données</h2></div>
         <ul class="cp-liste">${ligne({ icone: 'save', titre: 'Sauvegarde', texte: 'Exporter, importer ou effacer vos données.', href: '#/donnees' })}</ul>
       </section>
+
+      ${aideInstallation()}
 
       <section class="pg-section" aria-labelledby="pf-acces">
         <div class="pg-section__tete"><h2 id="pf-acces">Accès rapides</h2></div>

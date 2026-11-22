@@ -206,3 +206,10 @@ a.ac-resume:hover { color: var(--cp-texte); }
   .ac-actions[style*="--ac-nb:5"] .ac-action__rond { width: 56px; height: 56px; }
   .ac-actions[style*="--ac-nb:5"] .ac-action__texte { font-size: 12px; }
 }
+
+/* Ajouter au calendrier */
+.ac-afaire__cal { grid-column: 1 / -1; display: flex; justify-content: flex-start; }
+.rp-calendrier { display: grid; gap: var(--cp-espace-2); justify-items: start; margin-block: var(--cp-espace-3); }
+.rp-calendrier p { margin: 0; }
+.sn-calendrier-aide { margin: var(--cp-espace-3) 0 0; }
+.sn-carte__actions { flex-wrap: wrap; }
