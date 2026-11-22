@@ -15,10 +15,12 @@ import { bouton, badge, champ, choix, carteAnimal, vide, activerFiltres, PALETTE
 import { ESPECES, infosEspece, nomEspece, erreurChamp } from './commun.js';
 import { calculerRappels, rendre as rendreRappels } from './rappels.js';
 import { rendre as rendreFiche } from './fiche.js';
+import { rendre as rendreGarde } from './garde.js';
 import { ajouterExemples } from './exemples.js';
 
 export function rendre(zone, segments) {
   if (segments[0] === 'rappels') return rendreRappels(zone);
+  if (segments[0] && segments[1] === 'garde') return rendreGarde(zone, segments[0], segments[2]);
   if (segments[0]) return rendreFiche(zone, segments[0], segments[1] === 'soin' ? segments[2] : '');
   rendreListe(zone);
 }

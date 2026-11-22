@@ -201,6 +201,8 @@ export function rendre(zone, id, soinCible = '') {
         </div>
       </section>
 
+      <div class="fi-garde">${bouton({ texte: 'Fiche de garde', icone: 'clipboard-list', variante: 'secondaire', href: `#/animaux/${encodeURIComponent(animal.id)}/garde` })}<span class="cp-doux">Repas, soins, habitudes et contacts, pour votre pet-sitter.</span></div>
+
       <section class="fi-chiffres" aria-label="Chiffres clés" data-chiffres>${chiffresHtml(animal)}</section>
 
       <div class="fi-onglets" data-onglets>

@@ -5,7 +5,8 @@
 // et les modules qui l'utilisent n'auront presque rien à changer.
 //
 // Forme des données :
-//   { version, exemplesAjoutes, profil: { prenom }, animaux: [], soins: [], pesees: [] }
+//   { version, exemplesAjoutes, profil: { prenom }, animaux: [], soins: [], pesees: [], fichesGarde: { [idAnimal]: { … } } }
+// `fichesGarde` est FACULTATIF aussi (un export plus ancien, sans ce champ, s'importe normalement).
 // `profil` est FACULTATIF : un export plus ancien, sans ce champ, s'importe normalement (le prénom reste vide).
 //
 // RÈGLE DE SÉCURITÉ : des données déjà enregistrées mais illisibles (JSON abîmé, mauvaise forme, version plus récente)
@@ -19,6 +20,10 @@ const VERSION = 1;
 const PRENOM_MAX = 40; // doit être déclaré AVANT charger() : elle s'exécute dès le chargement du fichier
 const COLLECTIONS = ['animaux', 'soins', 'pesees'];
 const CLE_SECOURS = `${CLE}.secours`;
+// Champs d'une fiche de garde (tous facultatifs, du texte) ; voir modules/animaux/garde.js
+export const CHAMPS_GARDE = ['aliment', 'quantite', 'horaires', 'interdits', 'soinsGarde', 'promenades', 'litiere', 'sommeil', 'jouets', 'peurs', 'regles',
+  'proprietaireNom', 'proprietaireTel', 'secoursNom', 'secoursTel', 'vetoNom', 'vetoTel', 'infos'];
+const GARDE_MAX = 2000; // caractères par champ
 
 // Non nul quand les données enregistrées n'ont pas pu être lues : { raison, brut, cleSecours }
 let probleme = null;
@@ -31,8 +36,21 @@ function profilValide(p) {
   return { prenom };
 }
 
+/** Fiches de garde lues dans un fichier : { idAnimal: { champ: texte } }, seuls les champs connus et non vides sont gardés. */
+function fichesValides(f) {
+  const sortie = {};
+  if (!f || typeof f !== 'object' || Array.isArray(f)) return sortie;
+  for (const [id, fiche] of Object.entries(f)) {
+    if (!fiche || typeof fiche !== 'object') continue;
+    const propre = {};
+    for (const c of CHAMPS_GARDE) if (typeof fiche[c] === 'string' && fiche[c].trim()) propre[c] = fiche[c].trim().slice(0, GARDE_MAX);
+    if (Object.keys(propre).length) sortie[id] = propre;
+  }
+  return sortie;
+}
+
 function vide() {
-  return { version: VERSION, exemplesAjoutes: false, profil: profilValide(), animaux: [], soins: [], pesees: [] };
+  return { version: VERSION, exemplesAjoutes: false, profil: profilValide(), animaux: [], soins: [], pesees: [], fichesGarde: {} };
 }
 
 function normaliser(obj) {
@@ -40,6 +58,8 @@ function normaliser(obj) {
   for (const c of COLLECTIONS) base[c] = Array.isArray(obj?.[c]) ? obj[c] : [];
   base.exemplesAjoutes = Boolean(obj?.exemplesAjoutes);
   base.profil = profilValide(obj?.profil);
+  base.fichesGarde = fichesValides(obj?.fichesGarde);
+  for (const id of Object.keys(base.fichesGarde)) if (!base.animaux.some((x) => x?.id === id)) delete base.fichesGarde[id]; // fiche d'un animal absent du fichier : ignorée
   return base;
 }
 
@@ -49,6 +69,7 @@ function diagnostiquer(brut) {
   try { obj = JSON.parse(brut); } catch { return 'illisible'; }
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return 'invalide';
   if (COLLECTIONS.some((c) => c in obj && !Array.isArray(obj[c]))) return 'invalide';
+  if ('fichesGarde' in obj && (!obj.fichesGarde || typeof obj.fichesGarde !== 'object' || Array.isArray(obj.fichesGarde))) return 'invalide';
   if (typeof obj.version === 'number' && obj.version > VERSION) return 'recente'; // une version plus récente de l'appli l'a écrit
   return null;
 }
@@ -126,6 +147,7 @@ export function supprimer(collection, id) {
   if (collection === 'animaux') {
     donnees.soins = donnees.soins.filter((s) => s.animalId !== id);
     donnees.pesees = donnees.pesees.filter((p) => p.animalId !== id);
+    delete donnees.fichesGarde[id];
     window.dispatchEvent(new CustomEvent('animal-supprime', { detail: { id } })); // ses documents (js/documents-db.js) partent aussi
   }
   sauver();
@@ -142,6 +164,23 @@ export function modifierProfil(changements) {
   donnees.profil = profilValide({ ...donnees.profil, ...changements });
   sauver();
   return lireProfil();
+}
+
+// ----- Fiche de garde (pet-sitters) : une par animal, tous les champs facultatifs -----
+
+/** La fiche d'un animal : tous les champs, vides s'ils ne sont pas remplis. */
+export function lireFicheGarde(animalId) {
+  const fiche = {};
+  for (const c of CHAMPS_GARDE) fiche[c] = donnees.fichesGarde[animalId]?.[c] ?? '';
+  return fiche;
+}
+
+/** Enregistre la fiche (remplace l'ancienne). Une fiche entièrement vide est supprimée. */
+export function enregistrerFicheGarde(animalId, champs) {
+  const propre = fichesValides({ [animalId]: champs })[animalId];
+  if (propre) donnees.fichesGarde[animalId] = propre; else delete donnees.fichesGarde[animalId];
+  sauver();
+  return lireFicheGarde(animalId);
 }
 
 // ----- Drapeau "les animaux d'exemple ont déjà été ajoutés" -----
