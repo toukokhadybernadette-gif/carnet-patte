@@ -68,15 +68,16 @@ export async function ouvrirEdge({ sortie, balise, port }) {
         if (b.scrollWidth > b.clientWidth + 1 || t.left < br.left - 1 || t.right > br.right + 1 || t.top < br.top - 1 || t.bottom > br.bottom + 1) out.push('texte de bouton qui déborde : « ' + etiquette(b) + ' »');
       }
       const textes = [...racine.querySelectorAll('*')].filter((e) => visible(e) && !defile(e) && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && !e.closest('svg, [hidden], .cp-sr, .cp-btn'));
-      const rect = (e) => { if (getComputedStyle(e).overflow !== 'visible') return e.getBoundingClientRect(); const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect(); };
+      // Un texte qui passe à la ligne occupe plusieurs rectangles : on compare rectangle par rectangle (pas leur boîte englobante)
+      const rects = (e) => { if (getComputedStyle(e).overflow !== 'visible') return [e.getBoundingClientRect()]; const r = document.createRange(); r.selectNodeContents(e); return [...r.getClientRects()].filter((x) => x.width > 0 && x.height > 0); };
       for (let i = 0; i < textes.length; i++) for (let j = i + 1; j < textes.length; j++) {
         const a = textes[i]; const b = textes[j];
         if (a.contains(b) || b.contains(a)) continue;
         const cadre = a.closest('li, .cp-carte, header, dialog, details, section');
         if (!cadre || !cadre.contains(b)) continue;
-        const ra = rect(a); const rb = rect(b);
-        const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left); const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
-        if (w > 2 && h > 2) out.push('textes qui se chevauchent : ' + nom(a) + ' / ' + nom(b));
+        const ra = rects(a); const rb = rects(b);
+        const chevauche = ra.some((x) => rb.some((y) => Math.min(x.right, y.right) - Math.max(x.left, y.left) > 2 && Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top) > 2));
+        if (chevauche) out.push('textes qui se chevauchent : ' + nom(a) + ' / ' + nom(b));
       }
       return [...new Set(out)].slice(0, 8);
     };

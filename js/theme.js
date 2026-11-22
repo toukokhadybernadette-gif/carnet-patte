@@ -7,6 +7,18 @@
 // Les variables calculées sont posées sur <html> (style en ligne) et gardées dans localStorage pour le prochain chargement.
 
 import { themeDepuisCouleur, variablesTheme, estHex } from './couleurs-theme.js';
+import { variablesThemeSombre } from './couleurs-sombre.js';
+
+// ----- Mode clair / sombre / automatique (suit l'appareil) -----
+// Le mode est posé sur <html data-mode="light|dark"> ; css/themes-sombre.css (12 thèmes) et css/sombre.css font le reste.
+export const MODES = [
+  { id: 'clair', nom: 'Clair' },
+  { id: 'sombre', nom: 'Sombre' },
+  { id: 'auto', nom: 'Automatique' },
+];
+export const MODE_DEFAUT = 'clair';
+export const CLE_MODE = 'carnetpatte.mode';
+export const CLE_PERSO_VARIABLES_SOMBRE = 'carnetpatte.themePersoVarsSombre'; // variables de la couleur personnalisée en mode sombre (lues par le script de index.html)
 
 export const THEMES = [
   { id: 'kaki', nom: 'Kaki' },
@@ -53,6 +65,47 @@ export function couleurPerso() {
 const NOMS_VARIABLES = Object.keys(variablesTheme({ h: 0, s: 0 }).vars);
 const retirerVariablesPerso = () => { for (const nom of NOMS_VARIABLES) document.documentElement.style.removeProperty(nom); };
 
+const requeteSombre = () => (typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null);
+const modeConnu = (id) => MODES.some((m) => m.id === id);
+
+/** Mode choisi et mémorisé sur l'appareil : 'clair', 'sombre' ou 'auto'. */
+export function modeMemorise() {
+  const id = lire(CLE_MODE);
+  return modeConnu(id) ? id : MODE_DEFAUT;
+}
+
+/** Le mode sombre est-il actif maintenant ? (choix « Sombre », ou « Automatique » avec un appareil en mode sombre) */
+export function sombreActif(mode = modeMemorise()) {
+  return mode === 'sombre' || (mode === 'auto' && Boolean(requeteSombre()?.matches));
+}
+
+/** Variables calculées de la couleur personnalisée pour le mode actuel (sans flou si le navigateur ne sait pas le faire). */
+function variablesPerso(couleur) {
+  const { theme } = themeDepuisCouleur(couleur);
+  const sansFlou = typeof CSS !== 'undefined' && !CSS.supports('backdrop-filter', 'blur(1px)') && !CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
+  const clair = variablesTheme(theme);
+  const sombre = variablesThemeSombre(theme);
+  return { clair: { ...clair.vars, ...(sansFlou ? clair.solide : {}) }, sombre: { ...sombre.vars, ...(sansFlou ? sombre.solide : {}) }, apercu: clair.apercu };
+}
+
+/**
+ * Applique le mode (clair, sombre ou automatique). Si le thème est « couleur personnalisée », ses variables sont recalculées pour le mode.
+ * `memoriser: false` pour un simple essai.
+ */
+export function appliquerMode(mode, { memoriser = true } = {}) {
+  const m = modeConnu(mode) ? mode : MODE_DEFAUT;
+  const sombre = sombreActif(m);
+  document.documentElement.dataset.mode = sombre ? 'dark' : 'light';
+  if (document.documentElement.dataset.theme === PERSO) {
+    const v = variablesPerso(couleurPerso());
+    retirerVariablesPerso();
+    for (const [nom, valeur] of Object.entries(sombre ? v.sombre : v.clair)) document.documentElement.style.setProperty(nom, valeur);
+  }
+  majBarreEtat();
+  if (memoriser) ecrire(CLE_MODE, m);
+  return m;
+}
+
 const majBarreEtat = () => {
   // la barre d'état de l'iPhone prend la couleur du dégradé du haut
   const fond = getComputedStyle(document.documentElement).getPropertyValue('--cp-degrade').trim();
@@ -75,16 +128,16 @@ export function appliquerTheme(id, { memoriser = true } = {}) {
  */
 export function appliquerPerso(couleur, { memoriser = true } = {}) {
   const choisie = (estHex(couleur) ? couleur : COULEUR_PERSO_DEFAUT).toUpperCase();
-  const { theme, utilisee, ajustee } = themeDepuisCouleur(choisie);
-  const { vars, solide, apercu } = variablesTheme(theme);
-  const sansFlou = typeof CSS !== 'undefined' && !CSS.supports('backdrop-filter', 'blur(1px)') && !CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
-  const toutes = { ...vars, ...(sansFlou ? solide : {}) };
+  const { utilisee, ajustee } = themeDepuisCouleur(choisie);
+  const v = variablesPerso(choisie);
+  const toutes = sombreActif() ? v.sombre : v.clair;
   retirerVariablesPerso();
   for (const [nom, valeur] of Object.entries(toutes)) document.documentElement.style.setProperty(nom, valeur);
   document.documentElement.dataset.theme = PERSO;
   majBarreEtat();
-  if (memoriser) { ecrire(CLE_THEME, PERSO); ecrire(CLE_PERSO, choisie); ecrire(CLE_PERSO_VARIABLES, JSON.stringify(toutes)); }
-  return { choisie, utilisee, ajustee, apercu, variables: toutes };
+  // Les deux jeux de variables sont gardés : le script de index.html choisit le bon avant l'affichage (clair ou sombre), sans flash
+  if (memoriser) { ecrire(CLE_THEME, PERSO); ecrire(CLE_PERSO, choisie); ecrire(CLE_PERSO_VARIABLES, JSON.stringify(v.clair)); ecrire(CLE_PERSO_VARIABLES_SOMBRE, JSON.stringify(v.sombre)); }
+  return { choisie, utilisee, ajustee, apercu: v.apercu, variables: toutes };
 }
 
 export function themeActuel() {
@@ -94,7 +147,10 @@ export function themeActuel() {
 
 export function initialiserTheme() {
   addEventListener('load', majBarreEtat, { once: true }); // les feuilles de style sont sûrement chargées à ce moment-là
+  document.documentElement.dataset.mode = sombreActif() ? 'dark' : 'light';
   const id = themeMemorise();
   if (id === PERSO) appliquerPerso(couleurPerso(), { memoriser: false });
   else appliquerTheme(id, { memoriser: false });
+  // « Automatique » : le mode suit l'appareil, y compris quand il change pendant que l'appli est ouverte (coucher du soleil, réglage de l'iPhone)
+  requeteSombre()?.addEventListener?.('change', () => { if (modeMemorise() === 'auto') appliquerMode('auto', { memoriser: false }); });
 }

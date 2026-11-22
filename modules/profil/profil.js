@@ -3,12 +3,12 @@
 
 import * as storage from '../../js/storage.js';
 import { icone } from '../../js/icons.js';
-import { badge, alerte, bouton, champ, avatar } from '../../js/composants.js';
+import { badge, alerte, bouton, champ, avatar, choix } from '../../js/composants.js';
 import { toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { NAV } from '../../js/navigation.js';
 import { echapper } from '../../js/utils.js';
-import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso } from '../../js/theme.js';
+import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPerso, MODES, modeMemorise, appliquerMode } from '../../js/theme.js';
 import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
 import { estInstallee } from '../../js/pwa.js';
 
@@ -78,6 +78,15 @@ export function rendre(zone) {
         </form>
       </section>
 
+      <section class="pg-section" aria-labelledby="pf-mode">
+        <div class="pg-section__tete"><h2 id="pf-mode">Apparence</h2></div>
+        <div class="cp-carte pf-mode">
+          ${choix({ nom: 'mode', legende: 'Clair, sombre ou automatique', valeur: modeMemorise(), classe: 'pf-mode__choix',
+            options: MODES.map((m) => ({ valeur: m.id, texte: m.nom, icone: { clair: 'sun', sombre: 'moon', auto: 'smartphone' }[m.id] })) })}
+          <p class="cp-doux" data-mode-info>Automatique suit le réglage de votre iPhone (clair le jour, sombre le soir). Fonctionne avec toutes les couleurs ci-dessous.</p>
+        </div>
+      </section>
+
       <section class="pg-section" aria-labelledby="pf-theme">
         <div class="pg-section__tete"><h2 id="pf-theme">Couleur de l'appli</h2></div>
         <div class="cp-carte pf-themes">
@@ -118,6 +127,13 @@ export function rendre(zone) {
 
       ${ligneBientot()}
     </div>`;
+
+  // Apparence : changement immédiat, gardé sur l'appareil
+  zone.querySelector('.pf-mode').addEventListener('change', (e) => {
+    if (e.target.name !== 'mode') return;
+    appliquerMode(e.target.value);
+    toast(`Apparence « ${MODES.find((m) => m.id === e.target.value)?.nom ?? ''} » appliquée`);
+  });
 
   // Couleur de l'appli : aperçu immédiat, puis mémorisé sur l'appareil
   zone.querySelector('[data-themes]').addEventListener('change', (e) => {

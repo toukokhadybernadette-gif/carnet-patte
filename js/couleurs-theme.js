@@ -34,7 +34,7 @@ export function versHsl([r, g, b]) {
 }
 
 /** Le plus clair des `l` (en descendant de `depart`) qui donne au moins `mini`:1 contre `contre`. */
-const assez = (h, s, depart, contre, mini) => { for (let l = depart; l > 5; l -= 0.5) if (contraste(hsl(h, s, l), contre) >= mini) return l; return 5; };
+export const assez = (h, s, depart, contre, mini) => { for (let l = depart; l > 5; l -= 0.5) if (contraste(hsl(h, s, l), contre) >= mini) return l; return 5; };
 
 /**
  * Thème décrit par { h, s } (+ `fixe` pour garder des valeurs exactes, + `l` : clarté maximale souhaitée du bouton, pour une couleur choisie).

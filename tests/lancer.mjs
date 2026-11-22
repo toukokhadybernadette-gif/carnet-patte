@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme] [sombre]
 //   « carte-reel » appelle les VRAIS serveurs OpenStreetMap : il n'est jamais lancé par la suite automatique ni par --rapide, seulement à la main (node tests/lancer.mjs carte-reel)
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
@@ -39,6 +39,7 @@ const TESTS = {
   documents: 'test-documents.mjs',
   garde: 'test-garde.mjs',
   ferme: 'test-ferme.mjs',
+  sombre: 'test-sombre.mjs',
 };
 const MANUELS = new Set(['carte-reel', 'boutique-liens']); // jamais dans « tous les tests » (internet et serveurs publics requis)
 const AUTOMATIQUES = Object.keys(TESTS).filter((t) => !MANUELS.has(t));
@@ -46,6 +47,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
+  [/^css\/(sombre|themes-sombre)\.css$|^js\/couleurs-sombre\.js$/, ['sombre', 'refonte', 'couleurs', 'verre', 'etroit']],
   [/^modules\/ferme\//, ['ferme', '5e', '5f', 'finitions', 'etroit', 'retouches']],
   [/^js\/pdf\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],
   [/^js\/documents-db\.js$|^js\/sauvegarde\.js$|^js\/donnees\.js$|^modules\/animaux\/documents\.js$/, ['documents', 'migration', 'secours', 'etroit']],
