@@ -5,6 +5,7 @@ import { echapper, aujourdhui, formatDate } from '../../js/utils.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, choix, vide } from '../../js/composants.js';
+import { nomEntretien } from '../ferme/ferme.js';
 import { brancherCalendrier, boutonCalendrier, PHRASE_DATE } from './calendrier.js';
 import { TYPES_SOIN, classeType, infosType, statutRappel, ouvrirRappelFait, badgeSoin, erreurChamp, libellesSoin } from './commun.js';
 
@@ -18,6 +19,7 @@ export function formulaireSoin(animal, soin, apres) {
       ${choix({ nom: 'type', legende: 'Type de soin', valeur: typeInitial, classe: 'cp-choix--tuiles',
         options: TYPES_SOIN.map((t) => ({ valeur: t.id, texte: t.nom, icone: t.icone, classe: classeType(t.id) })) })}
       ${champ({ id: 'soin-titre', label: 'Nom du soin (facultatif)', valeur: s.titre ?? '', placeholder: 'Ex. : Rage, Frontline…', attrs: { name: 'titre', maxlength: 60, autocomplete: 'off' } })}
+      ${animal.groupe ? `<p class="sn-suggestions"><span class="cp-doux">Idée :</span>${bouton({ texte: nomEntretien(animal), variante: 'secondaire', taille: 's', icone: 'spray-can', attrs: { 'data-suggestion': nomEntretien(animal) } })}</p>` : ''}
       ${champ({ id: 'soin-date', label: 'Date du soin', type: 'date', valeur: s.date ?? '', requis: true, attrs: { name: 'date' } })}
       ${champ({ id: 'soin-notes', label: 'Note (facultatif)', type: 'textarea', valeur: s.notes ?? '', attrs: { name: 'notes', maxlength: 500, rows: 3 } })}
       <fieldset class="sn-rappel-champ">
@@ -38,6 +40,8 @@ export function formulaireSoin(animal, soin, apres) {
     const form = dlg.querySelector('form');
     dlg.querySelector('[data-annuler]').addEventListener('click', () => dlg.close());
     form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) erreurChamp(e.target, ''); });
+    // Groupe : « Nettoyage du poulailler » remplit le nom du soin et choisit « Autre soin »
+    form.querySelector('[data-suggestion]')?.addEventListener('click', (e) => { form.titre.value = e.currentTarget.dataset.suggestion; form.querySelector('input[name="type"][value="autre"]').checked = true; form.titre.focus(); });
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const f = new FormData(form);

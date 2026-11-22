@@ -47,11 +47,53 @@ export async function ouvrirEdge({ sortie, balise, port }) {
     log('axe', nom, ':', a.length ? `VIOLATIONS ${a.join(' | ')}` : '0 violation');
   };
 
+  // Contrôles de mise en page : rien ne déborde de l'écran, aucun bouton n'en recouvre un autre, aucun texte de bouton ne déborde, aucun texte n'en recouvre un autre
+  const OUTILS = `(() => {
+    const visible = (e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'; };
+    const defile = (e) => { for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === 'auto' || o === 'scroll') return true; } return false; };
+    const nom = (e) => (e.className && e.className.baseVal === undefined ? '.' + String(e.className).trim().split(/\s+/).slice(0, 2).join('.') : e.tagName.toLowerCase());
+    const etiquette = (e) => (e.innerText || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    window.__mep = (racine) => {
+      const out = [];
+      const L = innerWidth;
+      for (const e of racine.querySelectorAll('*')) { if (!visible(e) || defile(e) || e.closest('svg, .cp-sr, [hidden], .app-fond')) continue; const r = e.getBoundingClientRect(); if (r.right > L + 1 || r.left < -1) out.push('déborde de l écran : ' + nom(e)); }
+      const bs = [...racine.querySelectorAll('.cp-btn')].filter((e) => visible(e) && !e.closest('svg, .cp-sr, [hidden]'));
+      for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
+        const ra = bs[i].getBoundingClientRect(); const rb = bs[j].getBoundingClientRect();
+        const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left); const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+        if (w > 1 && h > 1) out.push('boutons qui se chevauchent : « ' + etiquette(bs[i]) + ' » / « ' + etiquette(bs[j]) + ' »');
+      }
+      for (const b of bs) {
+        const br = b.getBoundingClientRect(); const r = document.createRange(); r.selectNodeContents(b); const t = r.getBoundingClientRect();
+        if (b.scrollWidth > b.clientWidth + 1 || t.left < br.left - 1 || t.right > br.right + 1 || t.top < br.top - 1 || t.bottom > br.bottom + 1) out.push('texte de bouton qui déborde : « ' + etiquette(b) + ' »');
+      }
+      const textes = [...racine.querySelectorAll('*')].filter((e) => visible(e) && !defile(e) && [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && !e.closest('svg, [hidden], .cp-sr, .cp-btn'));
+      // Un texte qui passe à la ligne occupe plusieurs rectangles : on compare rectangle par rectangle (pas leur boîte englobante)
+      const rects = (e) => { if (getComputedStyle(e).overflow !== 'visible') return [e.getBoundingClientRect()]; const r = document.createRange(); r.selectNodeContents(e); return [...r.getClientRects()].filter((x) => x.width > 0 && x.height > 0); };
+      for (let i = 0; i < textes.length; i++) for (let j = i + 1; j < textes.length; j++) {
+        const a = textes[i]; const b = textes[j];
+        if (a.contains(b) || b.contains(a)) continue;
+        const cadre = a.closest('li, .cp-carte, header, dialog, details, section');
+        if (!cadre || !cadre.contains(b)) continue;
+        const ra = rects(a); const rb = rects(b);
+        const chevauche = ra.some((x) => rb.some((y) => Math.min(x.right, y.right) - Math.max(x.left, y.left) > 2 && Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top) > 2));
+        if (chevauche) out.push('textes qui se chevauchent : ' + nom(a) + ' / ' + nom(b));
+      }
+      return [...new Set(out)].slice(0, 8);
+    };
+  })()`;
+  const taille = (w, h) => send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 600 });
+  const controler = async (nomControle, sel = '#contenu') => {
+    await ev(OUTILS);
+    const r = await ev(`window.__mep(document.querySelector(${JSON.stringify(sel)}))`);
+    verifier(r.length === 0, `${nomControle} : aucun débordement, aucun chevauchement${r.length ? ' → ' + r.join(' | ') : ''}`);
+  };
+
   const fin = (net) => {
     log('export -> effacer -> import -> export identique :', net);
     log('ERREURS CONSOLE :', erreurs.length ? erreurs : 'aucune');
     log('VÉRIFICATIONS EN ÉCHEC :', echecs);
     ws.close(); proc.kill(); process.exit(0);
   };
-  return { send, ev, log, verifier, texte, ecran, donnees, aller, importer, axe, erreurs, fin, naviguer: async (u) => { await send('Page.navigate', { url: u }); await dort(1800); } };
+  return { send, ev, log, verifier, texte, ecran, donnees, aller, importer, axe, erreurs, fin, taille, controler, naviguer: async (u) => { await send('Page.navigate', { url: u }); await dort(1800); } };
 }

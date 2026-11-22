@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hsl, hex, controle, variablesTheme, themeDepuisCouleur } from '../js/couleurs-theme.js';
+import { URGENCE_SOMBRE, variablesThemeSombre, controleSombre, controleUrgenceSombre } from '../js/couleurs-sombre.js';
 
 export { palette, controle, contraste } from '../js/couleurs-theme.js';
 
@@ -37,6 +38,16 @@ function bloc(t) {
   const sans = `@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\n  ${selSans} {\n${Object.entries(solide).map(([k, v]) => `    ${k}: ${v};`).join('\n')}\n  }\n}`;
   const pastille = `.pf-theme--${t.id} { --pastille: ${apercu.pastille}; --pf-degrade: ${apercu.degrade}; --pf-fond: ${apercu.fond}; } /* aperçu du thème dans Profil */`;
   return `/* ----- ${t.nom} ----- */\n${sel} {\n${lignes}\n}\n${sans}\n${pastille}\n`;
+}
+
+/** Bloc du mode sombre d'un thème (css/themes-sombre.css) : mêmes variables, posées quand <html data-mode="dark">. */
+function blocSombre(t) {
+  const { vars, solide, apercu } = variablesThemeSombre(t);
+  const lignes = Object.entries(vars).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  const sel = t.id === 'kaki' ? ':root[data-mode="dark"], :root[data-mode="dark"][data-theme="kaki"]' : `:root[data-mode="dark"][data-theme="${t.id}"]`;
+  const sans = `@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {\n  ${sel} {\n${Object.entries(solide).map(([k, v]) => `    ${k}: ${v};`).join('\n')}\n  }\n}`;
+  const pastille = `:root[data-mode="dark"] .pf-theme--${t.id} { --pastille: ${apercu.pastille}; --pf-degrade: ${apercu.degrade}; --pf-fond: ${apercu.fond}; } /* aperçu du thème dans Profil, en sombre */`;
+  return `/* ----- ${t.nom} (sombre) ----- */\n${sel} {\n${lignes}\n}\n${sans}\n${pastille}\n`;
 }
 
 // ----- Programme principal -----
@@ -73,6 +84,40 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
   }
   console.log(`Couleur perso ${n} contrôles sur ${36 * 5 * 7} couleurs de départ · la plus juste : « ${pireP.nom} » ${pireP.ratio.toFixed(2)}:1 (départ ${pireP.choisie})`);
+  // ----- Mode sombre : css/themes-sombre.css -----
+  let sombre = `/* ===== Thèmes de couleur, MODE SOMBRE : FICHIER GÉNÉRÉ — ne pas modifier à la main =====
+   Source : outils/generer-themes.mjs (js/couleurs-sombre.js). Posé quand js/theme.js met <html data-mode="dark"> (choix Sombre, ou Automatique avec un iPhone en mode sombre).
+   Mêmes variables que css/themes.css ; les couleurs d'urgence, de types de soin et d'animaux ont leurs versions sombres (identiques dans tous les thèmes).
+   La couleur personnalisée est calculée dans le navigateur avec les mêmes formules.
+   Contraste texte/fond mesuré à la génération : au moins 4,5:1 pour chaque paire importante de chaque thème. */
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+${Object.entries(URGENCE_SOMBRE).map(([k, v]) => `  ${k}: ${v};`).join('\n')}
+}
+
+`;
+  for (const r of controleUrgenceSombre()) if (r.ratio < r.mini) { console.log(`   ÉCHEC ${r.nom} : ${r.ratio.toFixed(2)}:1`); echecs++; }
+  for (const t of THEMES) {
+    sombre += `${blocSombre(t)}\n`;
+    const r = controleSombre(t);
+    const mauvais = r.filter((x) => x.ratio < x.mini);
+    const pire = r.reduce((m, x) => (x.ratio / x.mini < m.ratio / m.mini ? x : m));
+    console.log(`${t.nom.padEnd(12)} sombre : ${r.length} paires, ${mauvais.length} sous le seuil · la plus juste : « ${pire.nom} » ${pire.ratio.toFixed(2)}:1`);
+    for (const m of mauvais) { console.log(`   ÉCHEC ${m.nom} : ${m.ratio.toFixed(2)}:1 (minimum ${m.mini}:1)`); echecs++; }
+  }
+  let nS = 0; let pireS = { ratio: 99, mini: 1 };
+  for (let h = 0; h < 360; h += 10) for (const sat of [0, 20, 50, 80, 100]) for (const l of [3, 15, 30, 50, 70, 90, 98]) {
+    const choisie = hex(hsl(h, sat, l));
+    const { theme } = themeDepuisCouleur(choisie);
+    for (const x of controleSombre(theme)) {
+      nS++;
+      if (x.ratio / x.mini < pireS.ratio / pireS.mini) pireS = { ...x, choisie };
+      if (x.ratio < x.mini) { echecs++; if (echecs < 15) console.log(`   ÉCHEC couleur personnalisée sombre ${choisie} : ${x.nom} ${x.ratio.toFixed(2)}:1`); }
+    }
+  }
+  console.log(`Couleur perso sombre ${nS} contrôles · la plus juste : « ${pireS.nom} » ${pireS.ratio.toFixed(2)}:1 (départ ${pireS.choisie})`);
+  fs.writeFileSync(path.join(ICI, '..', 'css', 'themes-sombre.css'), sombre.trimEnd() + '\n');
   fs.writeFileSync(path.join(ICI, '..', 'css', 'themes.css'), css.trimEnd() + '\n');
   if (echecs) { console.error(`\n${echecs} paire(s) sous le seuil.`); process.exit(1); }
   console.log('\ncss/themes.css écrit.');

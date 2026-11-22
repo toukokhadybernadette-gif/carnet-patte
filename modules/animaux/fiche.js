@@ -11,7 +11,10 @@ import { calculerRappels } from './rappels.js';
 import { formulaireAnimal, choisirCouleur } from './animaux.js';
 import * as soins from './soins.js';
 import * as pesees from './pesees.js';
+import * as documents from './documents.js';
+import { listerDocuments } from '../../js/documents-db.js';
 import { blocPourAnimal } from '../boutique/blocs.js';
+import { estGroupe, pondeuse, libelleEffectif, effectifDe, statsPonte, etatStock, texteJours, rendrePonte, rendreAlimentation, formulaireGroupe } from '../ferme/ferme.js';
 
 // Onglet affiché : mémorisé pendant la visite, pour ne pas revenir à « Santé » après une modification
 let memoire = { id: null, onglet: 'sante' };
@@ -21,6 +24,12 @@ const ONGLETS = [
   { id: 'historique', nom: 'Historique', icone: 'calendar' },
   { id: 'documents', nom: 'Documents', icone: 'image' },
 ];
+// Un groupe (basse-cour) n'a pas de pesées : il a, selon l'espèce, un suivi de ponte, et toujours un stock de nourriture
+const ONGLET_PONTE = { id: 'ponte', nom: 'Ponte', icone: 'trending-up' };
+const ONGLET_ALIMENTATION = { id: 'alimentation', nom: 'Repas', icone: 'wheat' }; // « Repas » : assez court pour tenir avec les autres onglets
+const ongletsPour = (animal) => !estGroupe(animal) ? ONGLETS
+  : [ONGLETS[0], ...(pondeuse(animal) ? [ONGLET_PONTE] : []), ONGLET_ALIMENTATION, ONGLETS[2], ONGLETS[3]];
+const num = (n, d = 1) => n.toLocaleString('fr-FR', { maximumFractionDigits: d });
 
 const PAS_HISTORIQUE = 30; // nombre d'événements affichés à la fois
 const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
@@ -55,7 +64,39 @@ function carteChiffre({ libelle, icone: nomIcone, valeur, sous, videTexte, ton =
     </div>`;
 }
 
+/** Chiffres d'un groupe : effectif, ponte (ou nourriture), prochain rappel. */
+function chiffresGroupe(animal) {
+  const n = effectifDe(animal);
+  const cEffectif = carteChiffre({ libelle: 'Effectif', icone: 'users', valeur: String(n), sous: libelleEffectif(animal) });
+  let cSuite;
+  if (pondeuse(animal)) {
+    const s = statsPonte(animal);
+    cSuite = carteChiffre({ libelle: 'Ponte (30 jours)', icone: 'trending-up', valeur: s.moyenne === null ? '' : `${num(s.moyenne)} œuf${s.moyenne >= 2 ? 's' : ''}/jour`,
+      sous: s.aujourdhui === null ? '' : `Aujourd'hui : ${s.aujourdhui}`, videTexte: 'Aucune saisie', aide: "Saisissez les œufs dans l'onglet Ponte." });
+  } else {
+    const stocks = storage.lister('stocks').filter((x) => x.animalId === animal.id).map((x) => ({ x, e: etatStock(x) })).sort((a, b) => (a.e.jours ?? 1e9) - (b.e.jours ?? 1e9));
+    const premier = stocks[0];
+    cSuite = carteChiffre({ libelle: 'Nourriture', icone: 'wheat', valeur: premier ? `${num(premier.e.restant)} kg` : '', sous: premier ? texteJours(premier.e) : '', ton: premier?.e.alerte ? 'retard' : '',
+      videTexte: 'Aucun stock', aide: "Ajoutez-en un dans l'onglet Alimentation." });
+  }
+  return cEffectif + cSuite + carteRappel(animal);
+}
+
+/** Rappel le plus urgent ; « Prochain » seulement s'il n'est pas en retard. */
+function carteRappel(animal) {
+  const prochain = calculerRappels().find((r) => r.animal.id === animal.id);
+  const enRetard = prochain?.statut.classe === 'retard';
+  return carteChiffre({
+    libelle: enRetard ? 'Rappel le plus urgent' : 'Prochain rappel', icone: enRetard ? 'bell-ring' : 'bell',
+    valeur: prochain ? prochain.statut.texte : '',
+    sous: prochain ? `${nomCourtSoin(prochain.soin)} · ${formatDate(prochain.soin.rappel)}` : '',
+    ton: prochain ? (prochain.statut.classe === 'retard' ? 'retard' : prochain.statut.classe === 'semaine' ? 'semaine' : '') : '',
+    videTexte: 'Aucun rappel prévu', aide: 'Programmez-en un depuis un soin.',
+  });
+}
+
 function chiffresHtml(animal) {
+  if (estGroupe(animal)) return chiffresGroupe(animal);
   // Âge
   const ageTexte = animal.naissance ? age(animal.naissance) : '';
   const cAge = carteChiffre({
@@ -81,17 +122,7 @@ function chiffresHtml(animal) {
     videTexte: 'Aucune pesée', aide: "Ajoutez-en une dans l'onglet Poids.",
   });
 
-  // Rappel le plus urgent (calculerRappels trie du plus en retard au plus lointain) ; « Prochain » seulement s'il n'est pas en retard
-  const prochain = calculerRappels().find((r) => r.animal.id === animal.id);
-  const enRetard = prochain?.statut.classe === 'retard';
-  const cRappel = carteChiffre({
-    libelle: enRetard ? 'Rappel le plus urgent' : 'Prochain rappel', icone: enRetard ? 'bell-ring' : 'bell',
-    valeur: prochain ? prochain.statut.texte : '',
-    sous: prochain ? `${nomCourtSoin(prochain.soin)} · ${formatDate(prochain.soin.rappel)}` : '',
-    ton: prochain ? (prochain.statut.classe === 'retard' ? 'retard' : prochain.statut.classe === 'semaine' ? 'semaine' : '') : '',
-    videTexte: 'Aucun rappel prévu', aide: 'Programmez-en un depuis un soin.',
-  });
-  return cAge + cPoids + cRappel;
+  return cAge + cPoids + carteRappel(animal);
 }
 
 // ----- Historique (lecture seule) -----
@@ -175,10 +206,11 @@ export function rendre(zone, id, soinCible = '') {
     return;
   }
 
+  const onglets = ongletsPour(animal);
   if (memoire.id !== animal.id) memoire = { id: animal.id, onglet: 'sante' };
-  if (soinCible) memoire.onglet = 'sante';
+  if (soinCible || !onglets.some((o) => o.id === memoire.onglet)) memoire.onglet = 'sante';
 
-  const details = [nomEspece(animal), animal.race].filter(Boolean).map(echapper).join(' · ');
+  const details = (estGroupe(animal) ? [`Groupe · ${libelleEffectif(animal)}`] : [nomEspece(animal), animal.race]).filter(Boolean).map(echapper).join(' · ');
   const idOnglet = (o) => `fi-onglet-${o}`;
   const idPanneau = (o) => `fi-panneau-${o}`;
 
@@ -191,7 +223,7 @@ export function rendre(zone, id, soinCible = '') {
         <div class="fi-entete__texte">
           <h1 style="--mot-long: ${motLong(animal.nom)}">${echapper(animal.nom)}</h1>
           <p class="fi-entete__espece">${details}</p>
-          <p class="fi-entete__naissance">${animal.naissance ? `Né(e) le ${formatDate(animal.naissance)} · ${age(animal.naissance)}` : 'Date de naissance inconnue'}</p>
+          <p class="fi-entete__naissance">${estGroupe(animal) ? 'Suivi de groupe : soins, rappels, ponte et nourriture' : animal.naissance ? `Né(e) le ${formatDate(animal.naissance)} · ${age(animal.naissance)}` : 'Date de naissance inconnue'}</p>
         </div>
         <div class="fi-entete__actions">
           ${bouton({ texte: 'Modifier', variante: 'secondaire', icone: 'pencil', attrs: { 'data-act': 'modifier' } })}
@@ -199,25 +231,26 @@ export function rendre(zone, id, soinCible = '') {
         </div>
       </section>
 
+      ${estGroupe(animal) ? '' : `<div class="fi-garde">${bouton({ texte: 'Fiche de garde', icone: 'clipboard-list', variante: 'secondaire', href: `#/animaux/${encodeURIComponent(animal.id)}/garde` })}<span class="cp-doux">Repas, soins, habitudes et contacts, pour votre pet-sitter.</span></div>`}
+
       <section class="fi-chiffres" aria-label="Chiffres clés" data-chiffres>${chiffresHtml(animal)}</section>
 
       <div class="fi-onglets" data-onglets>
         <div class="cp-onglets" role="tablist" aria-label="Fiche de ${echapper(animal.nom)}">
-          ${ONGLETS.map((o) => `
+          ${onglets.map((o) => `
             <button type="button" class="cp-onglet" role="tab" id="${idOnglet(o.id)}" aria-controls="${idPanneau(o.id)}"
               aria-selected="${o.id === memoire.onglet}" data-onglet="${o.id}">${icone(o.icone, { taille: 18 })}<span>${o.nom}</span></button>`).join('')}
         </div>
         <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('sante')}" aria-labelledby="${idOnglet('sante')}" tabindex="0"><div id="zone-soins"></div></div>
-        <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('poids')}" aria-labelledby="${idOnglet('poids')}" tabindex="0" hidden><div id="zone-pesees"></div></div>
+        ${estGroupe(animal) ? `
+        ${pondeuse(animal) ? `<div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('ponte')}" aria-labelledby="${idOnglet('ponte')}" tabindex="0" hidden><div id="zone-ponte"></div></div>` : ''}
+        <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('alimentation')}" aria-labelledby="${idOnglet('alimentation')}" tabindex="0" hidden><div id="zone-alimentation"></div></div>`
+          : `<div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('poids')}" aria-labelledby="${idOnglet('poids')}" tabindex="0" hidden><div id="zone-pesees"></div></div>`}
         <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('historique')}" aria-labelledby="${idOnglet('historique')}" tabindex="0" hidden>
           <section class="cp-carte fi-historique"><h2>Historique</h2><div data-historique></div></section>
         </div>
         <div class="cp-onglet-panneau" role="tabpanel" id="${idPanneau('documents')}" aria-labelledby="${idOnglet('documents')}" tabindex="0" hidden>
-          <section class="cp-carte">${vide({
-            niveau: 2, icone: 'image', titre: 'Documents',
-            texte: "Cette section n'est pas encore disponible.",
-            action: badge({ texte: 'Bientôt disponible', variante: 'bientot' }),
-          })}</section>
+          <div id="zone-documents"></div>
         </div>
       </div>
 
@@ -240,14 +273,20 @@ export function rendre(zone, id, soinCible = '') {
       toast("Ce soin n'existe plus dans la fiche de cet animal.", 'info');
     }
   }
-  pesees.rendre(zone.querySelector('#zone-pesees'), animal);
+  if (estGroupe(animal)) {
+    if (pondeuse(animal)) rendrePonte(zone.querySelector('#zone-ponte'), animal);
+    rendreAlimentation(zone.querySelector('#zone-alimentation'), animal);
+  } else {
+    pesees.rendre(zone.querySelector('#zone-pesees'), animal);
+  }
+  documents.rendre(zone.querySelector('#zone-documents'), animal);
 
   // Onglets
   const racineOnglets = zone.querySelector('[data-onglets]');
   activerOnglets(racineOnglets);
   racineOnglets.querySelector('[role="tablist"]').addEventListener('click', (e) => {
     const o = e.target.closest('[data-onglet]');
-    if (o) memoire.onglet = o.dataset.onglet;
+    if (o) { memoire.onglet = o.dataset.onglet; o.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }
   });
   racineOnglets.querySelector('[role="tablist"]').addEventListener('keydown', () => {
     // les flèches changent d'onglet : on relit celui qui est sélectionné une fois le changement fait
@@ -263,7 +302,7 @@ export function rendre(zone, id, soinCible = '') {
   };
   majDerivees();
   const observateur = new MutationObserver(majDerivees);
-  for (const z of ['#zone-soins', '#zone-pesees']) observateur.observe(zone.querySelector(z), { childList: true });
+  for (const z of ['#zone-soins', '#zone-pesees', '#zone-ponte', '#zone-alimentation']) { const el = zone.querySelector(z); if (el) observateur.observe(el, { childList: true }); }
   zoneHistorique.addEventListener('click', (e) => {
     if (!e.target.closest('[data-plus]')) return;
     limite += PAS_HISTORIQUE;
@@ -277,12 +316,15 @@ export function rendre(zone, id, soinCible = '') {
     if (declencheur.dataset.act === 'couleur') {
       choisirCouleur(animal, rafraichir);
     } else if (declencheur.dataset.act === 'modifier') {
-      formulaireAnimal(animal, rafraichir);
+      if (estGroupe(animal)) formulaireGroupe(animal, rafraichir); else formulaireAnimal(animal, rafraichir);
     } else if (declencheur.dataset.act === 'supprimer') {
       // Comportement inchangé : storage.supprimer retire l'animal ET ses soins et pesées. On le dit précisément.
       const nbSoins = soinsDe(animal).length;
       const nbPesees = peseesDe(animal).length;
-      const liees = [nbSoins && pluriel(nbSoins, 'soin'), nbPesees && pluriel(nbPesees, 'pesée')].filter(Boolean).join(' et ');
+      const nbOeufs = storage.lister('oeufs').filter((o) => o.animalId === animal.id).length;
+      const nbStocks = storage.lister('stocks').filter((o) => o.animalId === animal.id).length;
+      const nbDocs = await listerDocuments(animal.id).then((l) => l.length, () => 0);
+      const liees = [nbSoins && pluriel(nbSoins, 'soin'), nbPesees && pluriel(nbPesees, 'pesée'), nbDocs && pluriel(nbDocs, 'document'), nbOeufs && `${nbOeufs} saisie${nbOeufs > 1 ? 's' : ''} d'œufs`, nbStocks && pluriel(nbStocks, 'stock')].filter(Boolean).join(', ');
       const message = `Supprimer ${animal.nom} ? ${liees ? `Seront aussi supprimés : ${liees}.` : 'Aucun soin ni pesée ne lui est associé.'} Cette action est définitive.`;
       if (await confirmer(message)) {
         storage.supprimer('animaux', animal.id);

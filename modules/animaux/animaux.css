@@ -312,3 +312,89 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .ps-carte__poids { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-foret-texte); overflow-wrap: anywhere; }
 .ps-ligne-info { display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
 .ps-ligne-info .ic { flex: none; width: 14px; height: 14px; }
+
+/* ---------- Documents (onglet de la fiche) ---------- */
+.dc { display: grid; gap: var(--cp-espace-4); }
+.dc-espace { margin: 0; }
+.dc-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+.dc-carte { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--cp-espace-3); align-items: start; padding: var(--cp-espace-3); }
+.dc-vignette { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--cp-rayon-champ); overflow: hidden; background: var(--cp-surface-2); color: var(--cp-foret-texte); }
+.dc-vignette__img { width: 100%; height: 100%; object-fit: cover; }
+.dc-vignette__pdf { display: grid; justify-items: center; font-size: var(--cp-taille-xs); line-height: 1; gap: 2px; }
+.dc-carte__corps { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.dc-carte__titre { overflow-wrap: anywhere; }
+.dc-carte__meta { color: var(--cp-texte-doux); font-size: var(--cp-taille-s); }
+.dc-carte__actions { grid-column: 2; display: flex; align-items: center; gap: var(--cp-espace-2); }
+.dc-carte__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
+.dc-grande { display: block; max-width: 100%; max-height: 70dvh; margin-inline: auto; border-radius: var(--cp-rayon-champ); }
+.dc-form__actions { display: flex; gap: var(--cp-espace-3); justify-content: flex-end; flex-wrap: wrap; }
+.dn-taille { margin: 0; color: var(--cp-texte-doux); }
+
+/* ---------- Fiche de garde ---------- */
+.fi-garde { display: flex; align-items: center; gap: var(--cp-espace-3); flex-wrap: wrap; margin-block: var(--cp-espace-3); }
+.fi-garde .cp-doux { flex: 1 1 200px; min-width: 0; }
+.gd-form { display: grid; gap: var(--cp-espace-3); }
+.gd-section { padding: 0; }
+.gd-section__titre { display: flex; align-items: center; gap: var(--cp-espace-3); padding: var(--cp-espace-4); cursor: pointer; list-style: none; font-weight: 600; min-height: 48px; }
+.gd-section__titre::-webkit-details-marker { display: none; }
+.gd-section__icone { display: inline-flex; color: var(--cp-foret-texte); }
+.gd-section__nb { margin-left: auto; font-weight: 500; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.gd-section__fleche { display: inline-flex; transition: transform var(--cp-duree-rapide, .15s); }
+.gd-section[open] .gd-section__fleche { transform: rotate(180deg); }
+.gd-section__titre:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -2px; border-radius: var(--cp-rayon-carte); }
+.gd-section__corps { display: grid; gap: var(--cp-espace-4); padding: 0 var(--cp-espace-4) var(--cp-espace-4); }
+.gd-statut { margin: 0; }
+.gd-actions { display: flex; gap: var(--cp-espace-3); flex-wrap: wrap; }
+.gd-feuille { display: grid; gap: var(--cp-espace-4); padding: var(--cp-espace-5); }
+.gd-feuille__tete { display: flex; align-items: center; gap: var(--cp-espace-4); }
+.gd-feuille__id { min-width: 0; }
+.gd-feuille__id h2 { margin: 0; overflow-wrap: anywhere; }
+.gd-feuille__id p { margin: 2px 0 0; }
+.gd-vaccins { display: flex; align-items: flex-start; gap: var(--cp-espace-2); margin: 0; padding: var(--cp-espace-3); border-radius: var(--cp-rayon-champ); background: var(--cp-surface-2); }
+.gd-vaccins--retard { background: var(--cp-terre-pale); }
+.gd-bloc h3 { margin: 0 0 var(--cp-espace-2); font-size: var(--cp-taille-m); color: var(--cp-foret-texte); }
+.gd-liste { margin: 0; display: grid; gap: var(--cp-espace-3); padding: 0; list-style: none; }
+.gd-liste dt { font-size: var(--cp-taille-s); font-weight: 600; color: var(--cp-texte-doux); }
+.gd-liste dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.gd-bloc--poison { padding-top: var(--cp-espace-3); border-top: 1px solid var(--cp-bordure); }
+.gd-bloc--poison p { margin: 0 0 var(--cp-espace-2); }
+.gd-poison li { display: grid; justify-items: start; gap: 2px; }
+.gd-feuille__pied, .gd-vide { margin: 0; }
+
+/* ---------- Ferme / basse-cour ---------- */
+.al-entete__actions { display: flex; gap: var(--cp-espace-3); flex-wrap: wrap; }
+.fe { display: grid; gap: var(--cp-espace-4); }
+.fe-saisie { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-3); align-items: end; padding: var(--cp-espace-4); }
+.fe-saisie__actions { grid-column: 1 / -1; }
+.fe-moyenne { margin: 0; }
+.fe-graphique { padding: var(--cp-espace-4); overflow: hidden; }
+.fe-graphe { display: block; max-width: 100%; height: auto; }
+.fe-grille { stroke: var(--cp-bordure); stroke-width: 1; }
+.fe-axe { fill: var(--cp-texte-doux); font-size: 11px; font-family: var(--cp-police-texte); }
+.fe-barre { fill: var(--cp-foret); }
+.fe-vide { fill: var(--cp-bordure-forte, var(--cp-texte-doux)); }
+.fe-titre { margin: 0; font-size: var(--cp-taille-m); }
+.fe-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-2); }
+.fe-liste li { display: flex; align-items: center; justify-content: space-between; gap: var(--cp-espace-3); }
+.fe-stocks { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-3); }
+.fe-stock { display: grid; gap: var(--cp-espace-3); padding: var(--cp-espace-4); }
+.fe-stock--alerte { border-color: var(--cp-attention-bord, var(--cp-bordure)); }
+.fe-stock__corps { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.fe-stock__nom { overflow-wrap: anywhere; }
+.fe-stock__meta { color: var(--cp-texte-doux); font-size: var(--cp-taille-s); }
+.fe-stock__actions { display: flex; align-items: center; gap: var(--cp-espace-2); }
+.fe-stock__actions .cp-btn--secondaire.cp-btn--icone { background: transparent; border-color: transparent; color: var(--cp-texte-doux); }
+.fe-form__actions { display: flex; gap: var(--cp-espace-3); justify-content: flex-end; flex-wrap: wrap; }
+.fe-alerte { display: flex; text-decoration: none; color: inherit; margin-block: var(--cp-espace-3); }
+.sn-suggestions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-2); align-items: center; margin: 0; }
+
+
+/* Onglets de la fiche sur téléphone : de l'air entre les libellés ; si cinq onglets (groupe) ne tiennent pas, la rangée défile proprement */
+@media (max-width: 599px) {
+  .fi-onglets .cp-onglets { overflow-x: auto; gap: var(--cp-espace-1); scroll-snap-type: x proximity; }
+  .fi-onglets .cp-onglet { flex: 1 0 auto; min-width: max-content; padding-inline: var(--cp-espace-3); scroll-snap-align: center; }
+}
+
+/* Aperçu des thèmes dans Profil, en sombre : contour visible, case cochée visible, nom lisible */
+:root[data-mode="dark"] .pf-theme__carte { border-color: var(--cp-bordure-forte); }
+:root[data-mode="dark"] .pf-theme input:checked + .pf-theme__carte { border-color: var(--cp-texte); box-shadow: 0 0 0 2px var(--pastille), var(--cp-ombre-s); }

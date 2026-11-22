@@ -3,23 +3,26 @@
 
 import * as storage from '../../js/storage.js';
 import { creerIcs, telechargerIcs } from '../../js/ics.js';
-import { aujourdhui, formatDate } from '../../js/utils.js';
+import { aujourdhui, formatDate, ajouterJours } from '../../js/utils.js';
 import { toast } from '../../js/ui.js';
 import { bouton } from '../../js/composants.js';
 import { nomCourtSoin, titreSoin } from './commun.js';
 
 export const PHRASE_DATE = 'Si vous changez la date dans Carnet Patte, ajoutez à nouveau le rappel au calendrier.';
 
-/** « Vermifuge — Moka » */
-export const titreEvenement = (soin, animal) => `${nomCourtSoin(soin)} — ${animal.nom}`;
+const enRetard = (soin) => soin.rappel < aujourdhui();
+
+/** « Vermifuge — Moka », et « Vermifuge — Moka (en retard) » si le rappel est déjà passé. */
+export const titreEvenement = (soin, animal) => `${nomCourtSoin(soin)} — ${animal.nom}${enRetard(soin) ? ' (en retard)' : ''}`;
 
 /** Le rappel prêt pour le fichier : titre, date, et une note avec le nom du soin (jamais les notes privées du soin). */
 export function rappelPourCalendrier(soin, animal) {
   return {
     id: soin.id,
     titre: titreEvenement(soin, animal),
-    description: `Soin : ${titreSoin(soin)}\nAnimal : ${animal.nom}\nRappel prévu le ${formatDate(soin.rappel)}.\nCréé par Carnet Patte.`,
-    date: soin.rappel,
+    description: `Soin : ${titreSoin(soin)}\nAnimal : ${animal.nom}\nRappel prévu le ${formatDate(soin.rappel)}${enRetard(soin) ? ' (en retard)' : ''}.\nCréé par Carnet Patte.`,
+    // Un rappel déjà passé est placé DEMAIN : une alerte dans le passé ne sonnerait jamais
+    date: enRetard(soin) ? ajouterJours(aujourdhui(), 1) : soin.rappel,
   };
 }
 

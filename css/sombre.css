@@ -1,0 +1,51 @@
+/* ===== Mode sombre : couleurs écrites « en dur » ailleurs (blanc translucide, filets clairs…) =====
+   Les variables de couleur sombres viennent de css/themes-sombre.css (généré) ; ce fichier ne traite que ce qui n'est PAS une variable.
+   Chargé en dernier. Tout est sous :root[data-mode="dark"] : rien ne change en mode clair.
+   Le verre (flou + transparence) est gardé : les variables --cp-verre-* sont simplement sombres. */
+
+:root[data-mode="dark"] { background-color: var(--cp-fond); }
+
+/* Cartes de l'Accueil : verre sombre au lieu de blanc translucide */
+:root[data-mode="dark"] .ac-afaire,
+:root[data-mode="dark"] .ac-story,
+:root[data-mode="dark"] .ac-pastille { background: var(--cp-verre-fond-fort); border-color: var(--cp-verre-bordure); }
+@media (max-width: 599px) {
+  :root[data-mode="dark"] .cp-carte.cp-carte-animal { background: var(--cp-verre-fond-fort); }
+}
+
+/* Boutons secondaires et pastilles de filtre : reflet discret au lieu du filet blanc */
+:root[data-mode="dark"] .cp-btn--secondaire { background: rgba(255, 255, 255, .06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 2px 5px rgba(0, 0, 0, .3); }
+:root[data-mode="dark"] .cp-filtre:not([aria-pressed="true"]):not(:disabled),
+:root[data-mode="dark"] .rp-statuts .cp-choix__option span,
+:root[data-mode="dark"] .tx-tel { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 2px 5px rgba(0, 0, 0, .3); }
+:root[data-mode="dark"] .cp-btn--danger { background: #B0402B; color: #FFFFFF; border-color: #7D2A1B; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 3px 7px rgba(0, 0, 0, .35); }
+:root[data-mode="dark"] .cp-btn--danger:is(:hover, .is-survol):not(:disabled) { background: #9A3624; }
+:root[data-mode="dark"] .cp-btn--danger:active:not(:disabled) { background: #842D1D; }
+
+/* Fenêtres et menu : même verre, reflet sombre */
+:root[data-mode="dark"] .cp-modale,
+:root[data-mode="dark"] .app-menu { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 24px 60px rgba(0, 0, 0, .6); }
+
+/* Dégradé qui fond les boutons collés en bas d'un formulaire */
+:root[data-mode="dark"] .al-form__actions,
+:root[data-mode="dark"] .sn-form__actions,
+:root[data-mode="dark"] .rf-actions { background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--cp-carte) 28%); }
+
+/* Champs en erreur, flèche des listes déroulantes (dessinée en kaki sur fond clair) */
+:root[data-mode="dark"] .cp-input[aria-invalid="true"],
+:root[data-mode="dark"] .cp-select[aria-invalid="true"],
+:root[data-mode="dark"] .cp-textarea[aria-invalid="true"] { background: #3A211C; }
+:root[data-mode="dark"] .cp-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23D5DBB4' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+
+/* Filets colorés des alertes et des bandeaux */
+:root[data-mode="dark"] .cp-alerte--succes, :root[data-mode="dark"] .tx-bandeau--ok { border-color: #2F5A45; }
+:root[data-mode="dark"] .cp-alerte--info { border-color: var(--cp-bordure-forte); }
+:root[data-mode="dark"] .cp-alerte--attention, :root[data-mode="dark"] .tx-bandeau--prudence, :root[data-mode="dark"] .bq-mention { border-color: #6B5320; }
+:root[data-mode="dark"] .cp-alerte--erreur, :root[data-mode="dark"] .tx-bandeau--toxique { border-color: #6E3326; }
+
+/* Carte : le fond de carte (tuiles OpenStreetMap) reste clair et lisible ; seule la lumière est un peu adoucie pour ne pas éblouir */
+:root[data-mode="dark"] .leaflet-tile-pane { filter: brightness(.86) contrast(1.05); }
+:root[data-mode="dark"] .leaflet-container { background: #2A2F2B; }
+
+/* Photos et vignettes : un fin liseré pour qu'elles se détachent du fond sombre */
+:root[data-mode="dark"] .dc-vignette__img, :root[data-mode="dark"] .dc-grande { outline: 1px solid rgba(255, 255, 255, .12); }

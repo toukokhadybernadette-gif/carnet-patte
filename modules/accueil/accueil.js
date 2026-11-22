@@ -10,6 +10,7 @@ import { illustration } from '../../js/illustrations.js';
 import { rafraichir } from '../../js/router.js';
 import { conseilDuMois, PHRASE_VETERINAIRE } from '../../js/conseils.js';
 import { brancherCalendrier, boutonCalendrier } from '../animaux/calendrier.js';
+import { estGroupe, libelleEffectif, alerteStocksHtml } from '../ferme/ferme.js';
 import { calculerRappels } from '../animaux/rappels.js';
 import { formulaireAnimal } from '../animaux/animaux.js';
 import { infosEspece, nomEspece, infosType, classeType, badgeEcheance, nomCourtSoin, ouvrirRappelFait } from '../animaux/commun.js';
@@ -69,7 +70,7 @@ function slideAnimal(a, urgent, i, total) {
         ${image}
         <span class="ac-couv__voile" aria-hidden="true"></span>
         <span class="ac-couv__nom">${echapper(a.nom)}</span>
-        <span class="ac-couv__espece">${echapper(nomEspece(a))}</span>
+        <span class="ac-couv__espece">${echapper(estGroupe(a) ? `Groupe · ${libelleEffectif(a)}` : nomEspece(a))}</span>
       </a>
       ${blocAFaire(urgent)}
     </li>`;
@@ -132,6 +133,7 @@ export function rendre(zone) {
           ${rappels.length ? `<a class="pg-lien" href="#/animaux/rappels">Tout voir ${icone('chevron-right', { taille: 16 })}</a>` : ''}
         </div>
         ${blocRappels}
+        ${alerteStocksHtml()}
       </section>
 
       <section class="pg-section" aria-labelledby="ac-conseil">
