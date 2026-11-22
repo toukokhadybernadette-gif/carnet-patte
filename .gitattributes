@@ -1,0 +1,3 @@
+# Le fichier des en-têtes Cloudflare doit rester en fins de ligne LF, même sur Windows
+_headers text eol=lf
+sw.js text eol=lf

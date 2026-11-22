@@ -12,6 +12,7 @@ import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPers
 import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
 import { variablesThemeSombre } from '../../js/couleurs-sombre.js';
 import { estInstallee } from '../../js/pwa.js';
+import { estConfigure as comptesActifs } from '../../js/compte.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
   <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">
@@ -122,6 +123,7 @@ export function rendre(zone) {
         <ul class="cp-liste">
           ${ligne({ icone: 'users', titre: 'Communauté', texte: 'Échanger avec d\'autres passionnés.', href: '#/communaute', bientot: true })}
           ${ligne({ icone: 'briefcase-business', titre: 'Professionnels', texte: 'Outils pour éleveurs et professionnels.', href: '#/pro', bientot: true })}
+          ${comptesActifs() ? ligne({ icone: 'user', titre: 'Compte (essai)', texte: 'Connexion facultative par code reçu par e-mail.', href: '#/compte' }) : ''}
           ${ligne({ icone: 'info', titre: 'À propos', texte: 'Mentions légales, sources et licences.', href: '#/apropos' })}
           ${ligne({ icone: 'compass', titre: 'Autres modules à venir', texte: 'Basse-cour, perdus / trouvés, refuges.', href: '#/bientot' })}
         </ul>
