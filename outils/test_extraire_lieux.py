@@ -232,7 +232,7 @@ class BaseAdresseNationale(unittest.TestCase):
         source = open(chemin, encoding='utf-8').read()
         hotes = {re.match(r'https?://([^/\s\'")]+)', u).group(1) for u in re.findall(r'https?://[^\s\'")]+', source)}
         autorises = {'download.geofabrik.de', 'etalab-datasets.geo.data.gouv.fr', 'data.geopf.fr', 'adresse.data.gouv.fr', 'www.etalab.gouv.fr',
-                     'github.com', 'www.openstreetmap.org', 'api-adresse.data.gouv.fr'}
+                     'github.com', 'www.openstreetmap.org', 'api-adresse.data.gouv.fr', 'carnet-patte.pages.dev'}  # carnet-patte.pages.dev : notre propre site, dans l'agent (User-Agent)
         self.assertEqual(hotes - autorises, set())
         self.assertNotIn('api-adresse.data.gouv.fr/reverse', source)   # l'ancienne adresse (dépréciée) n'est jamais appelée
 

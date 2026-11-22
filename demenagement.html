@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#EEF3D3">
+  <meta name="robots" content="noindex">
+  <script>(function(){try{var L=localStorage,r=document.documentElement,m=L.getItem('carnetpatte.mode'),d=m==='sombre'||((m==='auto'||!m)&&matchMedia('(prefers-color-scheme: dark)').matches),t=L.getItem('carnetpatte.theme');r.dataset.mode=d?'dark':'light';if(t==='perso'){var v=JSON.parse(L.getItem(d?'carnetpatte.themePersoVarsSombre':'carnetpatte.themePersoVars'));for(var k in v)r.style.setProperty(k,v[k]);r.dataset.theme='perso'}else if(t&&/^[a-z-]+$/.test(t))r.dataset.theme=t}catch(e){}})()</script>
+  <title>Carnet Patte a déménagé</title>
+  <link rel="icon" href="assets/icons/pwa/icone-96.png">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/composants.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/themes-sombre.css">
+  <link rel="stylesheet" href="css/sombre.css">
+  <style>
+    body { margin: 0; background: var(--cp-degrade); background: linear-gradient(180deg, var(--cp-degrade), var(--cp-fond) 320px) no-repeat, var(--cp-fond); color: var(--cp-texte); font-family: var(--cp-police-texte); font-size: var(--cp-taille-m); line-height: var(--cp-interligne); min-height: 100dvh; }
+    main { max-width: 640px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); display: grid; gap: 20px; }
+    h1 { margin: 0; font-family: var(--cp-police-titre); font-size: var(--cp-taille-xxl); line-height: var(--cp-interligne-xxl); color: var(--cp-foret-texte); letter-spacing: var(--cp-lettrage-titre); }
+    h2 { margin: 0 0 8px; font-family: var(--cp-police-titre); font-size: var(--cp-taille-l); line-height: var(--cp-interligne-l); color: var(--cp-foret-texte); }
+    p { margin: 0 0 12px; }
+    .carte { background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: 24px; padding: 20px; box-shadow: var(--cp-ombre-s); }
+    .adresse { font-weight: 700; overflow-wrap: anywhere; color: var(--cp-foret-texte); }
+    ol { margin: 0; padding-left: 1.4em; display: grid; gap: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 14px 0 4px; }
+    .cp-btn { text-decoration: none; }
+    .etat { margin: 8px 0 0; color: var(--cp-texte-doux); }
+    .doux { color: var(--cp-texte-doux); font-size: var(--cp-taille-s); }
+    a { color: var(--cp-foret-texte); }
+    a.cp-btn--principal { color: var(--cp-texte-inverse); }
+  </style>
+</head>
+<body>
+  <main class="cp">
+    <header>
+      <h1>Carnet Patte a déménagé</h1>
+      <p>Le site a une nouvelle adresse : <span class="adresse" data-nouvelle></span></p>
+      <p class="doux">L'ancienne adresse reste ouverte encore un moment, puis fermera. Vos données ne se déplacent pas toutes seules : suivez les quatre étapes ci-dessous.</p>
+      <div class="actions"><a class="cp-btn cp-btn--principal" data-lien-nouvelle rel="noopener" href="https://carnet-patte.pages.dev/">Ouvrir la nouvelle adresse</a></div>
+    </header>
+
+    <section class="carte" aria-labelledby="t-donnees">
+      <h2 id="t-donnees">Récupérer vos données</h2>
+      <p>Vos animaux, soins, pesées, documents et fiches de garde sont enregistrés <strong>sur cet appareil, pour cette adresse</strong>. Rien n'est envoyé sur internet : il faut les exporter ici, puis les importer là-bas.</p>
+      <ol>
+        <li><strong>Exporter ici.</strong> Touchez « Télécharger ma sauvegarde » (ou, dans l'appli : Profil → Sauvegarde → Télécharger).
+          <div class="actions"><button type="button" class="cp-btn cp-btn--secondaire" id="exporter">Télécharger ma sauvegarde</button></div>
+          <p class="etat" id="etat" role="status">Calcul de la taille de votre sauvegarde…</p></li>
+        <li><strong>Ouvrir la nouvelle adresse</strong> dans Safari (bouton ci-dessus).</li>
+        <li><strong>Importer là-bas.</strong> Dans la nouvelle appli : Profil → Sauvegarde → « Choisir un fichier… », puis choisissez le fichier téléchargé (nommé <em>carnet-patte-AAAA-MM-JJ.json</em>, dans Fichiers → Téléchargements) et confirmez.</li>
+        <li><strong>Réinstaller l'appli.</strong> Dans Safari, sur la nouvelle adresse : Partager → « Sur l'écran d'accueil ». Une fois vos données retrouvées, vous pouvez supprimer l'ancienne icône.</li>
+      </ol>
+    </section>
+
+    <p class="doux">Vous utilisez Carnet Patte sur plusieurs appareils ? Faites ces étapes sur chacun : les données de l'un ne sont pas celles de l'autre. Aucune donnée n'est envoyée à l'éditeur du site.</p>
+    <noscript><p class="carte">Le bouton d'export a besoin de JavaScript. Vous pouvez aussi exporter depuis l'appli : Profil → Sauvegarde.</p></noscript>
+  </main>
+
+  <script type="module">
+    import { NOUVELLE_ADRESSE, NOUVEAU_NOM } from './js/adresse.js';
+    import * as storage from './js/storage.js';
+    import * as sauvegarde from './js/sauvegarde.js';
+    import { aujourdhui, formatTaille } from './js/utils.js';
+
+    document.querySelector('[data-nouvelle]').textContent = NOUVEAU_NOM;
+    document.querySelector('[data-lien-nouvelle]').href = NOUVELLE_ADRESSE;
+    const etat = document.getElementById('etat');
+    const bouton = document.getElementById('exporter');
+    const nb = storage.lister('animaux').length;
+    (async () => {
+      try {
+        const { octets, documents } = await sauvegarde.estimerSauvegarde();
+        etat.textContent = nb ? `Votre sauvegarde : ${nb} ${nb > 1 ? 'animaux' : 'animal'}${documents ? `, ${documents} document${documents > 1 ? 's' : ''}` : ''}, environ ${formatTaille(octets)}.` : "Aucun animal n'est enregistré ici : vous n'avez peut-être rien à récupérer sur cet appareil.";
+      } catch { etat.textContent = ''; }
+    })();
+    bouton.addEventListener('click', async () => {
+      bouton.disabled = true;
+      try {
+        const blob = new Blob([await sauvegarde.exporterTout()], { type: 'application/json' });
+        const lien = document.createElement('a');
+        lien.href = URL.createObjectURL(blob);
+        lien.download = `carnet-patte-${aujourdhui()}.json`;
+        document.body.append(lien);
+        lien.click();
+        lien.remove();
+        setTimeout(() => URL.revokeObjectURL(lien.href), 60000);
+        etat.textContent = `Sauvegarde téléchargée (${formatTaille(blob.size)}). Passez à l'étape 2.`;
+      } catch (e) {
+        etat.textContent = `La sauvegarde n'a pas pu être créée : ${e.message}`;
+      } finally { bouton.disabled = false; }
+    });
+  </script>
+</body>
+</html>

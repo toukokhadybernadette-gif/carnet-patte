@@ -23,13 +23,16 @@ import { afficherSecours } from './secours.js';
 import { mesurerEtAdapter } from './fond.js';
 import { initialiserTheme } from './theme.js';
 import { initialiserPwa } from './pwa.js';
+import { afficherBandeauDemenagement } from './adresse.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
+import { rendre as rendreApropos, rendreMentions } from '../modules/apropos/apropos.js';
 
 // ----- Thème de couleur (mémorisé sur l'appareil) -----
 initialiserTheme();
 
 // ----- Appli installable et hors ligne (service worker, bannière de mise à jour) -----
 initialiserPwa();
+afficherBandeauDemenagement(); // seulement sur l'ancienne adresse (GitHub Pages) : à retirer quand elle sera fermée
 
 // ----- Routes -----
 route('accueil', rendreAccueil);
@@ -42,6 +45,8 @@ route('profil', rendreProfil);
 route('toxique', rendreToxique);
 route('donnees', rendreDonnees);
 route('bientot', rendreBientot);
+route('apropos', rendreApropos);
+route('mentions', (zone) => rendreMentions(zone)); // la fonction a d'autres paramètres (tests) : on ne lui passe que la zone
 route('composants', rendreComposants); // page de référence du design, pas dans le menu
 
 // ----- Données enregistrées illisibles : on n'écrase RIEN, on explique et on propose de les exporter (js/secours.js) -----

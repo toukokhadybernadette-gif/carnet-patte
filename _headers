@@ -1,0 +1,16 @@
+# En-têtes ajoutés par Cloudflare Pages (format : https://developers.cloudflare.com/pages/configuration/headers/).
+# Sur GitHub Pages ce fichier est ignoré (sans effet).
+
+# Ces trois fichiers doivent toujours être relus sur le serveur : c'est ce qui évite une vieille version bloquée en cache
+/sw.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+# Pour toutes les pages
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), microphone=(), camera=()

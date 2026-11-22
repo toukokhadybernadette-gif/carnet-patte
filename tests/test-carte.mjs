@@ -156,7 +156,8 @@ verifier(/Base Adresse Nationale/.test(licence) && /Licence Ouverte 2\.0/.test(l
 const wfMensuel = fs.readFileSync(path.join(RACINE, '.github/workflows/lieux-mensuel.yml'), 'utf8');
 const wfPages = fs.readFileSync(path.join(RACINE, '.github/workflows/pages.yml'), 'utf8');
 verifier(/cron: '0 4 2 \* \*'/.test(wfMensuel) && /workflow_dispatch/.test(wfMensuel) && /gh pr create/.test(wfMensuel) && /pull-requests: write/.test(wfMensuel) && !/push[^\n]*origin main|--base main --head main/.test(wfMensuel), 'GitHub Action mensuelle : planifiée, lancement manuel possible, ouvre une Pull Request, ne pousse jamais sur main');
-verifier(/cp -r [^\n]*\bdonnees\b[^\n]* _site/.test(wfPages), 'le déploiement du site publie le dossier donnees/');
+const assembleur = fs.readFileSync(path.join(RACINE, 'outils/assembler-site.mjs'), 'utf8');
+verifier(/assembler-site\.mjs/.test(wfPages) && /DOSSIERS = \[[^\]]*'donnees'/.test(assembleur), 'le déploiement du site (GitHub et Cloudflare : outils/assembler-site.mjs) publie le dossier donnees/');
 const { spawnSync } = await import('node:child_process');
 const py = ['python', 'python3', 'py'].map((c) => spawnSync(c, [path.join(RACINE, 'outils/test_extraire_lieux.py')], { encoding: 'utf8' })).find((r) => !r.error);
 const pySansModule = py && /No module named/.test(py.stderr ?? '');

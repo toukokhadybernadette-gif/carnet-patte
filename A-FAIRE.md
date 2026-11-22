@@ -1,3 +1,15 @@
+# Déménagement vers Cloudflare Pages (carnet-patte.pages.dev)
+
+Marche à suivre complète : `DEPLOIEMENT-CLOUDFLARE.md`. Version d'avant : tag `avant-cloudflare`.
+
+## À faire par vous
+- Créer le projet Cloudflare Pages (étapes dans `DEPLOIEMENT-CLOUDFLARE.md`), puis tester l'adresse sur l'iPhone.
+- **Mentions légales** : remplir `js/mentions-config.js` (nom, SIRET, e-mail de contact ; le statut « Micro-entreprise » est déjà écrit). Tant qu'un champ est vide, la page affiche « [à compléter] ». **L'adresse postale n'est volontairement pas affichée** : ne la remplir que si vous décidez de la publier. Vérifier avec un comptable que l'hébergeur indiqué suffit pour ne pas publier votre adresse personnelle. Le numéro de téléphone de Cloudflare vient de sa documentation publique : à revérifier avant publication définitive.
+- **Fermer l'ancienne adresse GitHub Pages : SEULEMENT après votre OK.** D'ici là elle garde l'appli complète, avec un bandeau « Carnet Patte a déménagé » (`js/adresse.js`) et la page `demenagement.html`.
+
+## Ce qui dépend de l'adresse (vérifié)
+Manifeste et service worker : chemins relatifs, valables à la racine (`/`) comme dans un sous-dossier. Aucun lien absolu vers l'ancienne adresse dans le site (testé : ni `github.io` ni le nom du compte dans les fichiers publiés). L'agent de l'extraction mensuelle des lieux (`outils/extraire-lieux.py`) pointe vers la nouvelle adresse. L'adresse du dépôt GitHub contient encore le nom du compte : elle n'apparaît nulle part dans le site.
+
 # Module 4 « Boutique » : en cours (branche `boutique`, pas encore publié)
 
 Version d'avant : `main` (tag `avant-carte` = avant le module 3). Retour arrière après publication : `git revert -m 1 <commit de merge>` puis `git push origin main`.
