@@ -92,19 +92,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 @media (max-width: 599px) {
 .fi-entete { gap: var(--cp-espace-3); }
 }
-/* Chiffres clés */
-.fi-chiffres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--cp-carte); border: 1px solid var(--cp-bordure); border-radius: var(--cp-rayon-carte); box-shadow: var(--cp-ombre-s); overflow: hidden; }
-.fi-chiffres > .fi-chiffre, .rp-chiffres > .rp-chiffre { border: 0; border-radius: 0; box-shadow: none; padding: 14px 16px; gap: 2px; }
-.fi-chiffres > .fi-chiffre + .fi-chiffre, .rp-chiffres > .rp-chiffre + .rp-chiffre { border-left: 1px solid var(--cp-bordure); }
-.fi-chiffre__sous { font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux); }
-.fi-chiffre__vide { font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: var(--cp-taille-m); color: var(--cp-texte-doux); line-height: var(--cp-interligne-m); }
-.fi-chiffre .cp-stat__valeur { overflow-wrap: anywhere; }
-.fi-chiffre--retard .cp-stat__valeur { color: var(--cp-terre); }
-@media (max-width: 599px) {
-.fi-chiffres { grid-template-columns: 1fr 1fr; }
-.fi-chiffres > .fi-chiffre { padding: 10px 12px; }
-.fi-chiffres > .fi-chiffre:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--cp-bordure); }
-}
+/* Chiffres clés : petites bulles de verre séparées (css/bulles.css, js/composants.js : bulleInfo) */
 /* Onglets : barre défilante sur mobile, panneaux espacés */
 .fi-onglets { display: grid; gap: 0; }
 .fi-onglets .cp-onglets { margin-bottom: var(--cp-espace-2); }
@@ -398,3 +386,12 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 /* Aperçu des thèmes dans Profil, en sombre : contour visible, case cochée visible, nom lisible */
 :root[data-mode="dark"] .pf-theme__carte { border-color: var(--cp-bordure-forte); }
 :root[data-mode="dark"] .pf-theme input:checked + .pf-theme__carte { border-color: var(--cp-texte); box-shadow: 0 0 0 2px var(--pastille), var(--cp-ombre-s); }
+
+/* Onglets d'un groupe (5) sur téléphone : ils TIENNENT sur l'écran (libellés un peu plus compacts) ; si l'écran est vraiment trop étroit, la rangée défile
+   et un fondu à droite montre qu'il y a une suite (jamais un onglet coupé sans indication). */
+@media (max-width: 599px) {
+  .fi-onglets .cp-onglets { gap: 2px; }
+  .fi-onglets .cp-onglet { padding-inline: 6px; font-size: 12.5px; }
+  .fi-onglets .cp-onglets.a-suite { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+}
+

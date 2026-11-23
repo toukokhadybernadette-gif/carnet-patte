@@ -64,7 +64,7 @@ body { background: transparent; }
 /* ---------- Surfaces en verre ---------- */
 /* Une carte, sauf les lignes d'une liste et les chiffres d'une carte à colonnes (elles sont DANS un verre : pas de flou imbriqué) */
 .cp-carte:where(:not(.cp-stat, .sn-carte, .rp-carte, .ps-carte, .pg-bientot)),
-.cp-liste, .sn-liste, .rp-liste, .pg-stats, .fi-chiffres, .rp-chiffres, .cp-tableau-enveloppe {
+.cp-liste, .sn-liste, .rp-liste, .pg-stats, .rp-chiffres, .cp-tableau-enveloppe {
   background: var(--cp-verre-fond);
   -webkit-backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.6);
   backdrop-filter: blur(var(--cp-verre-flou)) saturate(1.6);

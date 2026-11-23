@@ -9,8 +9,11 @@
 // CE QU'IL NE FAIT JAMAIS
 //  - Toucher aux données des animaux : elles sont dans le localStorage de la page, que ce fichier ne peut ni lire ni écrire.
 //    Il ne met en cache que des fichiers de l'appli (GET, même site), jamais une réponse venue d'ailleurs.
-//  - Imposer une vieille version : une nouvelle version s'installe en attente, la page affiche « Nouvelle version disponible »
-//    et ne la prend qu'après un clic sur « Mettre à jour » (message SKIP_WAITING).
+//  - Imposer une vieille version : une nouvelle version prend la main tout de suite (skipWaiting + clients.claim), efface les anciens caches,
+//    et la page propose « Recharger » (js/pwa.js) sans jamais recharger toute seule.
+//  - Servir ou garder une réponse REDIRIGÉE : le navigateur refuse une navigation servie avec une réponse issue d'une redirection
+//    (ERR_FAILED, vu dans Chrome sur iPhone après une mise à jour : Cloudflare redirige /index.html vers / et /demenagement.html vers /demenagement).
+//    Toute réponse est donc recopiée « propre » (propre()) avant d'être gardée ou servie, et en cas de souci le réseau prend le relais.
 //
 // VERSION et FICHIERS sont remplacés à la publication par outils/preparer-sw.mjs (l'Action « Publier le site »).
 // Tel quel (VERSION = 'dev', pendant le développement avec Live Server), le service worker ne met RIEN en cache : on voit toujours les fichiers à jour.
@@ -26,18 +29,23 @@ const LIEUX_MAX = 40;
 const racine = new URL('./', self.registration.scope);
 const page = new URL('index.html', racine).href;
 
+/** Copie « propre » d'une réponse : sans trace de redirection (redirected = false), que le navigateur accepte pour une navigation. */
+async function propre(reponse) {
+  if (!reponse.redirected) return reponse;
+  return new Response(await reponse.blob(), { status: reponse.status, statusText: reponse.statusText, headers: reponse.headers });
+}
+
 self.addEventListener('install', (evenement) => {
-  if (MODE_DEV) { self.skipWaiting(); return; }
+  self.skipWaiting(); // la nouvelle version prend la main dès qu'elle est prête ; la page propose de recharger
+  if (MODE_DEV) return;
   evenement.waitUntil((async () => {
     const cache = await caches.open(CACHE_APP);
     // cache: 'reload' : on prend les fichiers sur le serveur, jamais dans le cache HTTP du navigateur (c'est ce qui bloquait de vieilles versions)
     await Promise.all(FICHIERS.map(async (f) => {
       const reponse = await fetch(new Request(new URL(f, racine), { cache: 'reload' }));
       if (!reponse.ok) throw new Error(`${f} : HTTP ${reponse.status}`); // un fichier manquant annule l'installation : jamais de version à moitié en cache
-      await cache.put(new URL(f, racine), reponse);
+      await cache.put(new URL(f, racine), await propre(reponse));
     }));
-    // Première installation : rien à remplacer, on prend la main tout de suite. Sinon on attend le clic sur « Mettre à jour ».
-    if (!self.registration.active) self.skipWaiting();
   })());
 });
 
@@ -80,19 +88,21 @@ self.addEventListener('fetch', (evenement) => {
   if (url.pathname.includes('/donnees/lieux/')) { evenement.respondWith(lieux(requete)); return; }
 
   evenement.respondWith((async () => {
-    const cache = await caches.open(CACHE_APP);
-    // La racine de l'appli (/) donne la page ; une autre page du site (demenagement.html, ou /demenagement sans « .html » comme sur Cloudflare Pages) donne SA page
     const navigation = requete.mode === 'navigate';
-    const chemin = url.pathname.replace(/\/$/, '');
-    let copie = await cache.match(navigation && chemin === racine.pathname.replace(/\/$/, '') ? page : requete, { ignoreSearch: true });
-    if (!copie && navigation && !/\.[a-z0-9]+$/i.test(chemin)) copie = await cache.match(new URL(`${chemin}.html`, url.origin), { ignoreSearch: true });
-    if (copie) return copie;
+    try {
+      const cache = await caches.open(CACHE_APP);
+      // La racine de l'appli (/) donne la page ; une autre page du site (demenagement.html, ou /demenagement sans « .html » comme sur Cloudflare Pages) donne SA page
+      const chemin = url.pathname.replace(/\/$/, '');
+      let copie = await cache.match(navigation && chemin === racine.pathname.replace(/\/$/, '') ? page : requete, { ignoreSearch: true });
+      if (!copie && navigation && !/\.[a-z0-9]+$/i.test(chemin)) copie = await cache.match(new URL(`${chemin}.html`, url.origin), { ignoreSearch: true });
+      if (copie) return await propre(copie); // jamais une réponse redirigée servie depuis le cache
+    } catch { /* cache illisible : on retombe sur le réseau */ }
     try {
       const reponse = await fetch(requete);
-      if (reponse.ok && reponse.type === 'basic') cache.put(requete, reponse.clone()); // un fichier de l'appli absent de la liste est gardé à son premier usage
+      if (reponse.ok && reponse.type === 'basic' && !reponse.redirected) caches.open(CACHE_APP).then((c) => c.put(requete, reponse.clone())).catch(() => {}); // un fichier de l'appli absent de la liste est gardé à son premier usage
       return reponse;
     } catch (e) {
-      if (requete.mode === 'navigate') return (await cache.match(page)) ?? Response.error();
+      if (navigation) { const secours = await caches.match(page).catch(() => null); return secours ? await propre(secours) : Response.error(); }
       throw e;
     }
   })());

@@ -1,11 +1,11 @@
 // Fiche d'un animal : en-tête, chiffres clés, et quatre onglets (Santé, Poids, Historique, Documents).
 
 import * as storage from '../../js/storage.js';
-import { echapper, age, formatDate, formatPoids, aujourdhui } from '../../js/utils.js';
+import { echapper, age, formatDate, formatDateCourte, formatDateNumerique, formatPoids, aujourdhui } from '../../js/utils.js';
 import { confirmer, toast } from '../../js/ui.js';
 import { rafraichir } from '../../js/router.js';
 import { icone } from '../../js/icons.js';
-import { bouton, badge, vide, activerOnglets, avatar, couleurAnimal } from '../../js/composants.js';
+import { bouton, badge, vide, activerOnglets, avatar, couleurAnimal, bulleInfo } from '../../js/composants.js';
 import { infosEspece, nomEspece, infosType, classeType, statutRappel, badgeEcheance, nomCourtSoin, titreSoin } from './commun.js';
 import { calculerRappels } from './rappels.js';
 import { formulaireAnimal, choisirCouleur } from './animaux.js';
@@ -52,16 +52,9 @@ const peseesDe = (animal) => storage.lister('pesees').filter((p) => p.animalId =
 
 // ----- Chiffres clés -----
 
+/** Une info clé de la fiche : une bulle de verre (voir bulleInfo dans js/composants.js). */
 function carteChiffre({ libelle, icone: nomIcone, valeur, sous, videTexte, ton = '', aide = '' }) {
-  return `
-    <div class="cp-carte cp-stat fi-chiffre${ton ? ` fi-chiffre--${ton}` : ''}" role="group" aria-label="${echapper(libelle)}">
-      <div class="cp-stat__tete"><span>${echapper(libelle)}</span><span class="cp-stat__icone">${icone(nomIcone, { taille: 20 })}</span></div>
-      ${valeur
-        ? `<span class="cp-stat__valeur">${echapper(valeur)}</span>`
-        : `<span class="fi-chiffre__vide">${echapper(videTexte)}</span>`}
-      ${sous ? `<span class="fi-chiffre__sous">${echapper(sous)}</span>` : ''}
-      ${!valeur && aide ? `<span class="fi-chiffre__sous">${echapper(aide)}</span>` : ''}
-    </div>`;
+  return bulleInfo({ libelle, icone: nomIcone, valeur, detail: valeur ? sous : aide, vide: videTexte, ton, classe: 'fi-chiffre' });
 }
 
 /** Chiffres d'un groupe : effectif, ponte (ou nourriture), prochain rappel. */
@@ -72,12 +65,12 @@ function chiffresGroupe(animal) {
   if (pondeuse(animal)) {
     const s = statsPonte(animal);
     cSuite = carteChiffre({ libelle: 'Ponte (30 jours)', icone: 'trending-up', valeur: s.moyenne === null ? '' : `${num(s.moyenne)} œuf${s.moyenne >= 2 ? 's' : ''}/jour`,
-      sous: s.aujourdhui === null ? '' : `Aujourd'hui : ${s.aujourdhui}`, videTexte: 'Aucune saisie', aide: "Saisissez les œufs dans l'onglet Ponte." });
+      sous: s.aujourdhui === null ? '' : `Aujourd'hui : ${s.aujourdhui}`, videTexte: 'Aucune saisie', aide: "Onglet Ponte" });
   } else {
     const stocks = storage.lister('stocks').filter((x) => x.animalId === animal.id).map((x) => ({ x, e: etatStock(x) })).sort((a, b) => (a.e.jours ?? 1e9) - (b.e.jours ?? 1e9));
     const premier = stocks[0];
     cSuite = carteChiffre({ libelle: 'Nourriture', icone: 'wheat', valeur: premier ? `${num(premier.e.restant)} kg` : '', sous: premier ? texteJours(premier.e) : '', ton: premier?.e.alerte ? 'retard' : '',
-      videTexte: 'Aucun stock', aide: "Ajoutez-en un dans l'onglet Alimentation." });
+      videTexte: 'Aucun stock', aide: "Onglet Repas" });
   }
   return cEffectif + cSuite + carteRappel(animal);
 }
@@ -89,9 +82,9 @@ function carteRappel(animal) {
   return carteChiffre({
     libelle: enRetard ? 'Rappel le plus urgent' : 'Prochain rappel', icone: enRetard ? 'bell-ring' : 'bell',
     valeur: prochain ? prochain.statut.texte : '',
-    sous: prochain ? `${nomCourtSoin(prochain.soin)} · ${formatDate(prochain.soin.rappel)}` : '',
+    sous: prochain ? `${formatDateCourte(prochain.soin.rappel)} · ${nomCourtSoin(prochain.soin)}` : '', // la date d'abord : elle reste visible même si le nom du soin est long
     ton: prochain ? (prochain.statut.classe === 'retard' ? 'retard' : prochain.statut.classe === 'semaine' ? 'semaine' : '') : '',
-    videTexte: 'Aucun rappel prévu', aide: 'Programmez-en un depuis un soin.',
+    videTexte: 'Aucun rappel', aide: 'Programmez-en un depuis un soin',
   });
 }
 
@@ -100,9 +93,9 @@ function chiffresHtml(animal) {
   // Âge
   const ageTexte = animal.naissance ? age(animal.naissance) : '';
   const cAge = carteChiffre({
-    libelle: 'Âge', icone: 'calendar', valeur: ageTexte,
-    sous: ageTexte ? `Né(e) le ${formatDate(animal.naissance)}` : '',
-    videTexte: 'Non renseigné', aide: 'Ajoutez la date de naissance avec « Modifier ».',
+    libelle: 'Âge', icone: 'cake', valeur: ageTexte,
+    sous: ageTexte ? `Né le ${formatDateNumerique(animal.naissance)}` : '',
+    videTexte: 'Âge inconnu', aide: 'Ajoutez-le avec « Modifier »',
   });
 
   // Dernier poids
@@ -110,16 +103,15 @@ function chiffresHtml(animal) {
   const derniere = liste[liste.length - 1];
   let sousPoids = '';
   if (derniere) {
-    sousPoids = `Le ${formatDate(derniere.date)}`;
     const precedente = liste[liste.length - 2];
     if (precedente) {
       const diff = Math.round((derniere.poidsKg - precedente.poidsKg) * 1000) / 1000;
-      if (diff !== 0) sousPoids += ` · ${diff > 0 ? '+' : '−'}${Math.abs(diff).toLocaleString('fr-FR')} kg`;
-    }
+      sousPoids = diff === 0 ? `Inchangé depuis le ${formatDateCourte(precedente.date)}` : `${diff > 0 ? '+' : '−'}${Math.abs(diff).toLocaleString('fr-FR')} kg depuis le ${formatDateCourte(precedente.date)}`;
+    } else sousPoids = `Pesé le ${formatDateCourte(derniere.date)}`;
   }
   const cPoids = carteChiffre({
     libelle: 'Dernier poids', icone: 'scale', valeur: derniere ? formatPoids(derniere.poidsKg) : '', sous: sousPoids,
-    videTexte: 'Aucune pesée', aide: "Ajoutez-en une dans l'onglet Poids.",
+    videTexte: 'Aucune pesée', aide: "Ajoutez-en une (onglet Poids)",
   });
 
   return cAge + cPoids + carteRappel(animal);
@@ -233,7 +225,7 @@ export function rendre(zone, id, soinCible = '') {
 
       ${estGroupe(animal) ? '' : `<div class="fi-garde">${bouton({ texte: 'Fiche de garde', icone: 'clipboard-list', variante: 'secondaire', href: `#/animaux/${encodeURIComponent(animal.id)}/garde` })}<span class="cp-doux">Repas, soins, habitudes et contacts, pour votre pet-sitter.</span></div>`}
 
-      <section class="fi-chiffres" aria-label="Chiffres clés" data-chiffres>${chiffresHtml(animal)}</section>
+      <section class="fi-chiffres bulles" aria-label="Chiffres clés" data-chiffres>${chiffresHtml(animal)}</section>
 
       <div class="fi-onglets" data-onglets>
         <div class="cp-onglets" role="tablist" aria-label="Fiche de ${echapper(animal.nom)}">
@@ -284,6 +276,12 @@ export function rendre(zone, id, soinCible = '') {
   // Onglets
   const racineOnglets = zone.querySelector('[data-onglets]');
   activerOnglets(racineOnglets);
+  // Si les onglets ne tiennent pas (très petit écran), la rangée défile : un fondu à droite montre qu'il y a une suite
+  const listeOnglets = racineOnglets.querySelector('[role="tablist"]');
+  const majSuite = () => listeOnglets.classList.toggle('a-suite', listeOnglets.scrollWidth - listeOnglets.clientWidth - listeOnglets.scrollLeft > 4);
+  listeOnglets.addEventListener('scroll', majSuite, { passive: true });
+  new ResizeObserver(majSuite).observe(listeOnglets); // disparaît avec la page : rien à nettoyer
+  majSuite();
   racineOnglets.querySelector('[role="tablist"]').addEventListener('click', (e) => {
     const o = e.target.closest('[data-onglet]');
     if (o) { memoire.onglet = o.dataset.onglet; o.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }

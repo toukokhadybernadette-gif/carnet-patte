@@ -1,0 +1,49 @@
+/* ===== Petites bulles d'information en verre (js/composants.js : bulleInfo) =====
+   Fini le grand cadre commun découpé par des traits : chaque info est une bulle à part, séparée des autres par un espace.
+   Verre : flou léger + transparence, dans la couleur du thème (variables --cp-verre-* et --cp-sauge-verre-*, donc aussi en mode sombre).
+   Une icône, la valeur en gros, un détail discret sur UNE ligne. */
+
+.bulles { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-3); }
+@media (min-width: 600px) {
+  .bulles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bulles > .bulle:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (min-width: 900px) {
+  .bulles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bulles > .bulle:last-child:nth-child(odd) { grid-column: auto; }
+}
+
+.bulle {
+  display: flex; align-items: center; gap: var(--cp-espace-3); min-width: 0;
+  padding: 12px 18px 12px 12px; border-radius: 28px;
+  background: var(--cp-verre-fond);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid var(--cp-verre-bordure);
+  box-shadow: var(--cp-verre-ombre);
+}
+.bulle__icone {
+  flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%;
+  background: var(--cp-sauge-verre-fort); color: var(--cp-foret-texte);
+  box-shadow: var(--cp-sauge-verre-ombre);
+}
+.bulle__corps { display: grid; gap: 1px; min-width: 0; }
+.bulle__valeur {
+  font-family: var(--cp-police-titre); font-weight: var(--cp-graisse-titre); font-size: 22px; line-height: 1.15; letter-spacing: -0.01em;
+  color: var(--cp-texte); overflow-wrap: normal; word-break: normal;
+}
+.bulle__valeur--vide { font-size: var(--cp-taille-m); line-height: var(--cp-interligne-m); color: var(--cp-texte-doux); }
+.bulle__detail {
+  font-size: var(--cp-taille-s); line-height: var(--cp-interligne-s); color: var(--cp-texte-doux);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* une seule ligne : jamais de coupure sur deux lignes */
+}
+
+/* Rappels : la couleur d'urgence, doublée par la forme de l'icône (cloche qui sonne = en retard) */
+.bulle--retard .bulle__valeur { color: var(--cp-terre); }
+.bulle--retard .bulle__icone { background: var(--cp-terre-pale); color: var(--cp-terre); }
+.bulle--semaine .bulle__valeur { color: var(--cp-ambre); }
+.bulle--semaine .bulle__icone { background: var(--cp-ambre-pale); color: var(--cp-ambre); }
+
+/* Sans flou (navigateur ancien) : fond plein, comme les autres surfaces en verre */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bulle { background: var(--cp-carte); }
+}
