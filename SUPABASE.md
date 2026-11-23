@@ -63,6 +63,34 @@ Supabase gardera plus tard les comptes et (pour Premium) les données synchronis
 
 Je les écris dans `js/supabase-config.js` (public par conception), je pousse la branche `comptes`, et vous testez la connexion sur l'iPhone (voir l'écran **Profil → Compte (essai)**). Les tables et les règles de sécurité (RLS) arrivent à l'étape 2, avec les sauvegardes automatiques **avant** de mettre de vraies données.
 
+## 7. Vrai envoi d'e-mails : Resend avec carnetpatte.com (Cloudflare)
+
+Sans SMTP personnalisé, Supabase n'autorise pas à changer le modèle d'e-mail et limite fortement les envois. Resend (offre gratuite : 100 e-mails par jour, 3 000 par mois) envoie les codes depuis `@carnetpatte.com`.
+
+**A. Resend : ajouter le domaine**
+1. Créez un compte sur resend.com. **Domains** → **Add Domain** → `carnetpatte.com`, région **Ireland (eu-west-1)** (données en Europe).
+2. Resend affiche des enregistrements DNS (en général 1 MX et 1 TXT « SPF » sur `send`, 1 TXT « DKIM » sur `resend._domainkey`). Deux façons de les créer :
+   - **Automatique** : bouton « Sign in to Cloudflare » / « Auto configure », vous autorisez, c'est fait ;
+   - **À la main** : Cloudflare → carnetpatte.com → **DNS** → **Records** → **Add record**, un par ligne de Resend (même type, même nom, même valeur). Pour chacun, **Proxy status = « DNS only »** (nuage gris, pas orange).
+3. Retour dans Resend → **Verify DNS Records**. Quelques minutes suffisent d'habitude ; le domaine doit passer à **Verified**.
+4. Facultatif mais conseillé : un enregistrement TXT `_dmarc` avec la valeur `v=DMARC1; p=none;` (aide à ne pas finir dans les indésirables).
+
+**B. Resend : créer la clé**
+5. **API Keys** → **Create API Key**, nom `supabase`, permission **Sending access**, domaine `carnetpatte.com`. La clé commence par `re_` et ne s'affiche qu'une fois.
+6. Cette clé est **secrète** : elle va uniquement dans Supabase (étape 7). Ne l'écrivez ni dans le dépôt, ni dans un message, ni à moi.
+
+**C. Supabase : brancher Resend**
+7. Supabase → **Authentication** → **Emails** → **SMTP Settings** → **Enable Custom SMTP** :
+   - Sender email : `no-reply@carnetpatte.com` · Sender name : `Carnet Patte`
+   - Host : `smtp.resend.com` · Port : `465`
+   - Username : `resend` · Password : la clé `re_…`
+   - **Save**.
+8. **Authentication** → **Rate Limits** : « emails sent per hour » est limité à 30 après un SMTP perso ; c'est largement suffisant pour l'essai.
+9. **Authentication** → **Emails** → **Templates** : les modèles sont maintenant modifiables. **Magic Link** et **Confirm signup**, chacun avec le sujet et le corps de l'étape 10 ci-dessus (`{{ .Token }}` = le code à 6 chiffres).
+10. **URL Configuration** : *Site URL* = `https://carnetpatte.com`, *Redirect URLs* = `https://carnetpatte.com/**`.
+
+**Test** : sur l'iPhone, Profil → Compte (essai), saisissez votre e-mail : le code arrive de `no-reply@carnetpatte.com`.
+
 ## Limites de l'offre gratuite (rappel)
 
 500 Mo de base, 1 Go de fichiers, 5 Go de transfert par mois, 50 000 utilisateurs actifs par mois, **pas de sauvegarde** et **pause du projet après une semaine d'inactivité**. Elles conviennent à l'essai ; pour de vrais abonnés payants, il faudra passer au palier Pro (environ 25 $/mois), comme prévu dans le plan.

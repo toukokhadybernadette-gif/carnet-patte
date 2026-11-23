@@ -7,6 +7,6 @@
 // Tant que ces valeurs sont vides, l'appli ne montre aucune fonction de compte et ne contacte jamais Supabase.
 
 export const SUPABASE = {
-  url: '',   // Ex. : https://abcdefghijklmnop.supabase.co
-  cle: '',   // Ex. : sb_publishable_…
+  url: 'https://tiqtmoyxxqzabgaaiwfa.supabase.co', // projet Carnet Patte, région West EU (Irlande)
+  cle: 'sb_publishable_W0z_kMkg1J3TueNECEzEeg_oJQSDUZ1',
 };

@@ -49,8 +49,10 @@ const CLE = 'sb_publishable_cle_de_test_0123456789';
 
 // ----- Serveur du site -----
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain', '.webmanifest': 'application/manifest+json' };
+let configServie = 'vide'; // le vrai js/supabase-config.js est rempli : le site du test sert SA config (vide au début, puis le faux serveur), jamais le vrai projet
 const site = http.createServer((req, res) => {
   let chemin = decodeURIComponent(new URL(req.url, 'http://x').pathname); if (chemin === '/') chemin = '/index.html';
+  if (chemin === '/js/supabase-config.js') { res.writeHead(200, { 'Content-Type': MIME['.js'], 'Cache-Control': 'no-store' }).end(`export const SUPABASE = ${JSON.stringify(configServie === 'vide' ? { url: '', cle: '' } : { url: URL_FAUX, cle: CLE })};`); return; }
   const f = path.join(RACINE, chemin);
   if (!f.startsWith(RACINE) || f.startsWith(path.join(RACINE, 'tests')) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404).end('introuvable'); return; }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] ?? 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
@@ -95,7 +97,7 @@ verifier(!liste.some((f) => f.startsWith('assets/supabase/')) && fs.existsSync(p
 
 // ===== 3. Configuré (faux serveur) : visible, parcours complet =====
 log('--- 3. Parcours de connexion ---');
-await ev(`import('/js/compte.js').then((m) => m.utiliserConfig({ url: ${JSON.stringify(URL_FAUX)}, cle: ${JSON.stringify(CLE)} }))`);
+configServie = 'faux'; await send('Page.reload'); await dort(2000); // la page relit la config servie (maintenant le faux serveur)
 await aller('#/profil'); await dort(400);
 verifier(await ev(`[...document.querySelectorAll('a[href="#/compte"]')].some((a) => a.textContent.includes('Compte (essai)'))`), 'Profil : la ligne « Compte (essai) » apparaît quand c’est configuré');
 await aller('#/compte'); await dort(500);
@@ -137,7 +139,6 @@ await taille(390, 844); await controler('Compte (connecté) à 390 px'); await t
 // ===== 4. Session conservée, renouvelée, déconnexion =====
 log('--- 4. Session ---');
 await send('Page.reload'); await dort(2000);
-await ev(`import('/js/compte.js').then((m) => m.utiliserConfig({ url: ${JSON.stringify(URL_FAUX)}, cle: ${JSON.stringify(CLE)} }))`);
 const nbVerif = journal.filter((j) => j.chemin.startsWith('/auth/v1/verify')).length;
 await aller('#/compte'); await dort(900);
 await ev(`import('/js/router.js').then((r) => r.rafraichir())`); await dort(900);
@@ -145,7 +146,6 @@ verifier(await ev(`!!document.querySelector('[data-etape=connecte]')`) && (await
 // session périmée : renouvelée toute seule avec le jeton de renouvellement
 await ev(`(() => { const s = JSON.parse(localStorage.getItem('carnetpatte.compte')); s.expires_at = Math.floor(Date.now() / 1000) - 60; localStorage.setItem('carnetpatte.compte', JSON.stringify(s)); })()`);
 await send('Page.reload'); await dort(2000);
-await ev(`import('/js/compte.js').then((m) => m.utiliserConfig({ url: ${JSON.stringify(URL_FAUX)}, cle: ${JSON.stringify(CLE)} }))`);
 await aller('#/compte'); await ev(`import('/js/router.js').then((r) => r.rafraichir())`); await dort(1200);
 const renouv = journal.filter((j) => j.chemin.includes('grant_type=refresh_token')).length;
 verifier(renouv >= 1 && await ev(`!!document.querySelector('[data-etape=connecte]')`), `session périmée : renouvelée toute seule (${renouv} renouvellement), toujours connecté`);
@@ -162,7 +162,6 @@ verifier(await donnees() === avant, 'les données des animaux sont les mêmes ap
 // ===== 5. Hors connexion avant la première connexion =====
 log('--- 5. Pas d’internet ---');
 await send('Page.reload'); await dort(2000);
-await ev(`import('/js/compte.js').then((m) => m.utiliserConfig({ url: ${JSON.stringify(URL_FAUX)}, cle: ${JSON.stringify(CLE)} }))`);
 await aller('#/compte'); await ev(`import('/js/router.js').then((r) => r.rafraichir())`); await dort(700);
 await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });
 await saisir('#cm-email', 'ok@exemple.fr'); await soumettre(); await dort(500);
