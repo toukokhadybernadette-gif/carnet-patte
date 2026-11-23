@@ -3,7 +3,7 @@
 
 import * as compte from '../../js/compte.js';
 import { echapper } from '../../js/utils.js';
-import { toast } from '../../js/ui.js';
+import { toast, confirmer } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, alerte } from '../../js/composants.js';
 
@@ -34,7 +34,7 @@ function vueEmail(cadre, zone, emailInitial = '') {
   cadre.innerHTML = `
     <form class="cp-carte cm-form" novalidate data-etape="email">
       <h2>Se connecter</h2>
-      <p class="cp-doux">Saisissez votre adresse e-mail : vous recevrez un code à 6 chiffres. Pas de mot de passe. Un compte est créé à la première connexion.</p>
+      <p class="cp-doux">Saisissez votre adresse e-mail : vous recevrez un code à 6 chiffres. Pas de mot de passe. Un compte est créé à la première connexion. Seule votre adresse e-mail est conservée : <a href="#/confidentialite">confidentialité</a>.</p>
       ${champ({ id: 'cm-email', label: 'Adresse e-mail', type: 'email', valeur: emailInitial, requis: true, attrs: { name: 'email', autocomplete: 'email', inputmode: 'email', autocapitalize: 'none', spellcheck: 'false' } })}
       <div class="cm-actions">${bouton({ texte: 'Recevoir un code', type: 'submit', icone: 'check' })}</div>
     </form>`;
@@ -113,8 +113,24 @@ function vueConnecte(cadre, zone, u) {
     <section class="cp-carte cm-form" data-etape="connecte" aria-labelledby="cm-connecte">
       <h2 id="cm-connecte">Connecté</h2>
       <p>Vous êtes connecté avec <strong data-email>${echapper(u.email)}</strong>.</p>
-      <p class="cp-doux">Pour l'instant, se connecter ne change rien d'autre : vos animaux restent sur cet appareil, et rien n'est envoyé. La sauvegarde et la synchronisation viendront ensuite.</p>
+      <p class="cp-doux">Se connecter ne change rien d'autre : vos animaux restent sur cet appareil, et rien n'est envoyé. La sauvegarde et la synchronisation seront réservées à la formule Premium.</p>
       <div class="cm-actions">${bouton({ texte: 'Se déconnecter', variante: 'secondaire', icone: 'x', attrs: { 'data-deconnecter': true } })}</div>
+    </section>
+    <section class="cp-carte cm-form" aria-labelledby="cm-premium" data-premium>
+      <h2 id="cm-premium">Premium : sauvegarde cloud et synchronisation</h2>
+      <p>Retrouver vos animaux sur plusieurs appareils, avec une sauvegarde automatique : <strong>pas encore disponible</strong>. Cette option sera réservée à la formule Premium. Le reste de l'appli reste gratuit.</p>
+      <p class="cp-doux" data-formule role="status">Formule : vérification…</p>
+      <p class="cp-doux" data-attente-etat role="status"></p>
+      <div class="cm-actions">${bouton({ texte: "Me prévenir à l'ouverture", icone: 'bell', desactive: true, attrs: { 'data-attente': true } })}</div>
+    </section>
+    <section class="cp-carte cm-form" aria-labelledby="cm-donnees" data-donnees>
+      <h2 id="cm-donnees">Vos données et votre vie privée</h2>
+      <p>Le serveur ne garde que votre adresse e-mail, la date de création du compte, votre formule et votre éventuelle inscription à la liste d'attente. <a href="#/confidentialite">Lire la politique de confidentialité</a>.</p>
+      <div class="cm-actions">
+        ${bouton({ texte: 'Télécharger les données de mon compte', variante: 'secondaire', icone: 'download', attrs: { 'data-exporter-compte': true } })}
+        ${bouton({ texte: 'Supprimer mon compte', variante: 'danger', icone: 'trash-2', attrs: { 'data-supprimer-compte': true } })}
+      </div>
+      <p class="cp-doux">Supprimer le compte efface définitivement ces informations sur le serveur. Vos animaux, sur cet appareil, ne sont pas touchés.</p>
     </section>
     <section class="cp-carte cm-essai" aria-labelledby="cm-essai-titre" data-essai>
       <h2 id="cm-essai-titre">Essai : la connexion tient-elle ?</h2>
@@ -129,6 +145,63 @@ function vueConnecte(cadre, zone, u) {
     await compte.deconnecter();
     toast('Déconnecté de cet appareil');
     vueEmail(cadre, zone);
+  });
+  brancherPremium(cadre);
+  brancherDonnees(cadre, zone);
+}
+
+/** Formule et liste d'attente Premium (lues au serveur : hors connexion, on l'explique sans bloquer le reste de la page). */
+async function brancherPremium(cadre) {
+  const formule = cadre.querySelector('[data-formule]');
+  const etat = cadre.querySelector('[data-attente-etat]');
+  const btn = cadre.querySelector('[data-attente]');
+  const texteBouton = (t) => { btn.querySelector('span').textContent = t; };
+  let inscrit = false;
+  try {
+    const [p, attente] = await Promise.all([compte.profil(), compte.surListeAttente()]);
+    if (!cadre.isConnected) return;
+    inscrit = attente;
+    formule.textContent = `Formule : ${p.plan === 'premium' ? 'Premium' : 'Gratuite'}`;
+  } catch (err) {
+    if (!cadre.isConnected) return;
+    formule.textContent = 'Formule : non disponible pour le moment';
+    etat.textContent = compte.messageErreur(err);
+    return;
+  }
+  const afficher = () => { etat.textContent = inscrit ? "Vous êtes sur la liste d'attente : un e-mail vous sera envoyé à l'ouverture, sans engagement." : ''; texteBouton(inscrit ? "Me retirer de la liste d'attente" : "Me prévenir à l'ouverture"); btn.disabled = false; };
+  afficher();
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try { await compte.changerListeAttente(!inscrit); inscrit = !inscrit; toast(inscrit ? "Inscrit sur la liste d'attente" : "Retiré de la liste d'attente"); } catch (err) { etat.textContent = compte.messageErreur(err); }
+    btn.disabled = false; afficher();
+  });
+}
+
+/** Export des données du compte (fichier JSON) et suppression du compte. */
+function brancherDonnees(cadre, zone) {
+  cadre.querySelector('[data-exporter-compte]').addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      const donnees = await compte.exporterMesDonnees();
+      const blob = new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' });
+      const lien = document.createElement('a');
+      lien.href = URL.createObjectURL(blob);
+      lien.download = `carnet-patte-compte-${new Date().toISOString().slice(0, 10)}.json`;
+      lien.click();
+      setTimeout(() => URL.revokeObjectURL(lien.href), 60000);
+      toast('Données du compte téléchargées');
+    } catch (err) { toast(compte.messageErreur(err), 'erreur'); }
+    b.disabled = false;
+  });
+  cadre.querySelector('[data-supprimer-compte]').addEventListener('click', async (e) => {
+    const b = e.currentTarget; // à garder avant le « await » : l'événement n'a plus de cible ensuite
+    if (!await confirmer('Supprimer définitivement votre compte ? Votre adresse e-mail et vos inscriptions seront effacées du serveur, sans retour possible. Vos animaux, sur cet appareil, ne sont pas touchés.', 'Supprimer mon compte')) return;
+    b.disabled = true;
+    try {
+      await compte.supprimerMonCompte();
+      toast('Compte supprimé');
+      vueEmail(cadre, zone);
+    } catch (err) { b.disabled = false; toast(compte.messageErreur(err), 'erreur'); }
   });
 }
 

@@ -2,7 +2,8 @@
 // L'appli reste 100 % utilisable SANS compte : rien de ce fichier ne se charge tant qu'on n'ouvre pas la page « Compte », et la bibliothèque
 // Supabase (assets/supabase/, licence MIT) n'est téléchargée qu'à ce moment-là. Les données des animaux ne sont ni lues ni envoyées ici.
 //
-// Étape 0 du plan (essai de faisabilité) : connexion, session conservée, déconnexion. La synchronisation viendra ensuite.
+// Étape 0 : connexion, session conservée, déconnexion. Étape 2 : profil, liste d'attente Premium, export des données du compte, suppression du compte
+// (tables et règles : supabase/etape2.sql). La synchronisation des animaux (Premium) viendra ensuite : aujourd'hui, AUCUNE donnée d'animal ne part de l'appareil.
 
 import { SUPABASE } from './supabase-config.js';
 
@@ -47,6 +48,7 @@ export function messageErreur(e) {
   if (/otp_expired|expired|invalid/i.test(`${code} ${texte}`) && !/email address|format/i.test(texte)) return 'Code incorrect ou expiré. Vérifiez les 6 chiffres, ou demandez un nouveau code.';
   if (/validation_failed|email address|format/i.test(`${code} ${texte}`)) return 'Cette adresse e-mail ne semble pas valide.';
   if (/non configuré/.test(texte)) return "Les comptes ne sont pas encore activés sur ce site.";
+  if (/PGRST20[245]|42P01|42883|schema cache|does not exist/i.test(`${code} ${texte}`)) return "Cette fonction du compte n'est pas encore prête côté serveur. Réessayez plus tard.";
   return "Une erreur est survenue. Réessayez dans un instant.";
 }
 
@@ -73,7 +75,7 @@ export async function utilisateur() {
   if (!s) return null;
   let connecteLe = null;
   try { connecteLe = JSON.parse(localStorage.getItem(CLE_ESSAI))?.le ?? null; } catch { /* absent */ }
-  return { email: s.user.email, id: s.user.id, expireLe: (s.expires_at ?? 0) * 1000, connecteLe };
+  return { email: s.user.email, id: s.user.id, expireLe: (s.expires_at ?? 0) * 1000, connecteLe, creeLe: s.user.created_at ?? null, derniereConnexion: s.user.last_sign_in_at ?? null };
 }
 
 /** Se déconnecte de CET appareil (les données des animaux ne sont pas touchées). */
@@ -81,4 +83,55 @@ export async function deconnecter() {
   try { await (await client()).auth.signOut({ scope: 'local' }); } catch { /* hors connexion : on efface quand même la session locale */ }
   try { localStorage.removeItem(CLE_SESSION); localStorage.removeItem(CLE_ESSAI); } catch { /* stockage bloqué */ }
   window.dispatchEvent(new Event('compte-modifie'));
+}
+
+async function moi() {
+  const u = await utilisateur();
+  if (!u) throw new Error('non connecté');
+  return u;
+}
+
+/** Le profil du compte : { plan: 'gratuit' | 'premium', creeLe } (ligne créée par le serveur à la création du compte). */
+export async function profil() {
+  await moi();
+  const { data, error } = await (await client()).from('profils').select('plan, cree_le').maybeSingle();
+  if (error) throw error;
+  return { plan: data?.plan ?? 'gratuit', creeLe: data?.cree_le ?? null };
+}
+
+/** Cette personne est-elle sur la liste d'attente Premium ? */
+export async function surListeAttente() {
+  const u = await moi();
+  const { data, error } = await (await client()).from('liste_attente_premium').select('user_id').eq('user_id', u.id).maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+/** S'inscrit (ou se retire) de la liste d'attente Premium : la sauvegarde cloud et la synchro n'existent pas encore. */
+export async function changerListeAttente(inscrire) {
+  const u = await moi();
+  const table = (await client()).from('liste_attente_premium');
+  const { error } = inscrire ? await table.upsert({ user_id: u.id }, { onConflict: 'user_id', ignoreDuplicates: true }) : await table.delete().eq('user_id', u.id);
+  if (error) throw error;
+}
+
+/** Toutes les données que le serveur détient sur ce compte (droit d'accès et de portabilité). Les animaux n'y sont pas : ils ne quittent pas l'appareil. */
+export async function exporterMesDonnees() {
+  const u = await moi();
+  const [p, attente] = await Promise.all([profil(), surListeAttente()]);
+  return {
+    exporteLe: new Date().toISOString(),
+    compte: { identifiant: u.id, email: u.email, creeLe: u.creeLe, derniereConnexion: u.derniereConnexion },
+    profil: { formule: p.plan, creeLe: p.creeLe },
+    listeAttentePremium: attente,
+    remarque: "Vos animaux, soins, pesées et documents ne sont pas stockés sur nos serveurs : ils restent sur votre appareil (menu Sauvegarde pour les exporter).",
+  };
+}
+
+/** Supprime DÉFINITIVEMENT le compte et ses données sur le serveur, puis la session de cet appareil. Les animaux de l'appareil ne sont pas touchés. */
+export async function supprimerMonCompte() {
+  await moi();
+  const { error } = await (await client()).rpc('supprimer_mon_compte');
+  if (error) throw error;
+  await deconnecter();
 }

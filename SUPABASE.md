@@ -91,6 +91,19 @@ Sans SMTP personnalisé, Supabase n'autorise pas à changer le modèle d'e-mail 
 
 **Test** : sur l'iPhone, Profil → Compte (essai), saisissez votre e-mail : le code arrive de `noreply@carnetpatte.com`.
 
+## 8. Étape 2 : tables, règles de sécurité (RLS), suppression de compte
+
+Le fichier `supabase/etape2.sql` crée :
+- `profils` (formule gratuite ou Premium, créée toute seule pour chaque compte) : lisible par son propriétaire, **non modifiable depuis l'appli** (personne ne peut se donner Premium) ;
+- `liste_attente_premium` : chacun peut s'y inscrire, voir et retirer **sa** ligne, rien d'autre ;
+- la fonction `supprimer_mon_compte()` : supprime le compte de la personne connectée (et ses lignes, en cascade) ;
+- les droits **explicites** (« Grant API access automatically » étant décoché) : rien pour `anon`, le strict nécessaire pour `authenticated`.
+
+**À exécuter** : Supabase → **SQL Editor** → **New query** → collez tout `supabase/etape2.sql` → **Run** (« Success. No rows returned »). On peut le relancer sans risque.
+Puis une nouvelle requête avec `supabase/verifier-etape2.sql` (lecture seule) : `rowsecurity` doit valoir `true` pour les deux tables, `anon` ne doit apparaître nulle part dans les droits, et `supprimer_mon_compte` doit être exécutable par `authenticated` seulement.
+
+Aucune donnée d'animal n'est stockée côté serveur : la sauvegarde cloud et la synchronisation (Premium) auront leurs propres tables, plus tard.
+
 ## Limites de l'offre gratuite (rappel)
 
 500 Mo de base, 1 Go de fichiers, 5 Go de transfert par mois, 50 000 utilisateurs actifs par mois, **pas de sauvegarde** et **pause du projet après une semaine d'inactivité**. Elles conviennent à l'essai ; pour de vrais abonnés payants, il faudra passer au palier Pro (environ 25 $/mois), comme prévu dans le plan.

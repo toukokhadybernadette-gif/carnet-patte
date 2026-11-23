@@ -16,6 +16,7 @@ const { send, ev, log, verifier, texte, ecran, donnees, aller, importer, axe, fi
 
 // ----- Faux serveur d'authentification (imite GoTrue de Supabase) -----
 const journal = [];
+const etat = { plan: 'gratuit', attente: false, supprime: false };
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
 const session = (email, expiresIn = 3600) => {
   const exp = Math.floor(Date.now() / 1000) + expiresIn;
@@ -40,6 +41,14 @@ const faux = http.createServer((req, res) => {
     if (url.pathname === '/auth/v1/token') return json(200, session('ok@exemple.fr'));
     if (url.pathname === '/auth/v1/user') return json(200, session('ok@exemple.fr').user);
     if (url.pathname === '/auth/v1/logout') { res.writeHead(204, cors).end(); return; }
+    // Tables et fonction de l'étape 2 (supabase/etape2.sql) : profil, liste d'attente Premium, suppression du compte
+    if (url.pathname === '/rest/v1/profils' && req.method === 'GET') return json(200, [{ plan: etat.plan, cree_le: '2026-11-23T10:00:00Z' }]);
+    if (url.pathname === '/rest/v1/liste_attente_premium') {
+      if (req.method === 'GET') return json(200, etat.attente ? [{ user_id: '11111111-2222-3333-4444-555555555555' }] : []);
+      if (req.method === 'POST') { etat.attente = true; res.writeHead(201, cors).end(); return; }
+      if (req.method === 'DELETE') { etat.attente = false; res.writeHead(204, cors).end(); return; }
+    }
+    if (url.pathname === '/rest/v1/rpc/supprimer_mon_compte') { etat.supprime = true; res.writeHead(204, cors).end(); return; }
     json(404, { msg: 'inconnu' });
   });
 });
@@ -95,6 +104,17 @@ verifier(secrets.length === 0, `aucune clé secrète (service_role, sb_secret_, 
 const liste = listerFichiers();
 verifier(!liste.some((f) => f.startsWith('assets/supabase/')) && fs.existsSync(path.join(RACINE, 'assets/supabase/supabase.js')) && fs.existsSync(path.join(RACINE, 'assets/supabase/LICENSE-supabase-js.txt')), 'la bibliothèque (220 Ko, licence MIT jointe) n’est PAS dans le cache hors ligne : elle ne se télécharge qu’à la demande');
 
+// Le script SQL de l'étape 2 (à coller dans Supabase) : RLS partout, droits explicites, rien pour « anon »
+const sql = fs.readFileSync(path.join(RACINE, 'supabase/etape2.sql'), 'utf8').replace(/--.*$/gm, '');
+const tables = [...sql.matchAll(/create table if not exists public\.(\w+)/g)].map((m) => m[1]);
+verifier(tables.length >= 2 && tables.every((t) => new RegExp(`alter table public[.]${t} +enable row level security`).test(sql)), `supabase/etape2.sql : RLS activée sur chaque table (${tables.join(', ')})`);
+const politiques = [...sql.matchAll(/create policy[\s\S]*?;/g)].map((m) => m[0]);
+verifier(politiques.length >= 4 && politiques.every((p) => /to authenticated/.test(p) && /\(select auth\.uid\(\)\) = (id|user_id)/.test(p)), `${politiques.length} règles : toutes réservées aux comptes connectés et limitées aux lignes de la personne (auth.uid())`);
+verifier(!/\bto anon\b|grant[^;]*\banon\b/i.test(sql) && tables.every((t) => new RegExp(`revoke all on public[.]${t} +from anon, authenticated`).test(sql)), 'droits explicites : tout est retiré à « anon », rien ne lui est donné');
+verifier(!/grant[^;]*(update|truncate|references|trigger)[^;]*on public\.(profils|liste_attente_premium)/i.test(sql) && !/for (update|all)/i.test(sql), 'aucun droit de modification sur le profil : personne ne peut se donner Premium depuis l’appli');
+verifier(/security definer set search_path = ''/.test(sql) && /revoke execute on function public\.supprimer_mon_compte\(\) from public, anon/.test(sql) && /grant\s+execute on function public\.supprimer_mon_compte\(\) to authenticated/.test(sql) && /auth\.uid\(\)/.test(sql.split('supprimer_mon_compte')[1]), 'supprimer_mon_compte : fonction sécurisée, réservée aux comptes connectés, ne supprime que SON compte');
+verifier(!/service_role|sb_secret_/i.test(sql), 'aucune clé secrète dans le script SQL');
+
 // ===== 3. Configuré (faux serveur) : visible, parcours complet =====
 log('--- 3. Parcours de connexion ---');
 configServie = 'faux'; await send('Page.reload'); await dort(2000); // la page relit la config servie (maintenant le faux serveur)
@@ -136,6 +156,34 @@ verifier((await texte('[data-essai]')).includes('navigateur (Safari)') && /Conne
 await controler('Compte (connecté) à 375 px'); await axe('#contenu', 'compte : connecté'); await ecran('compte-connecte');
 await taille(390, 844); await controler('Compte (connecté) à 390 px'); await taille(375, 812);
 
+// ===== 3b. Premium (liste d'attente), export, confidentialité =====
+log('--- 3b. Premium, vos données, confidentialité ---');
+await dort(600);
+verifier((await texte('[data-formule]')) === 'Formule : Gratuite' && (await texte('[data-premium]')).includes('pas encore disponible'), 'Premium : « pas encore disponible », formule Gratuite lue au serveur');
+verifier((await texte('[data-attente]')) === "Me prévenir à l'ouverture" && await ev(`!document.querySelector('[data-attente]').disabled`), 'bouton « Me prévenir à l’ouverture »');
+await ev(`document.querySelector('[data-attente]').click()`); await dort(700);
+verifier(etat.attente && (await texte('[data-attente-etat]')).includes("liste d'attente") && (await texte('[data-attente]')).includes('retirer'), 'inscription à la liste d’attente enregistrée, bouton « Me retirer »');
+const reqAttente = journal.find((j) => j.methode === 'POST' && j.chemin.startsWith('/rest/v1/liste_attente_premium'));
+verifier(reqAttente?.corps?.user_id === '11111111-2222-3333-4444-555555555555' && reqAttente.apikey === CLE && /^Bearer /.test(reqAttente.autorisation ?? ''), 'la requête ne porte que l’identifiant du compte, avec la clé publique et le jeton de la session');
+await ev(`document.querySelector('[data-attente]').click()`); await dort(700);
+verifier(!etat.attente && (await texte('[data-attente]')) === "Me prévenir à l'ouverture", 'retrait de la liste d’attente');
+await ev(`window.__fichier = null; URL.createObjectURL = (blob) => { blob.text().then((t) => { window.__fichier = t; }); return 'blob:test'; }; HTMLAnchorElement.prototype.click = function () { window.__nom = this.download; };`);
+await ev(`document.querySelector('[data-exporter-compte]').click()`); await dort(900);
+const exportCompte = JSON.parse((await ev(`window.__fichier`)) ?? 'null');
+const nomExport = await ev(`window.__nom`);
+verifier(exportCompte?.compte?.email === 'ok@exemple.fr' && exportCompte.profil.formule === 'gratuit' && exportCompte.listeAttentePremium === false && /^carnet-patte-compte-\d{4}-\d\d-\d\d\.json$/.test(nomExport), `export des données du compte : e-mail, formule, liste d’attente (${nomExport})`);
+verifier(!/Moka|Berger|NOTE-PRIVEE/.test(JSON.stringify(exportCompte)) && exportCompte.remarque.includes('restent sur votre appareil'), 'l’export du compte ne contient aucune donnée d’animal et le dit');
+await controler('Compte (Premium, données) à 375 px'); await axe('#contenu', 'compte : premium et données'); await ecran('compte-premium');
+await aller('#/confidentialite'); await dort(400);
+const conf = await texte('#contenu');
+verifier((await texte('h1')) === 'Confidentialité' && ['adresse e-mail', 'Supabase', 'Resend', 'Cloudflare', 'CNIL', "liste d'attente", 'supprimer votre compte'].every((m) => conf.includes(m)), 'page Confidentialité : données conservées, prestataires, droits, CNIL');
+verifier(conf.includes('Jamais') && conf.includes('vos animaux, soins, pesées, documents, photos ou votre position') && conf.includes('contact@carnetpatte.com'), 'elle affirme que les animaux ne quittent jamais l’appareil, et donne le contact');
+verifier(await ev(`!!document.querySelector('a[href="#/compte"]') && !!document.querySelector('a[href="#/mentions"]')`), 'liens vers la page Compte et les mentions légales');
+await controler('Confidentialité à 375 px'); await axe('#contenu', 'confidentialité'); await ecran('confidentialite');
+await aller('#/apropos'); await dort(300);
+verifier(await ev(`!!document.querySelector('a[href="#/confidentialite"]')`), 'À propos : lien vers la Confidentialité');
+await aller('#/compte'); await dort(700);
+
 // ===== 4. Session conservée, renouvelée, déconnexion =====
 log('--- 4. Session ---');
 await send('Page.reload'); await dort(2000);
@@ -175,6 +223,24 @@ log('--- 6. Confidentialité ---');
 const tout = JSON.stringify(journal);
 verifier(!/Moka-secret-42|NOTE-PRIVEE-UNIQUE|Berger/.test(tout), `les ${journal.length} requêtes envoyées au serveur d’authentification ne contiennent AUCUNE donnée d’animal (seulement e-mail et code)`);
 verifier(journal.every((j) => !j.autorisation || !/service_role/.test(j.autorisation)) && journal.filter((j) => j.apikey).every((j) => j.apikey === CLE), 'seule la clé publique est utilisée');
+
+// ===== 7. Suppression du compte =====
+log('--- 7. Suppression du compte ---');
+await send('Page.reload'); await dort(2000);
+await aller('#/compte'); await dort(700);
+await saisir('#cm-email', 'ok@exemple.fr'); await soumettre();
+await saisir('#cm-code', '123456'); await soumettre(); await dort(800);
+verifier(await ev(`!!document.querySelector('[data-supprimer-compte]')`), 'reconnecté : bouton « Supprimer mon compte »');
+await ev(`document.querySelector('[data-supprimer-compte]').click()`); await dort(500);
+verifier(await ev(`!!document.querySelector('dialog[open]')`) && (await texte('dialog[open]')).includes('définitivement') && (await texte('dialog[open]')).includes('sur cet appareil'), 'une confirmation explique : définitif, et les animaux de l’appareil ne sont pas touchés');
+await ev(`document.querySelector('dialog[open] [data-non]').click()`); await dort(400);
+verifier(!etat.supprime && await ev(`!!document.querySelector('[data-etape=connecte]')`), '« Annuler » : rien n’est supprimé');
+await ev(`document.querySelector('[data-supprimer-compte]').click()`); await dort(500);
+await ev(`document.querySelector('dialog[open] [data-oui]').click()`); await dort(1000);
+const rpc = journal.find((j) => j.chemin.startsWith('/rest/v1/rpc/supprimer_mon_compte'));
+verifier(etat.supprime && rpc?.methode === 'POST' && /^Bearer /.test(rpc.autorisation ?? ''), 'la suppression appelle la fonction du serveur avec le jeton de la session');
+verifier(await stockage() === null && await ev(`!!document.querySelector('#cm-email')`), 'session effacée de l’appareil, retour à l’écran de connexion');
+verifier(await donnees() === avant, 'les animaux de l’appareil sont intacts après la suppression du compte');
 
 // Aller-retour export / import des données
 const exp1 = await ev(`import('/js/storage.js').then(m=>m.exporter())`);

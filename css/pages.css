@@ -228,6 +228,7 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .ap-bloc { display: grid; gap: var(--cp-espace-2); padding: var(--cp-espace-5); }
 .ap-bloc h2 { margin: 0; font-size: var(--cp-taille-l); }
 .ap-bloc p { margin: 0; }
+.ap-actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); }
 .ap-liste { margin: 0; padding-left: 1.2em; display: grid; gap: var(--cp-espace-2); }
 .ap-dl { margin: 0; display: grid; gap: var(--cp-espace-3); }
 .ap-dl dt { font-size: var(--cp-taille-s); font-weight: 600; color: var(--cp-texte-doux); }

@@ -19,7 +19,7 @@ export function ouvrirAPropos() {
   modale('À propos de Carnet Patte', `
     <div class="ap-texte">
       <p><strong>Carnet Patte</strong> est un carnet de santé pour vos animaux : soins, rappels, pesées, et un guide « Toxique ? » pour savoir ce qui est dangereux.</p>
-      <p><strong>Vos données restent sur cet appareil.</strong> Il n'y a pas de compte et vos animaux, soins et rappels ne sont jamais envoyés sur internet. Seule la Carte Patte contacte OpenStreetMap, quand vous lancez une recherche. La Boutique ne contient que des liens vers des sites marchands : ils s'ouvrent dans un nouvel onglet, et la page indique toujours si Carnet Patte touche une commission. Pensez à faire une sauvegarde de temps en temps (menu ☰, « Sauvegarde »).</p>
+      <p><strong>Vos données restent sur cet appareil.</strong> Un compte est facultatif et vos animaux, soins et rappels ne sont jamais envoyés sur internet. Seule la Carte Patte contacte OpenStreetMap, quand vous lancez une recherche. La Boutique ne contient que des liens vers des sites marchands : ils s'ouvrent dans un nouvel onglet, et la page indique toujours si Carnet Patte touche une commission. Pensez à faire une sauvegarde de temps en temps (menu ☰, « Sauvegarde »).</p>
       <p>Le guide « Toxique ? » est indicatif : il ne remplace pas l'avis d'un vétérinaire. En cas de doute, appelez votre vétérinaire ou un centre antipoison vétérinaire.</p>
       <p class="cp-doux">Polices Manrope et Inter, icônes Lucide, carte Leaflet et son plugin de regroupement : licences libres, hébergées dans l'application. Lieux et fond de carte © contributeurs d'OpenStreetMap ; adresses manquantes complétées par la Base Adresse Nationale (Licence Ouverte 2.0).</p>
     </div>`);
