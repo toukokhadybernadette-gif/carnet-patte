@@ -44,7 +44,7 @@ Supabase gardera plus tard les comptes et (pour Premium) les données synchronis
       ```html
       <p>Bonjour,</p>
       <p>Votre code de connexion à Carnet Patte : <strong style="font-size:22px;letter-spacing:4px">{{ .Token }}</strong></p>
-      <p>Il est valable 15 minutes. Si vous n'avez rien demandé, ignorez ce message.</p>
+      <p>Il est valable 1 heure. Si vous n'avez rien demandé, ignorez ce message.</p>
       ```
     Le mot `{{ .Token }}` est ce qui met le code à 6 chiffres dans le message : sans lui, aucun code n'est envoyé.
 11. **URL Configuration** : *Site URL* = `https://carnetpatte.com`. Dans *Redirect URLs* ajoutez `https://carnetpatte.com/**`. **Save**.
@@ -81,7 +81,7 @@ Sans SMTP personnalisé, Supabase n'autorise pas à changer le modèle d'e-mail 
 
 **C. Supabase : brancher Resend**
 7. Supabase → **Authentication** → **Emails** → **SMTP Settings** → **Enable Custom SMTP** :
-   - Sender email : `no-reply@carnetpatte.com` · Sender name : `Carnet Patte`
+   - Sender email : `noreply@carnetpatte.com` · Sender name : `Carnet Patte`
    - Host : `smtp.resend.com` · Port : `465`
    - Username : `resend` · Password : la clé `re_…`
    - **Save**.
@@ -89,7 +89,7 @@ Sans SMTP personnalisé, Supabase n'autorise pas à changer le modèle d'e-mail 
 9. **Authentication** → **Emails** → **Templates** : les modèles sont maintenant modifiables. **Magic Link** et **Confirm signup**, chacun avec le sujet et le corps de l'étape 10 ci-dessus (`{{ .Token }}` = le code à 6 chiffres).
 10. **URL Configuration** : *Site URL* = `https://carnetpatte.com`, *Redirect URLs* = `https://carnetpatte.com/**`.
 
-**Test** : sur l'iPhone, Profil → Compte (essai), saisissez votre e-mail : le code arrive de `no-reply@carnetpatte.com`.
+**Test** : sur l'iPhone, Profil → Compte (essai), saisissez votre e-mail : le code arrive de `noreply@carnetpatte.com`.
 
 ## Limites de l'offre gratuite (rappel)
 
