@@ -20,7 +20,9 @@ let version = 't1';
 const serveur = http.createServer((req, res) => {
   const chemin = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (chemin === '/sw.js') { res.writeHead(200, { 'Content-Type': MIME['.js'], 'Cache-Control': 'max-age=3600' }).end(preparerSw(version)); return; } // un cache HTTP long : le navigateur doit quand même voir la nouvelle version
-  const fichier = path.join(RACINE, chemin === '/' ? 'index.html' : chemin);
+  // Comme Cloudflare Pages : /index.html → /, /demenagement.html → /demenagement (réponses REDIRIGÉES, que le service worker ne doit jamais servir telles quelles)
+  if (chemin === '/index.html' || chemin === '/demenagement.html') { res.writeHead(308, { Location: chemin === '/index.html' ? '/' : '/demenagement' }).end(); return; }
+  const fichier = path.join(RACINE, chemin === '/' ? 'index.html' : chemin === '/demenagement' ? 'demenagement.html' : chemin);
   if (!fichier.startsWith(RACINE) || fichier.startsWith(path.join(RACINE, 'tests')) || !fs.existsSync(fichier) || fs.statSync(fichier).isDirectory()) { res.writeHead(404).end('introuvable'); return; }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(fichier)] ?? 'application/octet-stream' });
   fs.createReadStream(fichier).pipe(res);
@@ -92,6 +94,8 @@ verifier((await noms()).includes('carnetpatte-app-t1'), `cache de la version t1 
 const cles = await ev(`caches.open('carnetpatte-app-t1').then(async (c) => (await c.keys()).map((r) => r.url))`);
 verifier(cles.length === liste.length && liste.every((f) => cles.includes(`${BASE}/${f}`)), `les ${liste.length} fichiers de l’appli sont en cache`);
 verifier(await ev(`!document.querySelector('.pwa-maj')`), 'pas de bannière de mise à jour à la première installation');
+const redirigees = await ev(`caches.open('carnetpatte-app-t1').then(async (c) => { const r = await Promise.all(['index.html', 'demenagement.html'].map((f) => c.match(f))); return r.map((x) => x && x.redirected); })`);
+verifier(JSON.stringify(redirigees) === '[false,false]', `index.html et demenagement.html (redirigés par le serveur) sont gardés sans trace de redirection : ${JSON.stringify(redirigees)}`);
 
 const fichier = { version: 1, exemplesAjoutes: true, exporteLe: '2026-01-01T00:00:00.000Z',
   animaux: [{ id: 'a', nom: 'Moka', espece: 'chien', especeAutre: '', race: 'Berger', naissance: '2023-08-01', photo: '' }, { id: 'b', nom: 'Filou', espece: 'chat', especeAutre: '', race: '', naissance: '', photo: '' }],
@@ -122,6 +126,13 @@ verifier(await fetch(`${BASE}/index.html`).then(() => false, () => true), 'le se
 await send('Page.reload'); await dort(2500);
 log('  titre =', await ev(`document.title`), '| contenu =', (await texte('#contenu')).slice(0, 60));
 verifier((await ev(`document.title`)).endsWith('Carnet Patte') && await ev(`!!document.querySelector('#contenu h1')`), 'l’appli se rouvre sans réseau (page rechargée depuis le cache)');
+// Navigations directes vers des adresses que le serveur redirige : ERR_FAILED si le service worker servait une réponse redirigée
+for (const [adresse, titre] of [[`${BASE}/index.html`, 'Carnet Patte'], [`${BASE}/demenagement.html`, 'Carnet Patte'], [`${BASE}/demenagement`, 'Carnet Patte']]) {
+  const nav = await send('Page.navigate', { url: adresse }); await dort(1800);
+  const t = await ev(`document.title`);
+  verifier(!nav?.errorText && t.includes(titre), `hors connexion, ${adresse.replace(BASE, '')} s’ouvre sans erreur (${nav?.errorText ?? 'ok'}) : « ${t} »`);
+}
+await send('Page.navigate', { url: `${BASE}/index.html` }); await dort(1800);
 await aller('#/animaux'); await dort(400);
 verifier((await texte('#contenu')).includes('Moka') && (await texte('#contenu')).includes('Filou'), 'les animaux s’affichent hors connexion');
 await aller('#/animaux/rappels'); await dort(400);
@@ -151,8 +162,10 @@ for (let i = 0; i < 60 && !(await ev(`!!document.querySelector('.pwa-maj')`)); i
 verifier(await ev(`!!document.querySelector('.pwa-maj')`), 'la bannière apparaît quand une nouvelle version est publiée');
 verifier((await texte('.pwa-maj')).includes('Nouvelle version disponible') && (await texte('.pwa-maj [data-maj]')) === 'Mettre à jour', `bannière : « ${await texte('.pwa-maj')} »`);
 verifier(await ev(`document.querySelector('.pwa-maj').getAttribute('role')`) === 'status', 'bannière annoncée aux lecteurs d’écran (role=status)');
+for (let i = 0; i < 40 && (await noms()).includes('carnetpatte-app-t1'); i++) await dort(250); // le nettoyage suit l'activation de quelques instants
 const pendant = await noms();
-verifier(pendant.includes('carnetpatte-app-t1') && pendant.includes('carnetpatte-app-t2'), `avant le clic, l’ancienne version reste en place et la nouvelle attend : ${pendant.join(', ')}`);
+verifier(pendant.includes('carnetpatte-app-t2') && !pendant.includes('carnetpatte-app-t1'), `la nouvelle version a pris la main toute seule (skipWaiting) et l’ancien cache est nettoyé : ${pendant.join(', ')}`);
+verifier(await ev(`navigator.serviceWorker.getRegistration().then((r) => !r.waiting && !!r.active)`), 'aucune version en attente : la nouvelle est déjà active');
 verifier(await ev(`window.__ancienne === true`), 'la page n’a pas été rechargée toute seule');
 verifier(await donnees() === avant, 'données des animaux identiques pendant l’attente');
 await ecran('banniere-maj'); await axe('.pwa-maj', 'bannière');

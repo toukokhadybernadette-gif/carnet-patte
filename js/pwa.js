@@ -9,7 +9,7 @@ export const estInstallee = () => navigator.standalone === true || matchMedia('(
 
 let bandeau = null;
 
-/** Petite bannière « Nouvelle version disponible — Mettre à jour ». `activer` est appelée au clic. */
+/** Petite bannière « Nouvelle version disponible — Mettre à jour » (recharge la page). `activer` est appelée au clic. */
 function afficherBandeau(activer) {
   if (bandeau?.isConnected) return;
   bandeau = document.createElement('div');
@@ -27,24 +27,14 @@ function afficherBandeau(activer) {
 
 export function initialiserPwa() {
   if (!('serviceWorker' in navigator)) return;
-  // Même page rechargée seulement si c'est NOUS qui avons demandé la mise à jour (pas à la toute première installation)
-  let rechargement = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (rechargement || !demandee) return;
-    rechargement = true;
-    location.reload();
-  });
-  let demandee = false;
+  // La nouvelle version prend la main toute seule (sw.js : skipWaiting + clients.claim). Si la page était déjà contrôlée par l'ancienne,
+  // on propose de recharger ; la page n'est jamais rechargée sans clic. À la toute première installation, rien à proposer.
+  const avaitControleur = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (avaitControleur) afficherBandeau(() => location.reload()); });
 
   addEventListener('load', async () => {
     let enregistrement;
     try { enregistrement = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }); } catch { return; } // pas de HTTPS, navigation privée… : l'appli marche quand même, sans hors-ligne
-    const activer = () => { demandee = true; (enregistrement.waiting ?? enregistrement.installing)?.postMessage({ type: 'SKIP_WAITING' }); };
-    // Une version déjà installée ET une autre en attente : on propose
-    const surveiller = (sw) => sw.addEventListener('statechange', () => { if (sw.state === 'installed' && navigator.serviceWorker.controller) afficherBandeau(activer); });
-    if (enregistrement.waiting && navigator.serviceWorker.controller) afficherBandeau(activer);
-    enregistrement.addEventListener('updatefound', () => enregistrement.installing && surveiller(enregistrement.installing));
-    if (enregistrement.installing) surveiller(enregistrement.installing);
     // Une appli installée reste longtemps ouverte en arrière-plan : on cherche une nouvelle version à chaque retour
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') enregistrement.update().catch(() => {}); });
   }, { once: true });

@@ -28,7 +28,7 @@ verifier(sw.includes("const VERSION = 'testdem1abcd';") && !sw.includes('/*FICHI
 const liste = JSON.parse(sw.match(/const FICHIERS = (\[.*?\]);/s)[1]);
 verifier(liste.includes('demenagement.html') && liste.includes('index.html') && liste.every((f) => present(f)) && !liste.some((f) => f.startsWith('donnees/')), `${liste.length} fichiers à garder hors ligne, tous présents (demenagement.html compris)`);
 const entetes = fs.readFileSync(path.join(SITE, '_headers'), 'utf8');
-verifier(/\/sw\.js\n\s+Cache-Control: no-cache/.test(entetes) && /\/index\.html\n\s+Cache-Control: no-cache/.test(entetes) && /X-Content-Type-Options: nosniff/.test(entetes), '_headers : sw.js, index.html et manifeste toujours relus ; nosniff');
+verifier(/\/sw\.js\r?\n\s+Cache-Control: no-cache/.test(entetes) && /\/index\.html\r?\n\s+Cache-Control: no-cache/.test(entetes) && /X-Content-Type-Options: nosniff/.test(entetes), '_headers : sw.js, index.html et manifeste toujours relus ; nosniff');
 const cf = spawnSync(process.execPath, [path.join(RACINE, 'outils/assembler-site.mjs'), `--sortie=${path.join(SITE, '_cf')}`], { env: { ...process.env, CF_PAGES_COMMIT_SHA: 'cafebabe1234deadbeef' }, encoding: 'utf8' });
 verifier(cf.status === 0 && fs.readFileSync(path.join(SITE, '_cf', 'sw.js'), 'utf8').includes("const VERSION = 'cafebabe1234';"), 'sur Cloudflare, la version vient de CF_PAGES_COMMIT_SHA');
 fs.rmSync(path.join(SITE, '_cf'), { recursive: true, force: true });
