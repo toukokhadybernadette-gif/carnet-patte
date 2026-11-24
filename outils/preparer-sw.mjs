@@ -11,7 +11,7 @@ const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FICHIERS_RACINE = ['index.html', 'demenagement.html', 'manifest.webmanifest'];
 const DOSSIERS = ['css', 'js', 'modules', 'assets'];
 const EXTENSIONS = new Set(['.html', '.css', '.js', '.json', '.png', '.svg', '.woff2', '.webmanifest']);
-const A_EXCLURE = [/\/demarrage-[^/]+\.png$/]; // écrans de démarrage iPhone : lus par iOS, pas par l'appli
+const A_EXCLURE = [/\/demarrage-[^/]+\.png$/, /^assets\/supabase\//]; // écrans de démarrage iPhone (lus par iOS) ; bibliothèque des comptes (chargée seulement à la demande, 220 Ko)
 
 function parcourir(base, dossier, sortie) {
   for (const e of fs.readdirSync(path.join(base, dossier), { withFileTypes: true })) {

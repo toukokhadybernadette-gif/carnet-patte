@@ -12,6 +12,7 @@ import { THEMES, PERSO, themeActuel, appliquerTheme, appliquerPerso, couleurPers
 import { themeDepuisCouleur, variablesTheme } from '../../js/couleurs-theme.js';
 import { variablesThemeSombre } from '../../js/couleurs-sombre.js';
 import { estInstallee } from '../../js/pwa.js';
+import { estConfigure as comptesActifs } from '../../js/compte.js';
 
 const ligne = ({ icone: i, titre, texte, href, bientot }) => `
   <li><a class="cp-liste__ligne cp-liste__ligne--lien" href="${href}">
@@ -108,7 +109,7 @@ export function rendre(zone) {
         </div>
       </section>
 
-      ${alerte({ type: 'info', titre: 'Pas encore de compte', texte: 'Les comptes arriveront plus tard. Pour l\'instant, vos animaux, soins et pesées sont enregistrés sur cet appareil : pensez à faire une sauvegarde de temps en temps.' })}
+      ${alerte({ type: 'info', titre: 'Un compte est facultatif', texte: 'Avec ou sans compte, vos animaux, soins et pesées sont enregistrés sur cet appareil. La sauvegarde et la synchronisation en ligne seront réservées à la formule Premium : en attendant, pensez à faire une sauvegarde de temps en temps.' })}
 
       <section class="pg-section" aria-labelledby="pf-donnees">
         <div class="pg-section__tete"><h2 id="pf-donnees">Mes données</h2></div>
@@ -122,6 +123,7 @@ export function rendre(zone) {
         <ul class="cp-liste">
           ${ligne({ icone: 'users', titre: 'Communauté', texte: 'Échanger avec d\'autres passionnés.', href: '#/communaute', bientot: true })}
           ${ligne({ icone: 'briefcase-business', titre: 'Professionnels', texte: 'Outils pour éleveurs et professionnels.', href: '#/pro', bientot: true })}
+          ${comptesActifs() ? ligne({ icone: 'user', titre: 'Compte', texte: 'Connexion facultative par code reçu par e-mail, liste d\'attente Premium, vos données.', href: '#/compte' }) : ''}
           ${ligne({ icone: 'info', titre: 'À propos', texte: 'Mentions légales, sources et licences.', href: '#/apropos' })}
           ${ligne({ icone: 'compass', titre: 'Autres modules à venir', texte: 'Basse-cour, perdus / trouvés, refuges.', href: '#/bientot' })}
         </ul>

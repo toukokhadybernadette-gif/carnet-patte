@@ -1,0 +1,366 @@
+// Test « carte » : Carte Patte (lieux utiles autour de soi) avec des réponses SIMULÉES : aucun vrai serveur OpenStreetMap n'est appelé.
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+const S = process.argv[2], URL = process.argv[3], TAG = process.argv[4];
+const E = process.env.EDGE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'; // chemin de msedge.exe : à adapter avec la variable EDGE si besoin
+const port = +(process.env.PORT || 9350);
+const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+let echecs = 0;
+const log = (...a) => console.log(...a);
+const verifier = (condition, texteLog) => { if (!condition) echecs++; log(`  ${texteLog} = ${condition}`); };
+
+fs.rmSync(`${S}/prof-e2e-${TAG}`, { recursive: true, force: true });
+const proc = spawn(E, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${port}`, `--user-data-dir=${S}/prof-e2e-${TAG}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let list; for (let i = 0; i < 40; i++) { try { list = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); if (list.find((t) => t.type === 'page')) break; } catch {} await sleep(250); }
+const ws = new WebSocket(list.find((t) => t.type === 'page').webSocketDebuggerUrl);
+await new Promise((r) => (ws.onopen = r));
+let id = 0; const pend = new Map(); const erreurs = [];
+ws.onmessage = (m) => { const d = JSON.parse(m.data);
+  if (d.id && pend.has(d.id)) { pend.get(d.id)(d); pend.delete(d.id); }
+  if (d.method === 'Runtime.exceptionThrown') erreurs.push('EXC ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text));
+  if (d.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(d.params.type)) erreurs.push('CONSOLE ' + d.params.args.map((a) => a.value ?? a.description).join(' '));
+  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error') erreurs.push('LOG ' + d.params.entry.text + ' ' + (d.params.entry.url || ''));
+};
+const send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+const ev = async (expr) => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'erreur'); return r.result.result.value; };
+await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
+fs.mkdirSync(`${S}/shots`, { recursive: true });
+const taille = (w, h) => send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: w < 600 });
+const aller = async (h) => { await ev(`location.hash='${h}'`); await sleep(700); };
+const aller2 = async (h) => { if (await ev(`location.hash`) === h) { await ev(`import('/js/router.js').then(r=>r.rafraichir())`); await sleep(500); } else await aller(h); };
+const ecran = async (nom, plein = false) => { const c = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: plein }); fs.writeFileSync(`${S}/shots/${TAG}-${nom}.png`, Buffer.from(c.result.data, 'base64')); };
+let axeSrc = ''; for (let i = 0; i < 4 && !axeSrc; i++) { try { axeSrc = await (await fetch('https://cdn.jsdelivr.net/npm/axe-core@4.10.2/axe.min.js')).text(); } catch { await sleep(1500); } }
+const axe = async (sel, nom) => { const a = await ev(`axe.run(document.querySelector('${sel}'), {runOnly:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa','best-practice']}).then(r=>({v:r.violations.map(v=>v.id+'('+v.nodes.length+') '+v.nodes[0].html.slice(0,90)),inc:r.incomplete.map(i=>i.id)}))`); log('axe', nom, ':', a.v.length ? 'VIOLATIONS ' + a.v.join(' | ') : '0 violation', a.inc.length ? '· à vérifier ' + a.inc : ''); };
+const sansDebord = () => ev(`document.documentElement.scrollWidth<=innerWidth`);
+const texte = (sel) => ev(`(document.querySelector(${JSON.stringify(sel)})?.innerText ?? 'ABSENT').replace(/\\s+/g,' ').trim()`);
+
+// ===== Réponses simulées : AUCUN vrai serveur (Overpass, Nominatim, tuiles) n'est appelé =====
+const mondial = (a, b) => { const r = Math.PI / 180, dl = (b.lat - a.lat) * r, dn = (b.lon - a.lon) * r; const h = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dn / 2) ** 2; return 2 * 6371000 * Math.asin(Math.sqrt(h)); };
+const C = { lat: 48.1173, lon: -1.6778 };                               // « Rennes »
+const POS = { lat: 48.1175, lon: -1.6775 };                             // la position simulée de l'appareil (jamais écrite nulle part)
+const nord = (m) => +(C.lat + m / 111320).toFixed(6);
+const est = (m) => +(C.lon + m / (111320 * Math.cos(C.lat * Math.PI / 180))).toFixed(6);
+const NOM_LONG = 'Clinique Vétérinaire Universitaire Internationale des Animaux de Compagnie et de la Faune Sauvage de Bretagne Occidentale';
+const ELEMENTS = [
+  { type: 'node', id: 1, lat: nord(400), lon: C.lon, tags: { amenity: 'veterinary', name: 'Clinique Vétérinaire du Parc', 'addr:housenumber': '12', 'addr:street': 'rue des Lilas', 'addr:postcode': '35000', 'addr:city': 'Rennes', phone: '+33 2 99 00 00 01', opening_hours: 'Mo-Fr 09:00-18:00; Sa 09:00-12:00' } },
+  { type: 'node', id: 12, lat: nord(-700), lon: C.lon, tags: { amenity: 'veterinary', name: NOM_LONG, 'addr:full': '1 avenue du Professeur Docteur Jean-Baptiste de la Fontaine-Saint-Martin, 35000 Rennes' } },
+  { type: 'node', id: 2, lat: C.lat, lon: est(1500), tags: { amenity: 'veterinary', name: 'Urgences Vétérinaires Rennes', opening_hours: '24/7', phone: '02 99 00 00 02' } },
+  { type: 'way', id: 3, center: { lat: nord(2600), lon: C.lon }, tags: { leisure: 'dog_park', name: 'Parc canin de la Prévalaye' } },
+  { type: 'node', id: 4, lat: nord(-3500), lon: C.lon, tags: { shop: 'pet', name: 'Au Royaume des Animaux' } },
+  { type: 'node', id: 5, lat: C.lat, lon: est(-4500), tags: { shop: 'pet_grooming', name: 'Toilettage Doudou', phone: 'pas un numéro', opening_hours: 'Mo-Sa 10:00-19:00' } },
+  { type: 'node', id: 7, lat: nord(6000), lon: C.lon, tags: { amenity: 'veterinary' } },
+  { type: 'node', id: 6, lat: C.lat, lon: est(8000), tags: { amenity: 'animal_shelter', name: 'Refuge de la SPA', phone: '+33 2 99 00 00 06' } },
+  { type: 'node', id: 8, lat: nord(-9500), lon: C.lon, tags: { shop: 'pet_supply', name: 'Pet Zone' } },
+  { type: 'node', id: 9, lat: nord(14000), lon: C.lon, tags: { amenity: 'veterinary', name: 'Vétérinaire lointain' } },
+];
+const BRUIT = [{ type: 'node', id: 90, lat: nord(200), lon: C.lon, tags: { amenity: 'cafe', name: 'Un café' } }, { type: 'node', id: 91, tags: { amenity: 'veterinary', name: 'Sans position' } }];
+const CAT = (t) => (t.amenity === 'veterinary' ? 'veto' : t.leisure === 'dog_park' ? 'parc' : ['pet', 'pet_supply'].includes(t.shop) ? 'animalerie' : t.shop === 'pet_grooming' ? 'toiletteur' : t.amenity === 'animal_shelter' ? 'refuge' : null);
+const coord = (e) => ({ lat: e.lat ?? e.center.lat, lon: e.lon ?? e.center.lon });
+const attendus = (centre, rayonKm) => ELEMENTS.map((e) => ({ id: `${e.type}/${e.id}`, cat: CAT(e.tags), nom: e.tags.name ?? '', d: mondial(centre, coord(e)), tags: e.tags })).filter((l) => l.d <= rayonKm * 1000).sort((a, b) => a.d - b.d);
+const VILLES = { rennes: { lat: C.lat, lon: C.lon, display_name: 'Rennes, Ille-et-Vilaine, Bretagne, France métropolitaine, France' }, '35000': { lat: C.lat, lon: C.lon, display_name: '35000, Rennes, Ille-et-Vilaine, Bretagne, France' },
+  brest: { lat: 48.39, lon: -4.486, display_name: 'Brest, Finistère, Bretagne, France' }, nantes: { lat: 47.2184, lon: -1.5536, display_name: 'Nantes, Loire-Atlantique, Pays de la Loire, France' },
+  lyon: { lat: 45.764, lon: 4.8357, display_name: 'Lyon, Métropole de Lyon, Rhône, France' }, marseille: { lat: 43.2965, lon: 5.3698, display_name: 'Marseille, Bouches-du-Rhône, France' } };
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+
+const appels = [];                 // chaque requête vers Overpass ou Nominatim : { t, type, ... }
+let tuiles = 0, enCours = 0, maxEnCours = 0, mode = 'ok';
+await send('Fetch.enable', { patterns: [{ urlPattern: '*overpass-api.de*' }, { urlPattern: '*nominatim.openstreetmap.org*' }, { urlPattern: '*tile.openstreetmap.org*' }] });
+const repondre = (requestId, { status = 200, type = 'application/json', corps = '' }) => send('Fetch.fulfillRequest', { requestId, responseCode: status, responseHeaders: [{ name: 'Content-Type', value: type }, { name: 'Access-Control-Allow-Origin', value: '*' }], body: Buffer.from(corps).toString('base64') });
+ws.addEventListener('message', async (m) => {
+  const d = JSON.parse(m.data);
+  if (d.method !== 'Fetch.requestPaused') return;
+  const { requestId, request } = d.params;
+  const u = new globalThis.URL(request.url);
+  if (u.hostname === 'tile.openstreetmap.org') { tuiles++; await repondre(requestId, { type: 'image/png', corps: PNG }); return; }
+  enCours++; maxEnCours = Math.max(maxEnCours, enCours);
+  await sleep(450); // une vraie réponse n'est pas instantanée : on vérifie qu'aucune autre requête ne part pendant ce temps
+  try {
+    if (u.hostname === 'nominatim.openstreetmap.org') {
+      const q = (u.searchParams.get('postalcode') ?? u.searchParams.get('q') ?? '').toLowerCase();
+      appels.push({ t: Date.now(), type: 'nominatim', q, pays: u.searchParams.get('country'), cp: u.searchParams.get('postalcode') });
+      await repondre(requestId, { corps: JSON.stringify(VILLES[q] ? [{ lat: String(VILLES[q].lat), lon: String(VILLES[q].lon), display_name: VILLES[q].display_name }] : []) });
+    } else {
+      const requete = new URLSearchParams(request.postData ?? '').get('data') ?? '';
+      const [, r, lat, lon] = requete.match(/around:(\d+),([-\d.]+),([-\d.]+)/) ?? [];
+      appels.push({ t: Date.now(), type: 'overpass', rayon: +r, lat, lon, methode: request.method, requete });
+      if (mode === 'hors-ligne') await send('Fetch.failRequest', { requestId, errorReason: 'InternetDisconnected' });
+      else if (mode === 'serveur') await repondre(requestId, { status: 504, type: 'text/plain', corps: 'Gateway Timeout' });
+      else if (mode === 'remarque') await repondre(requestId, { corps: JSON.stringify({ elements: [], remark: 'runtime error: Query timed out in "query" at line 1 after 26 seconds.' }) });
+      else {
+        const centre = { lat: +lat, lon: +lon };
+        const dedans = ELEMENTS.filter((e) => mondial(centre, coord(e)) <= +r);
+        const bruit = BRUIT.filter((e) => !e.lat || mondial(centre, coord(e)) <= +r);
+        await repondre(requestId, { corps: JSON.stringify({ version: 0.6, elements: [...dedans, ...bruit] }) });
+      }
+    }
+  } finally { enCours--; }
+});
+const nbOverpass = () => appels.filter((a) => a.type === 'overpass').length;
+const nbNominatim = () => appels.filter((a) => a.type === 'nominatim').length;
+const attendre = async (expr, ms = 20000) => { const fin = Date.now() + ms; while (Date.now() < fin) { if (await ev(expr)) return true; await sleep(150); } return false; };
+const origine = new globalThis.URL(URL).origin;
+await send('Browser.grantPermissions', { origin: origine, permissions: ['geolocation'] }).catch(() => {});
+await send('Emulation.setGeolocationOverride', { latitude: POS.lat, longitude: POS.lon, accuracy: 20 });
+// Espion : compte les demandes de position et permet de simuler un refus (le vrai refus dépend du profil du navigateur)
+const poserEspion = () => ev(`(() => { window.__geo = 0; window.__geoMode = 'reel'; const o = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+  navigator.geolocation.getCurrentPosition = (ok, err, opt) => { window.__geo++; if (window.__geoMode === 'refus') return setTimeout(() => err({ code: 1, message: 'denied' }), 40); return o(ok, err, opt); }; return true; })()`);
+const statut = () => texte('#ca-statut');
+const liste = () => ev(`[...document.querySelectorAll('.ca-lieu')].map((b) => ({ id: b.dataset.id, nom: b.querySelector('.ca-lieu__nom').textContent, meta: b.querySelector('.ca-lieu__meta').textContent }))`);
+const cliquer = (sel) => ev(`document.querySelector(${JSON.stringify(sel)}).click()`);
+const chercherVille = async (v) => { await ev(`(() => { const i = document.querySelector('#ca-ville'); i.value = ${JSON.stringify(v)}; i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('#ca-form').requestSubmit(); })()`); };
+const donnees = () => ev(`import('/js/storage.js').then(m => m.exporter())`);
+const sansHorodatage = (t) => { const o = JSON.parse(t); delete o.exporteLe; return JSON.stringify(o); };
+const importer = (t) => ev(`import('/js/storage.js').then(m => m.importer(${JSON.stringify(t)}))`);
+const A = (id, nom, espece, extra = {}) => ({ id, nom, espece, especeAutre: '', race: '', naissance: '', photo: '', ...extra });
+const erreursAttendues = (avant) => { const n = erreurs.length - avant; const dernieres = erreurs.slice(avant); const ok = dernieres.every((e) => /overpass-api|Failed to load resource|ERR_|504/.test(e)); erreurs.splice(avant); return ok ? n : -1; };
+
+await send('Page.navigate', { url: URL }); await sleep(1800); await taille(1280, 900); await aller2('#/accueil'); await ev(axeSrc);
+await importer(JSON.stringify({ version: 1, exemplesAjoutes: true, animaux: [A('c', 'Moka', 'chien'), A('b', 'Mimi', 'chat')], soins: [], pesees: [] }));
+const avantDonnees = sansHorodatage(await donnees());
+await ev(`localStorage.removeItem('carnetpatte.carteCache')`);
+
+log('=== ACCÈS : Accueil, menu ☰, barre latérale ===');
+await aller2('#/accueil');
+verifier(await ev(`document.querySelector('a.ca-acces')?.getAttribute('href')`) === '#/carte', 'Accueil : une carte « Carte Patte » mène à #/carte');
+await ev(`document.querySelector('#menu-bouton').click()`); await sleep(500);
+verifier(await ev(`document.querySelector('dialog.app-menu [data-menu=carte]')?.getAttribute('href')`) === '#/carte' && await ev(`document.querySelectorAll('dialog.app-menu .app-menu__lien').length`) === 6, 'menu ☰ : entrée « Carte Patte » (6 entrées en tout)');
+await ev(`document.querySelector('dialog.app-menu [data-menu=carte]').click()`); await sleep(900);
+verifier(await ev(`location.hash`) === '#/carte' && await texte('#contenu h1') === 'Carte Patte', 'le menu ouvre la page Carte Patte');
+verifier(await ev(`!!document.querySelector('.app-lateral [data-nav=carte]') && !document.querySelector('.app-bientot__liste [data-nav=carte]')`), 'barre latérale : la Carte n\'est plus rangée sous « Bientôt »');
+
+log('=== PAGE AVANT TOUTE RECHERCHE ===');
+await poserEspion();
+const MESSAGE = 'Données OpenStreetMap, parfois incomplètes. En urgence, appelez votre vétérinaire.';
+verifier((await texte('.ca-avertissement')).includes(MESSAGE), `message d'avertissement exact et visible : « ${MESSAGE} »`);
+verifier(await ev(`(() => { const r = document.querySelector('.ca-avertissement').getBoundingClientRect(); return r.width > 100 && r.height > 20; })()`), 'le message est visible (dimensions réelles)');
+verifier(await ev(`document.querySelector('.ca-info').textContent`).then((t) => /position/.test(t) && /pas enregistrée/.test(t)), 'ligne de vie privée : la position n\'est pas enregistrée');
+verifier(await ev(`window.__geo`) === 0, 'aucune demande de position avant un toucher');
+verifier(nbOverpass() === 0 && nbNominatim() === 0 && tuiles === 0, 'aucune requête réseau avant une recherche (ni lieux, ni ville, ni tuiles)');
+verifier(await ev(`document.querySelector('#ca-zone').hidden && !document.querySelector('#ca-vide').hidden`), 'avant la recherche : invite « Où êtes-vous ? », pas de carte');
+verifier(await ev(`!!document.querySelector('label[for=ca-ville]') && document.querySelector('#ca-loc').textContent.trim() === 'Autour de moi'`), 'bouton « Autour de moi » et champ « Ville ou code postal » étiquetés');
+verifier(JSON.stringify(await ev(`[...document.querySelectorAll('input[name=ca-rayon]')].map((i) => i.value + (i.checked ? '*' : ''))`)) === '["2","5*","10"]', 'rayon réglable 2, 5, 10 km (5 par défaut)');
+await axe('#contenu', 'Carte avant recherche, 1280 px');
+
+log('=== LOCALISATION REFUSÉE → recherche par ville ===');
+await ev(`window.__geoMode = 'refus'`); await cliquer('#ca-loc'); await sleep(500);
+verifier(/refusée/.test(await texte('#ca-erreur')) && await ev(`document.activeElement.id`) === 'ca-ville', 'refus : message clair et le curseur passe dans « Ville ou code postal »');
+verifier(await ev(`!document.querySelector('#ca-reessayer')`) && nbOverpass() === 0, 'refus : pas de bouton « Réessayer » inutile, aucune requête');
+await ev(`window.__geoMode = 'reel'`);
+
+log('=== AUTOUR DE MOI (position simulée) ===');
+await ev(`window.__geo = 0`);
+await cliquer('#ca-loc');
+verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut').textContent)`), 'les lieux s\'affichent');
+verifier(await ev(`window.__geo`) === 1, 'une seule demande de position, après le toucher');
+let attendu = attendus(POS, 5);
+let l = await liste();
+verifier(JSON.stringify(l.map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)), `liste triée par distance : ${l.map((x) => x.id.replace('node/', '')).join(' > ')} (attendu ${attendu.map((x) => x.id.replace('node/', '')).join(' > ')})`);
+const km = (t) => { const m = t.match(/([\d,]+)\s*(km|m)\b/); return parseFloat(m[1].replace(',', '.')) * (m[2] === 'km' ? 1000 : 1); };
+verifier(l.every((x, i) => i === 0 || km(x.meta) >= km(l[i - 1].meta)), `distances affichées croissantes (${l.map((x) => x.meta.split('· ')[1]).join(', ')})`);
+verifier(l.every((x, i) => Math.abs(km(x.meta) - attendu[i].d) <= Math.max(60, attendu[i].d * 0.06)), 'distances affichées justes (à 6 % près)');
+verifier((await statut()) === `${attendu.length} lieux dans 5 km autour de votre position, du plus proche au plus loin.`, `statut annoncé : « ${await statut()} »`);
+verifier(!l.some((x) => /café|Sans position/.test(x.nom)), 'le café et le lieu sans position sont ignorés');
+const o1 = appels.filter((a) => a.type === 'overpass');
+verifier(o1.length === 1 && o1[0].methode === 'POST' && o1[0].rayon === 6000 && o1[0].lat === '48.12' && o1[0].lon === '-1.68', `une seule requête Overpass, zone arrondie à 1 km (${o1[0]?.lat}, ${o1[0]?.lon}), rayon ${o1[0]?.rayon} m`);
+verifier(['veterinary', 'dog_park', 'pet', 'pet_supply', 'pet_grooming', 'animal_shelter'].every((t) => o1[0].requete.includes(`"${t}"`)), 'la requête demande les 5 catégories (vétérinaires, parcs à chiens, animaleries, toiletteurs, refuges)');
+verifier(!o1[0].requete.includes('48.1175') && !o1[0].requete.includes('1.6775'), 'la position exacte n\'est pas envoyée à Overpass');
+
+log('=== LA CARTE (Leaflet, OpenStreetMap) ===');
+verifier(await attendre(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length === ${attendu.length}`), `${attendu.length} marqueurs sur la carte`);
+verifier(await ev(`L.version`) === '1.9.4', 'Leaflet 1.9.4 (version fixe, hébergée dans l\'appli)');
+verifier(await ev(`!!document.querySelector('script[src="assets/leaflet/leaflet.js"]') && !document.querySelector('script[src*="unpkg"], script[src*="cdn"]')`), 'Leaflet vient de l\'appli, pas d\'un serveur tiers');
+const attrib = await ev(`(() => { const a = document.querySelector('.leaflet-control-attribution'); const r = a.getBoundingClientRect(); const c = document.querySelector('#ca-carte').getBoundingClientRect(); const lien = [...a.querySelectorAll('a')].find((x) => /OpenStreetMap/.test(x.textContent)); return { texte: a.textContent, href: lien?.href, visible: r.width > 50 && r.height > 8 && r.right <= c.right + 1 && r.bottom <= c.bottom + 1 && getComputedStyle(a).visibility === 'visible' && getComputedStyle(a).display !== 'none', taille: parseFloat(getComputedStyle(a).fontSize) }; })()`);
+verifier(/© OpenStreetMap contributors/.test(attrib.texte) && attrib.href === 'https://www.openstreetmap.org/copyright' && attrib.visible && attrib.taille >= 11, `attribution « © OpenStreetMap contributors » visible, avec le lien vers la licence (${attrib.taille}px)`);
+verifier(tuiles > 0, `les tuiles viennent de tile.openstreetmap.org (${tuiles} demandées, simulées)`);
+verifier(await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-marqueur')].every((m) => m.getAttribute('title') && m.getAttribute('tabindex') === '0')`), 'chaque marqueur a un nom (title) et se atteint au clavier (tabindex 0)');
+verifier(await ev(`document.querySelector('#ca-carte').getAttribute('role') === 'region' && !!document.querySelector('#ca-carte').getAttribute('aria-label')`), 'la carte est une région nommée');
+const couleurs = await ev(`[...document.querySelectorAll('.leaflet-marker-icon.ca-marqueur span')].map((s) => s.style.background + '|' + !!s.querySelector('svg'))`);
+verifier(couleurs.length === attendu.length && couleurs.every((c) => c.endsWith('|true')), 'chaque marqueur a son icône');
+await cliquer('.leaflet-control-zoom-in'); await sleep(300);
+verifier(await ev(`location.hash`) === '#/carte', 'les boutons + / − de la carte ne changent pas la page (pas de « # » dans l\'adresse)');
+await sleep(700);
+verifier(await ev(`document.activeElement !== null`) && (await ev(`getComputedStyle(document.querySelector('.leaflet-control-attribution')).display`)) !== 'none', 'carte toujours en place après un zoom');
+const stock = await ev(`JSON.stringify([...Object.entries(localStorage), ...Object.entries(sessionStorage)])`);
+verifier(!/48\.1175|1\.6775/.test(stock), 'la position exacte n\'est écrite nulle part (localStorage, sessionStorage)');
+verifier(/carteCache/.test(stock) && /"cle":"48\.12,-1\.68"/.test(stock), 'seuls les lieux et la zone arrondie à 1 km sont gardés (cache de quelques heures)');
+await axe('#contenu', 'Carte avec résultats, 1280 px');
+
+log('=== FILTRES EN PASTILLES ===');
+const pastilles = await ev(`[...document.querySelectorAll('.ca-filtre')].map((b) => ({ cat: b.dataset.cat, nom: b.textContent.replace(/\\s+/g, ' ').trim(), presse: b.getAttribute('aria-pressed'), n: b.querySelector('.cp-filtre__nombre').textContent, couleur: b.querySelector('.ca-puce').style.getPropertyValue('--ca-c'), icone: !!b.querySelector('.ca-puce svg'), haut: Math.round(b.getBoundingClientRect().height) }))`);
+verifier(pastilles.length === 5 && pastilles.every((p) => p.presse === 'true' && p.icone && /^#[0-9A-F]{6}$/i.test(p.couleur)), `5 pastilles actives, chacune avec son icône et sa couleur : ${pastilles.map((p) => `${p.nom}`).join(' | ')}`);
+verifier(new Set(pastilles.map((p) => p.couleur)).size === 5, 'cinq couleurs différentes');
+verifier(pastilles.every((p) => +p.n === attendu.filter((x) => x.cat === p.cat).length), `nombre par catégorie juste (${pastilles.map((p) => `${p.cat}=${p.n}`).join(', ')})`);
+await cliquer('.ca-filtre[data-cat=veto]'); await sleep(300);
+let vis = attendu.filter((x) => x.cat !== 'veto');
+verifier((await liste()).length === vis.length && await ev(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length`) === vis.length && await ev(`document.querySelector('.ca-filtre[data-cat=veto]').getAttribute('aria-pressed')`) === 'false', `sans les vétérinaires : ${vis.length} lieux dans la liste ET sur la carte`);
+verifier((await liste()).every((x) => !/Vétérinaire ·/.test(x.meta)) && /^\d+ lieux? dans 5 km/.test(await statut()), 'plus aucun vétérinaire dans la liste ; le statut se met à jour');
+for (const c of ['parc', 'animalerie', 'toiletteur', 'refuge']) await cliquer(`.ca-filtre[data-cat=${c}]`);
+await sleep(300);
+verifier((await liste()).length === 0 && /Aucun type de lieu sélectionné/.test(await statut()), 'tout désactivé : message clair, liste vide');
+for (const c of ['veto', 'parc', 'animalerie', 'toiletteur', 'refuge']) await cliquer(`.ca-filtre[data-cat=${c}]`);
+await sleep(300);
+verifier((await liste()).length === attendu.length, 'tout réactivé : tous les lieux reviennent');
+await cliquer('.ca-filtre[data-cat=animalerie]'); await sleep(200); await cliquer('.ca-filtre[data-cat=animalerie]'); await sleep(200);
+
+log('=== FICHE D\'UN LIEU ===');
+const ouvrir = async (id) => { await ev(`document.querySelector('.ca-lieu[data-id="${id}"]').click()`); await sleep(400); };
+await ouvrir('node/1');
+verifier(await ev(`!document.querySelector('#ca-fiche').hidden`) && await texte('#ca-fiche h3') === 'Clinique Vétérinaire du Parc', 'toucher un lieu de la liste ouvre sa fiche (nom)');
+const f1 = await texte('#ca-fiche');
+verifier(f1.includes('12 rue des Lilas, 35000 Rennes') && f1.includes('+33 2 99 00 00 01') && f1.includes('lun-ven 09:00-18:00 ; sam 09:00-12:00'), `fiche : adresse, téléphone, horaires traduits (${f1.slice(0, 160)}…)`);
+const b1 = await ev(`(() => { const a = [...document.querySelectorAll('#ca-fiche a')]; const it = a.find((x) => /^Itinéraire/.test(x.textContent.trim())); const ap = a.find((x) => /^Appeler/.test(x.textContent.trim())); return { it: it?.href, itRel: it?.rel, itCible: it?.target, ap: ap?.href, apNom: ap?.getAttribute('aria-label'), osm: [...a].find((x) => /OpenStreetMap/.test(x.textContent))?.href }; })()`);
+verifier(new RegExp(`^https://(www.google.com/maps/dir/\\?api=1&destination=${nord(400)},${C.lon}|maps.apple.com/\\?daddr=${nord(400)},${C.lon}&dirflg=d)$`).test(b1.it) && /noopener/.test(b1.itRel) && b1.itCible === '_blank', `bouton « Itinéraire » : ${b1.it}`);
+verifier(b1.ap === 'tel:+33299000001' && /^Appeler/.test(b1.apNom), `bouton « Appeler » : ${b1.ap}`);
+verifier(b1.osm === 'https://www.openstreetmap.org/node/1', 'lien pour corriger le lieu sur OpenStreetMap');
+verifier(await ev(`document.activeElement.id`) === 'ca-fiche', 'le focus passe sur la fiche (lecteurs d\'écran)');
+verifier(await ev(`document.querySelector('.ca-lieu[data-id="node/1"]').getAttribute('aria-current')`) === 'true' && await ev(`document.querySelector('.leaflet-marker-icon.is-selection')?.getAttribute('title')`) === 'Clinique Vétérinaire du Parc', 'lieu choisi : repéré dans la liste ET sur la carte');
+await axe('#ca-fiche', 'fiche d\'un lieu');
+await ouvrir('node/2');
+verifier(/Ouvert 24h\/24, 7 j\/7/.test(await texte('#ca-fiche')), '« Ouvert 24h/24 » seulement parce que la donnée dit 24/7');
+await ouvrir('node/4');
+const f4 = await texte('#ca-fiche');
+verifier(/Horaires non indiqués/.test(f4) && /Téléphone non indiqué/.test(f4) && /Adresse non indiquée/.test(f4) && !/24\s?h/i.test(f4) && await ev(`![...document.querySelectorAll('#ca-fiche a')].some((x) => /^Appeler/.test(x.textContent.trim()))`), 'sans horaires ni téléphone dans les données : rien d\'inventé, jamais « 24h/24 », pas de bouton « Appeler »');
+await ouvrir('node/5');
+verifier(/Téléphone non indiqué/.test(await texte('#ca-fiche')) && /lun-sam 10:00-19:00/.test(await texte('#ca-fiche')), 'un « téléphone » qui n\'en est pas un est ignoré');
+await ev(`document.querySelector('.leaflet-marker-icon[title="Parc canin de la Prévalaye"]').click()`); await sleep(400);
+verifier(await texte('#ca-fiche h3') === 'Parc canin de la Prévalaye' && await ev(`document.activeElement.id`) === 'ca-fiche', 'toucher un marqueur ouvre aussi la fiche');
+await cliquer('#ca-fermer'); await sleep(300);
+verifier(await ev(`document.querySelector('#ca-fiche').hidden`) && await ev(`document.activeElement.classList.contains('ca-lieu')`), 'fermer la fiche : le focus revient dans la liste');
+await ouvrir('node/12');
+verifier(await ev(`document.documentElement.scrollWidth <= innerWidth`) && /Faune Sauvage de Bretagne Occidentale/.test(await texte('#ca-fiche h3')), 'nom très long : la fiche s\'affiche entière sans déborder');
+
+log('=== RAYON ET CACHE ===');
+const avantR = nbOverpass();
+await cliquer('input[name=ca-rayon][value="2"]');
+verifier(await attendre(`/dans 2 km/.test(document.querySelector('#ca-statut').textContent)`), 'rayon 2 km');
+attendu = attendus(POS, 2);
+verifier(JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)), `2 km : ${attendu.length} lieux, triés`);
+verifier(nbOverpass() === avantR, 'rayon plus petit : réponse tirée du cache, aucune nouvelle requête');
+await cliquer('input[name=ca-rayon][value="10"]');
+verifier(await attendre(`/dans 10 km/.test(document.querySelector('#ca-statut').textContent)`), 'rayon 10 km');
+attendu = attendus(POS, 10);
+l = await liste();
+verifier(nbOverpass() === avantR + 1 && appels.filter((a) => a.type === 'overpass').at(-1).rayon === 11000, 'rayon plus grand : une seule nouvelle requête (11 km avec la marge)');
+verifier(JSON.stringify(l.map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)) && !l.some((x) => x.id === 'node/9'), `10 km : ${attendu.length} lieux triés ; le vétérinaire à 14 km est exclu`);
+verifier(l.some((x) => x.nom === 'Vétérinaire (sans nom)'), 'un lieu sans nom est affiché « Vétérinaire (sans nom) »');
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+verifier(nbOverpass() === avantR + 1, 'retour à 5 km : toujours depuis le cache');
+
+log('=== RECHERCHE PAR VILLE OU CODE POSTAL ===');
+await chercherVille('Rennes');
+verifier(await attendre(`/autour de Rennes, Ille-et-Vilaine/.test(document.querySelector('#ca-statut').textContent)`), `ville : « ${await statut()} »`);
+verifier(nbNominatim() === 1 && appels.find((a) => a.type === 'nominatim').q === 'rennes', 'une requête de ville (Nominatim)');
+verifier(nbOverpass() === avantR + 1, 'même zone que tout à l\'heure : aucune nouvelle requête de lieux (cache)');
+attendu = attendus(C, 5);
+verifier(JSON.stringify((await liste()).map((x) => x.id)) === JSON.stringify(attendu.map((x) => x.id)), 'lieux autour de Rennes, triés par distance depuis le centre-ville');
+await chercherVille('35000');
+await attendre(`/autour de 35000, Rennes/.test(document.querySelector('#ca-statut').textContent)`);
+const cp = appels.filter((a) => a.type === 'nominatim').at(-1);
+verifier(cp.cp === '35000' && cp.pays === 'France', 'un code postal à 5 chiffres est cherché comme code postal français');
+await chercherVille('Brest');
+verifier(await attendre(`/autour de Brest/.test(document.querySelector('#ca-statut').textContent)`) && /Aucun lieu trouvé dans 5 km autour de Brest/.test(await statut()), `aucun résultat : message honnête (« ${await statut()} »)`);
+verifier(await ev(`document.querySelector('#ca-zone').hidden === false`), 'la carte reste affichée même sans lieu');
+await chercherVille('zzzzzz');
+await attendre(`/Aucune ville/.test(document.querySelector('#ca-erreur').textContent)`);
+verifier(/Aucune ville ni aucun code postal/.test(await texte('#ca-erreur')) && await ev(`document.activeElement.id`) === 'ca-ville' && await ev(`!document.querySelector('#ca-reessayer')`), 'ville inconnue : message clair, focus dans le champ, pas de « Réessayer »');
+const avantVide = nbNominatim();
+await chercherVille('  ');
+await sleep(300);
+verifier(/Entrez une ville ou un code postal/.test(await texte('#ca-erreur')) && nbNominatim() === avantVide, 'champ vide : message, aucune requête');
+
+log('=== UNE SEULE RECHERCHE À LA FOIS, PAUSE ENTRE LES REQUÊTES ===');
+const n0 = appels.length;
+await ev(`(() => { const i = document.querySelector('#ca-ville'); i.value = 'Nantes'; const f = document.querySelector('#ca-form'); f.requestSubmit(); f.requestSubmit(); document.querySelector('#ca-loc').click(); document.querySelector('input[name=ca-rayon][value="10"]').click(); })()`);
+await attendre(`/autour de Nantes/.test(document.querySelector('#ca-statut').textContent) || /Aucun lieu trouvé/.test(document.querySelector('#ca-statut').textContent)`);
+await sleep(4500); // laisse passer la relance éventuelle après le changement de rayon
+const nouveaux = appels.slice(n0);
+verifier(nouveaux.filter((a) => a.type === 'nominatim').length === 1, `deux envois du formulaire + « Autour de moi » pendant la recherche : une seule requête de ville (${nouveaux.filter((a) => a.type === 'nominatim').length})`);
+verifier(maxEnCours === 1, `jamais deux requêtes en même temps vers OpenStreetMap (maximum observé : ${maxEnCours})`);
+const ecarts = appels.slice(1).map((a, i) => a.t - appels[i].t);
+verifier(ecarts.every((e) => e >= 1400), `au moins 1,5 s entre deux requêtes (plus petit écart : ${Math.min(...ecarts)} ms sur ${appels.length} requêtes)`);
+verifier(await ev(`window.__geo`) === 1, 'le bouton « Autour de moi » est ignoré pendant une recherche');
+verifier(appels.filter((a) => a.type === 'overpass').every((a) => a.methode === 'POST'), 'requêtes Overpass en POST (pas de très longue adresse)');
+await cliquer('input[name=ca-rayon][value="5"]'); await attendre(`/dans 5 km/.test(document.querySelector('#ca-statut').textContent)`);
+
+log('=== ERREURS RÉSEAU ===');
+let avantE = erreurs.length;
+mode = 'hors-ligne';
+await chercherVille('Lyon');
+verifier(await attendre(`document.querySelector('#ca-reessayer')`, 25000), 'coupure pendant la recherche : bouton « Réessayer » affiché');
+verifier(/Impossible de joindre OpenStreetMap/.test(await texte('#ca-erreur')) && await ev(`document.querySelector('#ca-erreur [role=alert]') !== null`), 'message clair, annoncé aux lecteurs d\'écran (role=alert)');
+await axe('#ca-erreur', 'message d\'erreur');
+mode = 'ok';
+await cliquer('#ca-reessayer');
+verifier(await attendre(`/autour de Lyon/.test(document.querySelector('#ca-statut').textContent)`, 25000) && await ev(`!document.querySelector('#ca-erreur .cp-alerte')`), '« Réessayer » relance la même recherche : l\'erreur disparaît');
+mode = 'serveur';
+await chercherVille('Marseille');
+verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent)`, 25000) && await ev(`!!document.querySelector('#ca-reessayer')`), 'serveur en erreur (504) : message clair + « Réessayer »');
+mode = 'remarque';
+await cliquer('#ca-reessayer');
+verifier(await attendre(`/ne répond pas correctement/.test(document.querySelector('#ca-erreur').textContent) && !document.querySelector('#ca-statut').textContent.includes('Recherche en cours')`, 25000), 'réponse « Query timed out » d\'Overpass : traitée comme une erreur, pas comme « aucun lieu »');
+verifier(erreursAttendues(avantE) >= 0, 'seules les erreurs réseau simulées apparaissent dans la console (retirées du compte)');
+mode = 'ok';
+await send('Network.enable');
+await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+const avantHL = appels.length;
+await chercherVille('Nantes');
+verifier(await attendre(`/Pas de connexion internet/.test(document.querySelector('#ca-erreur').textContent)`, 8000) && appels.length === avantHL, 'sans connexion : message immédiat, aucune requête tentée');
+await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+await cliquer('#ca-reessayer');
+verifier(await attendre(`/autour de Nantes/.test(document.querySelector('#ca-statut').textContent)`, 25000), 'connexion revenue : « Réessayer » fonctionne');
+
+log('=== AFFICHAGE SUR 375 px (iPhone), PAGE RECHARGÉE ===');
+await taille(375, 812);
+await send('Page.navigate', { url: URL }); await sleep(1800); await aller2('#/carte'); await ev(axeSrc); await poserEspion();
+const cle = await ev(`localStorage.getItem('carnetpatte.carteCache')`);
+verifier(cle !== null && JSON.parse(cle).zones.length >= 1, 'le cache survit au rechargement (lieux seulement)');
+// Cache expiré (plus de 6 h) : on doit refaire une vraie requête
+await ev(`(() => { const o = JSON.parse(localStorage.getItem('carnetpatte.carteCache')); o.zones.forEach((z) => { z.t -= 7 * 3600e3; }); localStorage.setItem('carnetpatte.carteCache', JSON.stringify(o)); })()`);
+const avantExp = nbOverpass();
+await cliquer('#ca-loc');
+verifier(await attendre(`/lieux? dans/.test(document.querySelector('#ca-statut').textContent)`) && nbOverpass() === avantExp + 1, 'cache vieux de plus de 6 h : ignoré, nouvelle requête');
+await sleep(800);
+attendu = attendus(POS, 5);
+verifier(await sansDebord(), 'aucun défilement horizontal à 375 px');
+const mesures = await ev(`(() => { const v = innerWidth; const trop = [...document.querySelectorAll('.pg--carte *')].filter((e) => !e.closest('.leaflet-container') && !e.closest('.cp-sr') && getComputedStyle(e).position !== 'fixed').filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.right > v + 1 || r.left < -1); }).map((e) => e.className || e.tagName).slice(0, 5);
+  const cible = (sel) => [...document.querySelectorAll(sel)].map((e) => Math.round(e.getBoundingClientRect().height));
+  const carte = document.querySelector('#ca-carte').getBoundingClientRect();
+  return { trop, carteL: Math.round(carte.width), carteH: Math.round(carte.height), carteG: Math.round(carte.left), carteD: Math.round(v - carte.right), boutons: [...cible('#ca-loc'), ...cible('#ca-chercher')], pastilles: cible('.ca-filtre'), lignes: cible('.ca-lieu'), rayons: [...document.querySelectorAll('.ca-rayons .cp-choix__option span')].map((e) => Math.round(e.getBoundingClientRect().height)) }; })()`);
+verifier(mesures.trop.length === 0, `rien ne dépasse de l'écran (${mesures.trop.join(', ') || 'rien'})`);
+verifier(mesures.carteL >= 300 && mesures.carteH >= 260 && mesures.carteG >= 8 && mesures.carteD >= 8, `la carte occupe la largeur avec une marge (${mesures.carteL} × ${mesures.carteH} px, marges ${mesures.carteG}/${mesures.carteD})`);
+verifier(mesures.boutons.every((h) => h >= 40) && mesures.lignes.every((h) => h >= 48) && mesures.pastilles.every((h) => h >= 36), `boutons et lignes assez grands pour le doigt (boutons ${mesures.boutons}, pastilles ${mesures.pastilles}, lignes ${mesures.lignes})`);
+await ecran('375-liste', true);
+await ouvrir('node/12');
+verifier(await sansDebord() && await ev(`(() => { const f = document.querySelector('#ca-fiche').getBoundingClientRect(); return f.left >= 0 && f.right <= innerWidth && [...document.querySelectorAll('#ca-fiche *')].every((e) => e.getBoundingClientRect().right <= innerWidth + 1); })()`), 'fiche avec un nom de 120 caractères : tout reste dans l\'écran');
+await ecran('375-fiche');
+// La carte ne passe pas par-dessus la barre du bas
+const dessus = await ev(`(() => { window.scrollTo(0, document.querySelector('#ca-carte').getBoundingClientRect().top + scrollY - (innerHeight - 110)); const n = document.querySelector('.cp-nav-bas').getBoundingClientRect(); const e = document.elementFromPoint(n.left + n.width / 2, n.top + n.height / 2); return !!e?.closest('#nav-bas'); })()`);
+verifier(dessus, 'la carte glisse SOUS la barre de navigation du bas (rien ne la recouvre)');
+await ev(`window.scrollTo(0, 0)`);
+await axe('#contenu', 'Carte avec fiche, 375 px');
+await taille(768, 1024); await sleep(500); verifier(await sansDebord(), 'aucun défilement horizontal à 768 px'); await axe('#contenu', 'Carte, 768 px');
+await taille(1280, 900); await sleep(500); verifier(await sansDebord(), 'aucun défilement horizontal à 1280 px'); await axe('#contenu', 'Carte, 1280 px');
+
+log('=== LES AUTRES PAGES NE SONT PAS CASSÉES ===');
+for (const h of ['#/accueil', '#/animaux', '#/animaux/rappels', '#/toxique', '#/profil', '#/donnees', '#/bientot']) { await aller2(h); verifier(await ev(`!!document.querySelector('#contenu h1')`), `page ${h} s'affiche`); }
+await aller2('#/bientot'); verifier(await ev(`document.querySelectorAll('.bt-carte').length`) === 3, 'page Bientôt : 3 modules à venir');
+await aller2('#/carte'); verifier(await ev(`!!document.querySelector('.leaflet-container')`) && /lieux? dans/.test(await statut()), 'revenir sur la Carte : les résultats sont toujours là, sans nouvelle requête');
+verifier(await ev(`document.querySelectorAll('.leaflet-container').length`) === 1, 'une seule carte dans la page (l\'ancienne est bien détruite)');
+
+log('=== DONNÉES DE L\'UTILISATEUR INTACTES ===');
+const apresDonnees = sansHorodatage(await donnees());
+verifier(avantDonnees === apresDonnees, 'utiliser la Carte ne modifie aucune donnée enregistrée (animaux, soins, pesées)');
+verifier(!/carteCache|"lat"|lieux/.test(await donnees()), 'les lieux gardés ne sont pas dans l\'export de sauvegarde');
+const exp = await donnees();
+await ev(`import('/js/storage.js').then(m => m.toutEffacer())`);
+verifier(await ev(`localStorage.getItem('carnetpatte.carteCache')`) === null, '« Tout effacer » vide aussi les lieux gardés par la Carte');
+await importer(exp);
+const exp2 = await donnees();
+log('export -> effacer -> import -> export identique :', sansHorodatage(exp) === sansHorodatage(exp2));
+
+log('ERREURS CONSOLE :', erreurs.length ? erreurs : 'aucune');
+log('VÉRIFICATIONS EN ÉCHEC :', echecs);
+ws.close(); proc.kill(); process.exit(echecs ? 1 : 0);

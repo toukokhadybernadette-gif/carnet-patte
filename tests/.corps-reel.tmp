@@ -1,0 +1,67 @@
+
+const VILLE = 'Toulouse';
+const POINT = { lat: 43.6045, lon: 1.4442 };   // centre de Toulouse
+const donnees = () => ev(`import('/js/storage.js').then(m => m.exporter())`);
+const sansHorodatage = (t) => { const o = JSON.parse(t); delete o.exporteLe; return JSON.stringify(o); };
+const attendre = async (expr, ms) => { const fin = Date.now() + ms; while (Date.now() < fin) { if (await ev(expr)) return true; await sleep(300); } return false; };
+
+await send('Page.navigate', { url: URL }); await sleep(1800); await taille(1280, 900); await aller2('#/carte');
+await ev(`localStorage.removeItem('carnetpatte.carteCache')`); // on veut de vraies requêtes, pas le cache
+const avant = sansHorodatage(await donnees());
+
+log('=== 1. LES SERVEURS RÉPONDENT-ILS ? (requêtes réelles depuis le navigateur, comme l\'appli) ===');
+// Même chemin que l'appli : fetch depuis la page. Un refus CORS ou une coupure y apparaît comme « Failed to fetch ».
+const sonde = (url, optionsJs) => ev(`(async () => { const t0 = performance.now(); try { const r = await fetch(${JSON.stringify(url)}, ${optionsJs}); const txt = await r.text(); return { ok: r.ok, status: r.status, ms: Math.round(performance.now() - t0), debut: txt.slice(0, 90).replace(/\\s+/g, ' '), elements: (() => { try { return JSON.parse(txt).elements.length; } catch { return null; } })() }; } catch (e) { return { ok: false, erreur: e.name + ' : ' + e.message, ms: Math.round(performance.now() - t0) }; } })()`);
+const nominatim = await sonde(`https://nominatim.openstreetmap.org/search?q=${VILLE}&format=jsonv2&limit=1&accept-language=fr`, '{}');
+log('  Nominatim (ville) :', JSON.stringify(nominatim));
+verifier(nominatim.ok && nominatim.elements === null && /lat/.test(nominatim.debut), `Nominatim répond (HTTP ${nominatim.status} en ${nominatim.ms} ms, CORS accepté par le navigateur)`);
+const serveurs = await ev(`import('/modules/carte/carte-donnees.js').then(m => m.SERVEURS_OVERPASS.map((s) => ({ nom: s.nom, url: s.url })))`);
+const requete = await ev(`import('/modules/carte/carte-donnees.js').then(m => m.requeteOverpass(${POINT.lat}, ${POINT.lon}, 6000))`);
+let bons = 0;
+for (const s of serveurs) {
+  await sleep(1600); // pause entre deux requêtes, comme l'appli
+  const r = await sonde(s.url, `{ method: 'POST', body: new URLSearchParams({ data: ${JSON.stringify(requete)} }) }`);
+  log(`  Overpass ${s.nom} :`, JSON.stringify(r));
+  const bon = r.ok && r.elements > 0;
+  if (bon) bons++;
+  verifier(bon, `Overpass ${s.nom} répond avec des lieux (${r.ok ? `HTTP ${r.status}, ${r.elements} éléments, ${r.ms} ms` : `ÉCHEC : ${r.erreur ?? `HTTP ${r.status} ${r.debut}`}`})`);
+}
+verifier(bons >= 1, `au moins un serveur Overpass répond (${bons} sur ${serveurs.length}) : sinon la Carte ne peut pas fonctionner`);
+
+log('=== 2. LA RECHERCHE COMPLÈTE DANS L\'APPLI (vraie ville, rayon 5 km) ===');
+await sleep(1600);
+const t0 = Date.now();
+await ev(`(() => { const i = document.querySelector('#ca-ville'); i.value = ${JSON.stringify(VILLE)}; i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('#ca-form').requestSubmit(); })()`);
+const fini = await attendre(`!/Recherche en cours/.test(document.querySelector('#ca-statut').textContent) && (document.querySelector('#ca-statut').textContent !== '' || document.querySelector('#ca-erreur .cp-alerte'))`, 120000);
+const duree = Date.now() - t0;
+const statut = await texte('#ca-statut');
+const erreurUi = await texte('#ca-erreur');
+log(`  durée : ${duree} ms · statut : « ${statut} » · erreur affichée : « ${erreurUi === 'ABSENT' ? '' : erreurUi} »`);
+verifier(fini && !(await ev(`!!document.querySelector('#ca-erreur .cp-alerte')`)), `la recherche aboutit sans message d'erreur (${erreurUi.slice(0, 200)})`);
+verifier(new RegExp(`autour de ${VILLE}`).test(statut) && /^\d+ lieux? dans 5 km/.test(statut), `statut : « ${statut} »`);
+const lieux = await ev(`[...document.querySelectorAll('.ca-lieu')].map((b) => ({ nom: b.querySelector('.ca-lieu__nom').textContent, meta: b.querySelector('.ca-lieu__meta').textContent }))`);
+log('  premiers lieux :', lieux.slice(0, 5).map((l) => `${l.nom} (${l.meta})`).join(' | '));
+verifier(lieux.length >= 1, `des lieux réels sont affichés (${lieux.length} dans la liste)`);
+const km = (t) => { const m = t.match(/([\d,]+)\s*(km|m)\b/); return m ? parseFloat(m[1].replace(',', '.')) * (m[2] === 'km' ? 1000 : 1) : NaN; };
+verifier(lieux.every((l, i) => i === 0 || km(l.meta) >= km(lieux[i - 1].meta)) && lieux.every((l) => km(l.meta) <= 5000), 'liste triée par distance, tous dans les 5 km');
+verifier(await attendre(`document.querySelectorAll('.leaflet-marker-icon.ca-marqueur').length > 0 && document.querySelectorAll('.leaflet-tile-loaded').length > 0`, 20000), 'la carte affiche des marqueurs et de vraies tuiles OpenStreetMap');
+const serveurUtilise = await ev(`JSON.parse(localStorage.getItem('carnetpatte.carteCache') ?? '{"zones":[]}').zones.length`);
+verifier(serveurUtilise === 1, 'les lieux sont gardés en cache après une vraie recherche');
+await ecran('reel-toulouse');
+
+log('=== 3. CE QUE L\'APPLI A ÉCRIT DANS LA CONSOLE ===');
+const diag = erreurs.filter((e) => /\[Carte Patte\]/.test(e));
+for (const d of diag) log('  INFO', d);
+log(diag.length ? `  ${diag.length} avertissement(s) de diagnostic : un serveur a échoué, l'appli a essayé le suivant.` : '  aucun avertissement : le premier serveur a répondu du premier coup.');
+for (let i = erreurs.length - 1; i >= 0; i--) if (/\[Carte Patte\]/.test(erreurs[i])) erreurs.splice(i, 1);
+
+log('=== 4. DONNÉES INTACTES ===');
+verifier(avant === sansHorodatage(await donnees()), 'une vraie recherche ne modifie aucune donnée enregistrée');
+const exp = await donnees();
+await ev(`import('/js/storage.js').then(m => m.toutEffacer())`);
+await ev(`import('/js/storage.js').then(m => m.importer(${JSON.stringify(exp)}))`);
+log('export -> effacer -> import -> export identique :', sansHorodatage(exp) === sansHorodatage(await donnees()));
+
+log('ERREURS CONSOLE :', erreurs.length ? erreurs : 'aucune');
+log('VÉRIFICATIONS EN ÉCHEC :', echecs);
+ws.close(); proc.kill(); process.exit(echecs ? 1 : 0);
