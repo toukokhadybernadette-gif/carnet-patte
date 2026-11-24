@@ -146,7 +146,7 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
         <p><strong>Ce qui est alors stocké dans le cloud :</strong></p>
         <ul class="ap-liste">
           <li>vos animaux (nom, espèce, race, naissance, couleur…), leurs soins et rappels, leurs pesées, les œufs et stocks de la ferme ;</li>
-          <li>les fiches de garde, qui peuvent contenir des noms et des numéros de téléphone que vous avez saisis (vétérinaire, personne de confiance) : n'y mettez que ce que vous souhaitez sauvegarder ;</li>
+          <li>les fiches de garde (dates de garde, traitements en cours, numéro de puce, habitudes, suivi du jour), qui peuvent contenir des noms et des numéros de téléphone que vous avez saisis (vétérinaire, personne à prévenir) : n'y mettez que ce que vous souhaitez sauvegarder ;</li>
           <li>votre prénom, s'il est renseigné ;</li>
           <li>vos documents (PDF, photos) et les photos de vos animaux, en fichiers.</li>
         </ul>
