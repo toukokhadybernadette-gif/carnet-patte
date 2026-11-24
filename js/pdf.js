@@ -1,13 +1,16 @@
-// Petit générateur de PDF (texte + une photo JPEG), sans bibliothèque : tout se passe sur l'appareil, hors ligne comprise.
+// Petit générateur de PDF, sans bibliothèque : tout se passe sur l'appareil, hors ligne comprise.
 // Police Helvetica (standard, intégrée à tous les lecteurs de PDF), encodage Windows-1252 : les accents français et « » ’ — € œ sont bien rendus.
-// Usage :  const pdf = new Pdf({ titre: 'Fiche de garde', pied: 'Carnet Patte' });
-//          pdf.entete({ surtitre, nom, lignes, photo }); pdf.section('Repas'); pdf.paire('Aliment', 'Croquettes'); pdf.paragraphe('…');
-//          const octets = pdf.octets();   // Uint8Array à mettre dans un Blob
-// `photo` : { octets: Uint8Array d'un JPEG, largeur, hauteur } (voir jpegDepuisImage dans modules/animaux/garde.js).
+// On dessine sur la page avec des coordonnées en points depuis son COIN HAUT GAUCHE (A4 : 595 x 842), comme à l'écran :
+//   const pdf = new Pdf({ titre: 'Fiche de garde' });
+//   pdf.rect(x, y, l, h, { r: 10, fond: [1, 1, 1], trait: [0.2, 0.2, 0.2] }); pdf.texte(x, yDeLaLigne, 'Bonjour', { taille: 11, gras: true });
+//   pdf.photoRonde(photo, cx, cy, rayon); pdf.icone('heart', x, y, 14, { couleur }); pdf.nouvellePage();
+//   const octets = pdf.octets();   // Uint8Array à mettre dans un Blob
+// `photo` : { octets: Uint8Array d'un JPEG, largeur, hauteur }. Les couleurs sont [rouge, vert, bleu] de 0 à 1.
 
-const A4 = { l: 595.28, h: 841.89 };
-const MARGE = 42;
-const BAS = 56; // place gardée en bas pour le pied de page
+import { dessinIcone } from './icons.js';
+import { cheminPdfIcone } from './pdf-icones.js';
+
+export const A4 = { l: 595.28, h: 841.89 };
 
 // Largeurs Helvetica (millièmes d'em) des caractères ASCII 32 à 126
 const LARGEURS = [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015,
@@ -68,7 +71,7 @@ export function couperLignes(texte, largeur, taille, gras = false) {
 }
 
 /** Chaîne PDF : (…) avec échappement ; tout caractère non ASCII devient un code octal Windows-1252. */
-function chainePdf(texte) {
+export function chainePdf(texte) {
   let s = '';
   for (const c of nettoyer(texte)) {
     const n = code(c);
@@ -80,81 +83,85 @@ function chainePdf(texte) {
   return `(${s})`;
 }
 
-const nombre = (n) => (Math.round(n * 100) / 100).toString();
+export const nombre = (n) => (Math.round(n * 100) / 100).toString();
 const hex16 = (t) => `<FEFF${[...t].map((c) => c.codePointAt(0).toString(16).padStart(4, '0').slice(-4)).join('').toUpperCase()}>`;
 
+const K = 0.5522847498; // courbe de Bézier d'un quart de cercle
+
 export class Pdf {
-  constructor({ titre = 'Document', pied = '' } = {}) {
+  constructor({ titre = 'Document' } = {}) {
     this.titre = titre;
-    this.pied = pied;
     this.pages = [];
     this.photo = null;
+    this.boites = []; // chaque texte dessiné, avec sa largeur : sert à vérifier qu'aucun texte ne dépasse de la page
     this.nouvellePage();
   }
 
-  nouvellePage() {
-    this.pages.push([]);
-    this.y = A4.h - MARGE;
-  }
+  nouvellePage() { this.pages.push([]); }
 
   get page() { return this.pages[this.pages.length - 1]; }
-  get largeur() { return A4.l - 2 * MARGE; }
+  /** Ordonnée PDF (depuis le bas) d'une ordonnée « écran » (depuis le haut). */
+  y(v) { return nombre(A4.h - v); }
 
-  /** Assure `hauteur` points libres : sinon page suivante. */
-  place(hauteur) { if (this.y - hauteur < BAS) this.nouvellePage(); }
-
-  espace(n) { this.y -= n; }
-
-  /** Écrit des lignes déjà coupées à partir de la position courante. */
-  ecrire(lignes, { taille = 11, gras = false, couleur = [0.12, 0.12, 0.12], x = MARGE, interligne = 1.4 } = {}) {
-    const h = taille * interligne;
-    for (const ligne of lignes) {
-      this.place(h);
-      this.y -= h;
-      this.page.push(`BT /${gras ? 'F2' : 'F1'} ${nombre(taille)} Tf ${couleur.map(nombre).join(' ')} rg ${nombre(x)} ${nombre(this.y + taille * (interligne - 1) / 2 + 1)} Td ${chainePdf(ligne)} Tj ET`);
-    }
+  /** Rectangle (coins arrondis si r > 0), rempli (`fond`) et/ou tracé (`trait`). */
+  rect(x, y, l, h, { r = 0, fond = null, trait = null, epaisseur = 1 } = {}) {
+    r = Math.min(r, l / 2, h / 2);
+    const [x0, y0, x1, y1] = [x, A4.h - y - h, x + l, A4.h - y];
+    const c = r * (1 - K);
+    const chemin = r > 0
+      ? `${nombre(x0 + r)} ${nombre(y0)} m ${nombre(x1 - r)} ${nombre(y0)} l ${nombre(x1 - c)} ${nombre(y0)} ${nombre(x1)} ${nombre(y0 + c)} ${nombre(x1)} ${nombre(y0 + r)} c `
+        + `${nombre(x1)} ${nombre(y1 - r)} l ${nombre(x1)} ${nombre(y1 - c)} ${nombre(x1 - c)} ${nombre(y1)} ${nombre(x1 - r)} ${nombre(y1)} c `
+        + `${nombre(x0 + r)} ${nombre(y1)} l ${nombre(x0 + c)} ${nombre(y1)} ${nombre(x0)} ${nombre(y1 - c)} ${nombre(x0)} ${nombre(y1 - r)} c `
+        + `${nombre(x0)} ${nombre(y0 + r)} l ${nombre(x0)} ${nombre(y0 + c)} ${nombre(x0 + c)} ${nombre(y0)} ${nombre(x0 + r)} ${nombre(y0)} c h`
+      : `${nombre(x0)} ${nombre(y0)} ${nombre(l)} ${nombre(h)} re`;
+    this.dessinerChemin(chemin, { fond, trait, epaisseur });
   }
 
-  paragraphe(texte, options = {}) {
-    const { taille = 11, gras = false, largeur = this.largeur, x = MARGE } = options;
-    this.ecrire(couperLignes(texte, largeur - (x - MARGE), taille, gras), options);
+  /** Cercle de centre (cx, cy), tracé avec quatre courbes de Bézier. */
+  cercle(cx, cy, rayon) {
+    const [x, y] = [cx, A4.h - cy];
+    const k = K * rayon;
+    return `${nombre(x + rayon)} ${nombre(y)} m ${nombre(x + rayon)} ${nombre(y + k)} ${nombre(x + k)} ${nombre(y + rayon)} ${nombre(x)} ${nombre(y + rayon)} c `
+      + `${nombre(x - k)} ${nombre(y + rayon)} ${nombre(x - rayon)} ${nombre(y + k)} ${nombre(x - rayon)} ${nombre(y)} c `
+      + `${nombre(x - rayon)} ${nombre(y - k)} ${nombre(x - k)} ${nombre(y - rayon)} ${nombre(x)} ${nombre(y - rayon)} c `
+      + `${nombre(x + k)} ${nombre(y - rayon)} ${nombre(x + rayon)} ${nombre(y - k)} ${nombre(x + rayon)} ${nombre(y)} c h`;
   }
 
-  /** Bandeau de section : fond coloré et titre en gras. */
-  section(titre) {
-    this.place(60);
-    this.espace(10);
-    this.y -= 22;
-    this.page.push(`0.93 0.95 0.84 rg ${nombre(MARGE)} ${nombre(this.y)} ${nombre(this.largeur)} 22 re f`);
-    this.page.push(`0.36 0.39 0.20 rg ${nombre(MARGE)} ${nombre(this.y)} 3 22 re f`);
-    this.page.push(`BT /F2 12 Tf 0.25 0.28 0.12 rg ${nombre(MARGE + 10)} ${nombre(this.y + 6.5)} Td ${chainePdf(titre)} Tj ET`);
-    this.espace(4);
+  disque(cx, cy, rayon, { fond = null, trait = null, epaisseur = 1 } = {}) {
+    this.dessinerChemin(this.cercle(cx, cy, rayon), { fond, trait, epaisseur });
   }
 
-  /** « Libellé » en petit et gris, puis la valeur dessous. */
-  paire(libelle, valeur) {
-    const lignes = couperLignes(valeur, this.largeur - 10, 11);
-    this.place(14 * 1.4 + 11 * 1.4 * Math.min(lignes.length, 2));
-    this.ecrire([libelle], { taille: 9, gras: true, couleur: [0.4, 0.4, 0.4], x: MARGE + 10, interligne: 1.5 });
-    this.ecrire(lignes, { taille: 11, x: MARGE + 10 });
-    this.espace(3);
+  dessinerChemin(chemin, { fond, trait, epaisseur }) {
+    if (!fond && !trait) return;
+    const couleurs = `${fond ? `${fond.map(nombre).join(' ')} rg ` : ''}${trait ? `${trait.map(nombre).join(' ')} RG ${nombre(epaisseur)} w ` : ''}`;
+    this.page.push(`q ${couleurs}${chemin} ${fond && trait ? 'B' : fond ? 'f' : 'S'} Q`);
   }
 
-  /** En-tête de la première page : surtitre, grand nom, lignes de détail et photo à droite. */
-  entete({ surtitre, nom, lignes = [], photo = null }) {
-    const haut = this.y;
-    const largeurTexteEntete = photo ? this.largeur - 100 : this.largeur;
-    this.ecrire([surtitre.toUpperCase()], { taille: 9, gras: true, couleur: [0.36, 0.39, 0.2], interligne: 1.6 });
-    this.ecrire(couperLignes(nom, largeurTexteEntete, 24, true), { taille: 24, gras: true, interligne: 1.25 });
-    this.espace(2);
-    for (const l of lignes) this.ecrire(couperLignes(l, largeurTexteEntete, 11), { taille: 11, couleur: [0.25, 0.25, 0.25] });
-    if (photo) {
-      const cote = 84;
-      this.photo = photo;
-      this.page.push(`q ${cote} 0 0 ${cote} ${nombre(A4.l - MARGE - cote)} ${nombre(haut - cote)} cm /Im1 Do Q`);
-      this.y = Math.min(this.y, haut - cote);
-    }
-    this.espace(6);
+  ligne(x1, y1, x2, y2, { couleur = [0.5, 0.5, 0.5], epaisseur = 0.75, tirets = null } = {}) {
+    this.page.push(`q ${couleur.map(nombre).join(' ')} RG ${nombre(epaisseur)} w ${tirets ? `[${tirets.join(' ')}] 0 d ` : ''}${nombre(x1)} ${this.y(y1)} m ${nombre(x2)} ${this.y(y2)} l S Q`);
+  }
+
+  /** Une ligne de texte dont la BASE est à l'ordonnée `y` (déjà coupée : voir couperLignes). */
+  texte(x, y, texte, { taille = 11, gras = false, couleur = [0.1, 0.1, 0.1] } = {}) {
+    this.boites.push({ page: this.pages.length - 1, x, y, l: largeurTexte(texte, taille, gras), taille, texte });
+    this.page.push(`BT /${gras ? 'F2' : 'F1'} ${nombre(taille)} Tf ${couleur.map(nombre).join(' ')} rg ${nombre(x)} ${this.y(y)} Td ${chainePdf(texte)} Tj ET`);
+  }
+
+  /** Une icône de l'appli (js/icons.js), dans le carré (x, y, taille x taille). */
+  icone(nom, x, y, taille, { couleur = [0.1, 0.1, 0.1], epaisseur = 2 } = {}) {
+    const dessin = dessinIcone(nom);
+    if (!dessin) return;
+    const a = taille / 24;
+    this.page.push(`q ${nombre(a)} 0 0 ${nombre(-a)} ${nombre(x)} ${this.y(y)} cm ${couleur.map(nombre).join(' ')} RG ${nombre(epaisseur)} w 1 J 1 j\n${cheminPdfIcone(dessin)}\nS Q`);
+  }
+
+  /** La photo, rognée en rond (elle remplit le disque). La même photo sert à toute la fiche. */
+  photoRonde(photo, cx, cy, rayon) {
+    this.photo = photo;
+    const cote = 2 * rayon;
+    const echelle = Math.max(cote / photo.largeur, cote / photo.hauteur);
+    const [l, h] = [photo.largeur * echelle, photo.hauteur * echelle];
+    this.page.push(`q ${this.cercle(cx, cy, rayon)} W n ${nombre(l)} 0 0 ${nombre(h)} ${nombre(cx - l / 2)} ${nombre(A4.h - cy - h / 2)} cm /Im1 Do Q`);
   }
 
   /** Le fichier PDF complet (Uint8Array). */
@@ -175,8 +182,7 @@ export class Pdf {
       objets[idPhoto] = { dict: `<< /Type /XObject /Subtype /Image /Width ${p.largeur} /Height ${p.hauteur} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${donnees.length} >>`, flux: donnees };
     }
     this.pages.forEach((contenu, i) => {
-      const pied = `BT /F1 8 Tf 0.5 0.5 0.5 rg ${MARGE} 30 Td ${chainePdf(`${this.pied}${this.pied ? ' · ' : ''}page ${i + 1} sur ${n}`)} Tj ET`;
-      const flux = [...contenu, pied].join('\n');
+      const flux = contenu.join('\n');
       objets[ids[i]] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.l} ${A4.h}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${idPhoto ? ` /XObject << /Im1 ${idPhoto} 0 R >>` : ''} >> /Contents ${ids[i] + 1} 0 R >>`;
       objets[ids[i] + 1] = { dict: `<< /Length ${flux.length} >>`, flux };
     });

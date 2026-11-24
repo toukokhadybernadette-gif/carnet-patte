@@ -23,9 +23,18 @@ const COLLECTIONS = ['animaux', 'soins', 'pesees'];
 const COLLECTIONS_FERME = ['oeufs', 'stocks'];
 const CLE_SECOURS = `${CLE}.secours`;
 // Champs d'une fiche de garde (tous facultatifs, du texte) ; voir modules/animaux/garde.js
+// Les champs de texte déjà saisis gardent leur nom : une fiche enregistrée avant les nouveautés s'ouvre à l'identique (rien à migrer, rien perdu).
+// Nouveautés : aime, nePasFaire (habitudes), puce, tatouage (identification), gardeDu, gardeAu (dates de garde, AAAA-MM-JJ).
 export const CHAMPS_GARDE = ['aliment', 'quantite', 'horaires', 'interdits', 'soinsGarde', 'promenades', 'litiere', 'sommeil', 'jouets', 'peurs', 'regles',
-  'proprietaireNom', 'proprietaireTel', 'secoursNom', 'secoursTel', 'vetoNom', 'vetoTel', 'infos'];
+  'proprietaireNom', 'proprietaireTel', 'secoursNom', 'secoursTel', 'vetoNom', 'vetoTel', 'infos',
+  'aime', 'nePasFaire', 'puce', 'tatouage', 'gardeDu', 'gardeAu'];
+const CHAMPS_DATE_GARDE = ['gardeDu', 'gardeAu'];
+export const TACHES_SUIVI = ['repas', 'eau', 'promenade', 'medicament']; // la petite liste du jour cochable
+export const TRAITEMENTS_MAX = 8;
 const GARDE_MAX = 2000; // caractères par champ
+const TRAITEMENT_MAX = 120; // caractères par case d'un traitement (médicament, dose, horaires)
+const SUIVI_JOURS_MAX = 45; // on ne garde que les derniers jours cochés
+const estDate = (t) => /^\d{4}-\d{2}-\d{2}$/.test(t ?? '') && !Number.isNaN(Date.parse(t));
 
 // Non nul quand les données enregistrées n'ont pas pu être lues : { raison, brut, cleSecours }
 let probleme = null;
@@ -38,14 +47,40 @@ function profilValide(p) {
   return { prenom };
 }
 
-/** Fiches de garde lues dans un fichier : { idAnimal: { champ: texte } }, seuls les champs connus et non vides sont gardés. */
+/** Traitements en cours : [{ nom, dose, horaires }], les lignes entièrement vides sont ignorées. */
+function traitementsValides(liste) {
+  if (!Array.isArray(liste)) return [];
+  const net = (t) => (typeof t === 'string' ? t.replace(/\s+/g, ' ').trim().slice(0, TRAITEMENT_MAX) : '');
+  return liste.map((t) => ({ nom: net(t?.nom), dose: net(t?.dose), horaires: net(t?.horaires) })).filter((t) => t.nom || t.dose || t.horaires).slice(0, TRAITEMENTS_MAX);
+}
+
+/** Suivi du jour : { 'AAAA-MM-JJ': ['repas', 'eau', …] }, seulement les jours et les tâches connus ; les plus anciens jours sont oubliés. */
+function suiviValide(suivi) {
+  const sortie = {};
+  if (!suivi || typeof suivi !== 'object' || Array.isArray(suivi)) return sortie;
+  for (const jour of Object.keys(suivi).filter(estDate).sort().slice(-SUIVI_JOURS_MAX)) {
+    const taches = TACHES_SUIVI.filter((t) => Array.isArray(suivi[jour]) && suivi[jour].includes(t));
+    if (taches.length) sortie[jour] = taches;
+  }
+  return sortie;
+}
+
+/** Fiches de garde lues dans un fichier : { idAnimal: { champ: texte, traitements: [...], suivi: {...} } }, seuls les champs connus et non vides sont gardés. */
 function fichesValides(f) {
   const sortie = {};
   if (!f || typeof f !== 'object' || Array.isArray(f)) return sortie;
   for (const [id, fiche] of Object.entries(f)) {
     if (!fiche || typeof fiche !== 'object') continue;
     const propre = {};
-    for (const c of CHAMPS_GARDE) if (typeof fiche[c] === 'string' && fiche[c].trim()) propre[c] = fiche[c].trim().slice(0, GARDE_MAX);
+    for (const c of CHAMPS_GARDE) {
+      if (typeof fiche[c] !== 'string' || !fiche[c].trim()) continue;
+      if (CHAMPS_DATE_GARDE.includes(c) && !estDate(fiche[c].trim())) continue;
+      propre[c] = fiche[c].trim().slice(0, GARDE_MAX);
+    }
+    const traitements = traitementsValides(fiche.traitements);
+    if (traitements.length) propre.traitements = traitements;
+    const suivi = suiviValide(fiche.suivi);
+    if (Object.keys(suivi).length) propre.suivi = suivi;
     if (Object.keys(propre).length) sortie[id] = propre;
   }
   return sortie;
@@ -172,10 +207,13 @@ export function modifierProfil(changements) {
 
 // ----- Fiche de garde (pet-sitters) : une par animal, tous les champs facultatifs -----
 
-/** La fiche d'un animal : tous les champs, vides s'ils ne sont pas remplis. */
+/** La fiche d'un animal : tous les champs de texte (vides s'ils ne sont pas remplis), `traitements` (liste) et `suivi` (jours cochés). */
 export function lireFicheGarde(animalId) {
+  const source = donnees.fichesGarde[animalId];
   const fiche = {};
-  for (const c of CHAMPS_GARDE) fiche[c] = donnees.fichesGarde[animalId]?.[c] ?? '';
+  for (const c of CHAMPS_GARDE) fiche[c] = source?.[c] ?? '';
+  fiche.traitements = (source?.traitements ?? []).map((t) => ({ ...t }));
+  fiche.suivi = Object.fromEntries(Object.entries(source?.suivi ?? {}).map(([j, t]) => [j, [...t]]));
   return fiche;
 }
 

@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme] [sombre] [demenagement] [compte] [synchro]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme] [sombre] [demenagement] [compte] [synchro] [recadrage]
 //   « carte-reel » appelle les VRAIS serveurs OpenStreetMap : il n'est jamais lancé par la suite automatique ni par --rapide, seulement à la main (node tests/lancer.mjs carte-reel)
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
@@ -43,6 +43,7 @@ const TESTS = {
   demenagement: 'test-demenagement.mjs',
   compte: 'test-compte.mjs',
   synchro: 'test-synchro.mjs',
+  recadrage: 'test-recadrage.mjs',
 };
 const MANUELS = new Set(['carte-reel', 'boutique-liens']); // jamais dans « tous les tests » (internet et serveurs publics requis)
 const AUTOMATIQUES = Object.keys(TESTS).filter((t) => !MANUELS.has(t));
@@ -55,7 +56,7 @@ const REGLES = [
   [/^demenagement\.html$|^_headers$|^js\/(adresse|mentions-config)\.js$|^modules\/apropos\/|^outils\/assembler-site\.mjs$/, ['demenagement', 'compte', 'installable', 'etroit']],
   [/^css\/(sombre|themes-sombre)\.css$|^js\/couleurs-sombre\.js$/, ['sombre', 'refonte', 'couleurs', 'verre', 'etroit']],
   [/^modules\/ferme\//, ['ferme', '5e', '5f', 'finitions', 'etroit', 'retouches']],
-  [/^js\/pdf\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],
+  [/^js\/pdf(-fiche|-icones)?\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],
   [/^js\/documents-db\.js$|^js\/sauvegarde\.js$|^js\/donnees\.js$|^modules\/animaux\/documents\.js$/, ['documents', 'migration', 'secours', 'synchro', 'etroit']],
   [/^js\/ics\.js$|^modules\/animaux\/calendrier\.js$/, ['calendrier', '5f', '5e', 'finitions', 'etroit']],
   [/^js\/pwa\.js$|^sw\.js$|^manifest\.webmanifest$|^css\/pwa\.css$|^assets\/icons\/pwa\/|^outils\/(preparer-sw|generer-icones-pwa)\.mjs$|^\.github\/workflows\/pages\.yml$|^tests\/outil-cdp\.mjs$/, ['installable', 'calendrier', 'etroit']],
@@ -70,7 +71,8 @@ const REGLES = [
   [/^modules\/animaux\/soins\.js$/, ['5e', '5f', 'finitions', 'etroit']],
   [/^modules\/animaux\/rappels\.js$/, ['5f', '5e', 'finitions', 'etroit']],
   [/^modules\/animaux\/pesees\.js$/, ['5g', 'graphique', 'finitions']],
-  [/^modules\/animaux\/(fiche|animaux|commun|exemples)\.js$|^modules\/animaux\/animaux\.css$/, ['5e', '5f', '5g', '5h', 'finitions', 'retouches', 'etroit']],
+  [/^js\/recadrage\.js$/, ['recadrage', 'refonte', 'etroit']],
+  [/^modules\/animaux\/(fiche|animaux|commun|exemples)\.js$|^modules\/animaux\/animaux\.css$/, ['5e', '5f', '5g', '5h', 'finitions', 'retouches', 'recadrage', 'etroit']],
   [/^js\/conseils\.js$/, ['5h', 'verre']],
   [/^modules\/(accueil|boutique|communaute|composants|pro|profil)\//, ['finitions', 'refonte', 'etroit', 'carte']],
 ];

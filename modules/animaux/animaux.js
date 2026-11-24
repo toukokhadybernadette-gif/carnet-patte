@@ -6,7 +6,8 @@
 //   #/animaux/<id>/soin/<idSoin> → fiche, onglet Santé, ce soin mis en évidence (lien « Voir le soin » des rappels)
 
 import * as storage from '../../js/storage.js';
-import { echapper, aujourdhui, age, redimensionnerPhoto } from '../../js/utils.js';
+import { echapper, aujourdhui, age } from '../../js/utils.js';
+import { recadrerPhoto } from '../../js/recadrage.js';
 import { modale, confirmer, toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { illustration } from '../../js/illustrations.js';
@@ -76,6 +77,7 @@ export function formulaireAnimal(animal, apres) {
           <label class="cp-btn cp-btn--principal al-photo__ajout">${icone('camera', { taille: 18 })}<span data-libelle-photo>${photo ? 'Changer la photo' : 'Ajouter une photo'}</span>
             <input type="file" accept="image/*" class="cp-sr" data-fichier>
           </label>
+          ${bouton({ texte: 'Recadrer la photo', variante: 'secondaire', taille: 's', icone: 'scissors', attrs: { 'data-recadrer': true } })}
           ${bouton({ texte: 'Retirer la photo', variante: 'discret', taille: 's', attrs: { 'data-retirer': true } })}
           <p class="al-photo__aide" data-aide-photo>Facultatif. Sans photo, une illustration de l'espèce est utilisée.</p>
         </div>
@@ -103,10 +105,12 @@ export function formulaireAnimal(animal, apres) {
     const apercu = dlg.querySelector('[data-apercu]');
     const champAutre = dlg.querySelector('[data-champ-autre]');
     const boutonRetirer = dlg.querySelector('[data-retirer]');
+    const boutonRecadrer = dlg.querySelector('[data-recadrer]');
 
     const majApercu = () => {
       apercu.innerHTML = apercuHtml(form.espece.value, photo, form.couleur.value || couleurAnimal({ id: a.id ?? a.nom })); // sans choix : la couleur automatique
       boutonRetirer.hidden = !photo;
+      boutonRecadrer.hidden = !photo;
       dlg.querySelector('[data-libelle-photo]').textContent = photo ? 'Changer la photo' : 'Ajouter une photo';
     };
     const majAutre = () => { champAutre.hidden = form.espece.value !== 'autre'; };
@@ -121,8 +125,16 @@ export function formulaireAnimal(animal, apres) {
       e.target.value = ''; // permet de rechoisir la même photo après l'avoir retirée
       if (!fichier) return;
       try {
-        photo = await redimensionnerPhoto(fichier);
-        majApercu();
+        const recadree = await recadrerPhoto(fichier); // l'écran de recadrage s'ouvre ; « Annuler » garde l'ancienne photo
+        if (recadree) { photo = recadree; majApercu(); }
+      } catch (err) {
+        toast(err.message, 'erreur');
+      }
+    });
+    boutonRecadrer.addEventListener('click', async () => {
+      try {
+        const recadree = await recadrerPhoto(photo);
+        if (recadree) { photo = recadree; majApercu(); }
       } catch (err) {
         toast(err.message, 'erreur');
       }
