@@ -102,8 +102,40 @@ Le fichier `supabase/etape2.sql` crée :
 **À exécuter** : Supabase → **SQL Editor** → **New query** → collez tout `supabase/etape2.sql` → **Run** (« Success. No rows returned »). On peut le relancer sans risque.
 Puis une nouvelle requête avec `supabase/verifier-etape2.sql` (lecture seule) : `rowsecurity` doit valoir `true` pour les deux tables, `anon` ne doit apparaître nulle part dans les droits, et `supprimer_mon_compte` doit être exécutable par `authenticated` seulement.
 
-Aucune donnée d'animal n'est stockée côté serveur : la sauvegarde cloud et la synchronisation (Premium) auront leurs propres tables, plus tard.
+## 9. Étape 3 : sauvegarde cloud et synchronisation (Premium)
 
-## Limites de l'offre gratuite (rappel)
+Le fichier `supabase/etape3.sql` (à lancer **après** l'étape 2) crée :
+- `elements` : un enregistrement par animal, soin, pesée, fiche de garde… (`donnees` en JSON, `modifie_le` = heure de l'appareil pour départager deux modifications, `recu_le` = heure du **serveur** pour demander « ce qui a changé depuis », `supprime` = stèle) ;
+- `documents_cloud` : la liste des fichiers (documents et photos d'animaux), avec leur taille ; c'est ici que le **quota de 100 Mo** est appliqué ;
+- le bucket privé `documents` (Storage) : un dossier par utilisateur, accès limité au sien ;
+- la règle **Premium requis pour écrire** (fonction `peut_ecrire_cloud()`), appliquée côté serveur : un compte gratuit qui contourne l'appli est refusé (code 42501) ;
+- une tâche horaire (`pg_cron`) : purge des stèles de plus de 90 jours et contrôle de la taille **réelle** des fichiers (un compte qui dépasse 100 Mo est bloqué en écriture jusqu'à repasser sous le quota) ;
+- `supprimer_mon_compte()` mise à jour : elle **refuse** de supprimer le compte s'il reste des fichiers. L'appli les supprime d'abord par l'API Storage (supprimer des lignes de `storage.objects` en SQL ne retire pas les vrais fichiers).
+
+**À exécuter** : SQL Editor → New query → collez tout `supabase/etape3.sql` → **Run**. Un message « pg_cron indisponible » (NOTICE) signifie qu'il faut activer l'extension : **Database → Extensions → pg_cron → Enable**, puis relancer le script. Puis une nouvelle requête avec `supabase/verifier-etape3.sql` (lecture seule) et vérifiez :
+1. `rowsecurity = true` pour `elements` et `documents_cloud` ;
+2. 3 règles par table (select, insert, update), toutes `authenticated`, **aucune** « delete » ;
+3. `anon` n'apparaît nulle part dans les droits ; `authenticated` = select, insert, update ;
+4. bucket `documents` : `public = false`, 15 Mo par fichier ;
+5. 3 règles Storage (lire, déposer, supprimer) ; 6. `peut_ecrire_cloud` et `supprimer_mon_compte` exécutables par `authenticated` seulement, `entretien_cloud` par personne ;
+7. 4 déclencheurs ; 8. la tâche `carnetpatte-entretien` existe et `active = true` ; 9. `peut_lire_les_fichiers = true` ; 10. aucune ligne de fichiers orphelins.
+
+**Étape 3b (quota réel)** : collez ensuite `supabase/etape3b.sql` → Run, puis `supabase/verifier-etape3b.sql` : la requête 1 doit renvoyer **0 ligne** (aucune règle « update » sur les fichiers : l'appli dépose avec `upsert = false`), la requête 2 doit montrer `octets_cloud_reels()` et `104857600` dans `with_check`, la requête 4 `authenticated = true` et `anon = false`.
+
+**Tester sans paiement** : dans l'éditeur Supabase, ouvrez `supabase/premium-on.sql`, remplacez l'adresse par la vôtre **dans l'éditeur seulement** (jamais dans le fichier du dépôt), Run : « UPDATE 1 ». `supabase/premium-off.sql` remet le compte en gratuit : ses données cloud restent lisibles, mais il ne peut plus rien y écrire.
+
+**Limites à connaître**
+- Le quota de 100 Mo est contrôlé à l'enregistrement du fichier (taille déclarée), puis, avec l'étape 3b, à chaque dépôt sur la taille **réelle** des fichiers déjà là, et toutes les heures. Supabase n'autorise pas de déclencheur sur `storage.objects`. Un utilisateur malveillant qui mentirait sur la taille ne peut dépasser que d'un fichier (15 Mo au plus) ; si cela devient un risque, il faudra une Edge Function.
+- Un appareil resté hors ligne plus de 90 jours peut ressusciter des éléments supprimés entre-temps (leurs stèles ont été purgées).
+- Pas de restauration d'anciennes versions ni de carnet partagé : prévus plus tard.
+
+## Limites de l'offre gratuite (rappel) et passage en Pro
+
 
 500 Mo de base, 1 Go de fichiers, 5 Go de transfert par mois, 50 000 utilisateurs actifs par mois, **pas de sauvegarde** et **pause du projet après une semaine d'inactivité**. Elles conviennent à l'essai ; pour de vrais abonnés payants, il faudra passer au palier Pro (environ 25 $/mois), comme prévu dans le plan.
+
+**Quand passer en Pro (environ 25 $/mois) ?**
+- **Dès le premier abonné payant**, pour une raison qui ne dépend pas du nombre d'utilisateurs : l'offre gratuite n'a **aucune sauvegarde** de la base et met le projet **en pause après une semaine d'inactivité**. Il ne faut pas vendre une « sauvegarde » sans l'avoir.
+- **Stockage de fichiers (1 Go)** : c'est la première limite. Un Premium qui remplit son quota occupe 100 Mo, un usage typique 5 à 20 Mo (photos réduites à 400 px, quelques PDF). Compter **environ 50 à 60 Premium** en usage typique, **10 seulement** si tous remplissent leur quota.
+- **Base de données (500 Mo)** : un carnet pèse environ 20 à 200 Ko de JSON : plus de 2 000 Premium avant d'être gêné. Ce n'est pas la limite.
+- **Transfert (5 Go par mois)** : l'appli consulte le serveur toutes les 60 s **seulement quand elle est ouverte** (environ 50 à 100 Mo par appareil et par mois). Restaurer un carnet sur un nouvel appareil télécharge ses fichiers. À surveiller vers quelques dizaines d'appareils très actifs.

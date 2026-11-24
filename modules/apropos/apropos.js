@@ -114,7 +114,7 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
   const contact = mail ? `<a href="mailto:${echapper(mail)}">${echapper(mail)}</a>` : aCompleter;
   zone.innerHTML = `
     <div class="cp pg ap-page">
-      ${entete('Confidentialité', `Dernière mise à jour : ${echapper(MISE_A_JOUR)}. En clair : sans compte, rien ne quitte votre appareil ; avec un compte, seulement votre e-mail.`, { href: '#/apropos', texte: 'À propos' })}
+      ${entete('Confidentialité', `Dernière mise à jour : ${echapper(MISE_A_JOUR)}. En clair : sans compte, rien ne quitte votre appareil ; avec un compte gratuit, seulement votre e-mail ; la sauvegarde cloud (Premium) n'envoie votre carnet que si vous l'activez.`, { href: '#/apropos', texte: 'À propos' })}
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-resp">
         <h2 id="cf-resp">Qui est responsable de vos données</h2>
@@ -123,7 +123,7 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-sans">
         <h2 id="cf-sans">Sans compte : tout reste sur votre appareil</h2>
-        <p>Vos animaux, soins, rappels, pesées, documents, photos et fiches de garde sont enregistrés dans le stockage local de votre appareil. Ils ne sont <strong>jamais envoyés</strong> à l'éditeur ni à un tiers, avec ou sans compte. Il n'y a ni cookie publicitaire, ni outil de mesure d'audience, ni publicité.</p>
+        <p>Vos animaux, soins, rappels, pesées, documents, photos et fiches de garde sont enregistrés dans le stockage local de votre appareil. Ils ne sont <strong>jamais envoyés</strong> à l'éditeur ni à un tiers, sans compte comme avec un compte gratuit : la seule exception est la sauvegarde cloud du Premium, que vous activez vous-même (voir plus bas). Il n'y a ni cookie publicitaire, ni outil de mesure d'audience, ni publicité.</p>
       </section>
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-avec">
@@ -135,15 +135,31 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
           <li>votre formule (gratuite ou Premium) ;</li>
           <li>votre inscription éventuelle à la liste d'attente Premium.</li>
         </ul>
-        <p><strong>Jamais</strong> : vos animaux, soins, pesées, documents, photos ou votre position. La sauvegarde cloud et la synchronisation n'existent pas encore ; elles seront réservées à la formule Premium. Avant leur ouverture, cette page sera mise à jour et vous serez prévenu(e).</p>
+        <p><strong>Jamais</strong>, avec un compte gratuit : vos animaux, soins, pesées, documents, photos ou votre position. Seule la sauvegarde cloud du Premium, que vous activez vous-même sur chaque appareil, envoie votre carnet (voir la section suivante). Votre position n'est jamais envoyée, dans aucun cas.</p>
         <p><strong>Pourquoi, et sur quel fondement.</strong> Vous connecter et reconnaître votre compte : c'est le service que vous demandez en créant un compte. Vous prévenir de l'ouverture du Premium : uniquement si vous vous inscrivez vous-même sur la liste d'attente, ce qui vaut consentement, que vous pouvez retirer à tout moment. Vos données ne sont ni vendues, ni louées, ni utilisées pour de la publicité.</p>
         <p><strong>Sur votre appareil.</strong> La session de connexion est gardée dans le stockage local de l'appareil (ce n'est pas un cookie de suivi). « Se déconnecter » l'efface.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cf-cloud">
+        <h2 id="cf-cloud">Sauvegarde cloud et synchronisation (Premium uniquement)</h2>
+        <p>Cette option n'existe que pour la formule Premium, et seulement après que vous l'avez activée sur un appareil (page Compte). Un compte gratuit n'envoie rien : le serveur l'en empêche lui-même.</p>
+        <p><strong>Ce qui est alors stocké dans le cloud :</strong></p>
+        <ul class="ap-liste">
+          <li>vos animaux (nom, espèce, race, naissance, couleur…), leurs soins et rappels, leurs pesées, les œufs et stocks de la ferme ;</li>
+          <li>les fiches de garde, qui peuvent contenir des noms et des numéros de téléphone que vous avez saisis (vétérinaire, personne de confiance) : n'y mettez que ce que vous souhaitez sauvegarder ;</li>
+          <li>votre prénom, s'il est renseigné ;</li>
+          <li>vos documents (PDF, photos) et les photos de vos animaux, en fichiers.</li>
+        </ul>
+        <p><strong>Où.</strong> Chez Supabase, dans un projet hébergé en Europe (Irlande) : une base de données et un espace de fichiers privé, un dossier par utilisateur. Les données sont chiffrées pendant le transfert et au repos par l'hébergeur. Les règles de sécurité du serveur ne donnent accès à vos données qu'à votre compte, et seulement en écriture si vous êtes Premium. L'éditeur n'en fait aucun autre usage : ni publicité, ni revente, ni analyse.</p>
+        <p><strong>Combien de temps.</strong> Tant que vous les gardez. Quand vous supprimez un élément (ou un document), son contenu est vidé du cloud aussitôt ; seule une trace sans contenu, qui sert à prévenir vos autres appareils, est conservée 90 jours, puis effacée. « Désactiver » sur un appareil arrête les envois mais ne supprime rien. Supprimer votre compte efface <strong>immédiatement et définitivement</strong> toutes vos données cloud et tous vos fichiers. Il n'y a pas de restauration d'une ancienne version : la sauvegarde garde seulement l'état le plus récent.</p>
+        <p><strong>Espace.</strong> 100 Mo de fichiers par compte (documents et photos). Au-delà, les nouveaux fichiers ne sont plus envoyés et l'appli vous le dit ; vos données restent entières sur l'appareil.</p>
+        <p><strong>Fondement.</strong> L'exécution du service Premium que vous demandez, activé par vous-même.</p>
       </section>
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-qui">
         <h2 id="cf-qui">Qui traite quoi</h2>
         <ul class="ap-liste">
-          <li><strong>Supabase</strong> : base de données et connexion des comptes. Projet hébergé en Europe (Irlande).</li>
+          <li><strong>Supabase</strong> : base de données, fichiers (sauvegarde cloud du Premium) et connexion des comptes. Projet hébergé en Europe (Irlande).</li>
           <li><strong>Resend</strong> : envoi par e-mail du code de connexion, depuis l'adresse noreply@carnetpatte.com. Ce service reçoit votre adresse e-mail et le code pour l'envoyer ; serveurs en Europe (Irlande).</li>
           <li><strong>Cloudflare</strong> : hébergement du site (voir les mentions légales).</li>
           <li>La Carte contacte OpenStreetMap quand vous l'utilisez (voir les mentions légales).</li>
@@ -153,14 +169,14 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-duree">
         <h2 id="cf-duree">Combien de temps</h2>
-        <p>Vos informations de compte sont conservées tant que le compte existe. Si vous supprimez le compte, elles sont effacées du serveur immédiatement et définitivement. Les prestataires d'envoi d'e-mails gardent un journal technique d'envoi pendant une durée limitée qu'ils fixent.</p>
+        <p>Vos informations de compte sont conservées tant que le compte existe. Si vous supprimez le compte, elles sont effacées du serveur immédiatement et définitivement, avec votre sauvegarde cloud et vos fichiers (Premium). Les prestataires d'envoi d'e-mails gardent un journal technique d'envoi pendant une durée limitée qu'ils fixent.</p>
       </section>
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-droits">
         <h2 id="cf-droits">Vos droits</h2>
         <p>Vous pouvez accéder à vos données, les faire corriger, les récupérer, les effacer, vous opposer à leur traitement ou retirer votre consentement. Connecté(e), la plupart se font <strong>directement</strong> dans l'appli :</p>
         <ul class="ap-liste">
-          <li>télécharger les données de votre compte, et supprimer votre compte : page Compte ;</li>
+          <li>télécharger les données de votre compte, sauvegarde cloud comprise, et supprimer votre compte : page Compte ;</li>
           <li>vous retirer de la liste d'attente Premium : page Compte ;</li>
           <li>pour les données de votre appareil : « Sauvegarde » (export et « Tout effacer »).</li>
         </ul>

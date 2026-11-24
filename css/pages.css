@@ -241,3 +241,17 @@ a.ac-resume:hover { color: var(--cp-texte); }
 .cm-form h2 { margin: 0; font-size: var(--cp-taille-l); }
 .cm-form p { margin: 0; }
 .cm-actions { display: flex; flex-wrap: wrap; gap: var(--cp-espace-3); }
+.cm-espace { display: grid; gap: var(--cp-espace-1); }
+.cm-espace progress { width: 100%; height: 10px; accent-color: var(--cp-foret); }
+
+/* Sauvegarde cloud : indicateur discret dans la barre du haut (un point de couleur ; le texte apparaît sur grand écran) */
+.sy-etat { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; min-height: 32px; padding: 0 6px; border-radius: 999px; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); text-decoration: none; }
+.sy-etat[hidden] { display: none; }
+.sy-etat__point { width: 10px; height: 10px; border-radius: 50%; background: var(--cp-succes); flex: none; }
+[data-etat="encours"] .sy-etat__point { background: var(--cp-sauge); }
+[data-etat="attente"] .sy-etat__point, [data-etat="quota"] .sy-etat__point, [data-etat="suspendu"] .sy-etat__point, [data-etat="gratuit"] .sy-etat__point { background: var(--cp-ambre); }
+[data-etat="erreur"] .sy-etat__point { background: var(--cp-terre); }
+.cm-legende { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--cp-espace-1); font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
+.cm-legende li { display: flex; align-items: center; gap: var(--cp-espace-2); }
+.sy-etat__texte { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (min-width: 900px) { .sy-etat__texte { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; } }
