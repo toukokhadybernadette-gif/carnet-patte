@@ -4,8 +4,9 @@
 import { echapper } from '../../js/utils.js';
 import { icone } from '../../js/icons.js';
 import { bouton } from '../../js/composants.js';
+import { TEXTE_CONSENTEMENT } from '../../js/compte.js';
 import { estAncienneAdresse } from '../../js/adresse.js';
-import { EDITEUR, HEBERGEURS, MISE_A_JOUR } from '../../js/mentions-config.js';
+import { EDITEUR, HEBERGEURS, MISE_A_JOUR, PREMIUM } from '../../js/mentions-config.js';
 
 const aCompleter = '<mark class="ap-vide">[à compléter]</mark>';
 const valeur = (v) => (String(v ?? '').trim() ? echapper(String(v).trim()) : aCompleter);
@@ -66,9 +67,14 @@ export function rendreMentions(zone, config = EDITEUR, hote = location.hostname)
           <div><dt>Statut</dt><dd data-champ="statut">${valeur(config.statut)}</dd></div>
           <div><dt>SIRET</dt><dd data-champ="siret">${valeur(config.siret)}</dd></div>
           <div><dt>Contact</dt><dd data-champ="email">${String(config.email ?? '').trim() ? `<a href="mailto:${echapper(String(config.email).trim())}">${echapper(String(config.email).trim())}</a>` : aCompleter}</dd></div>
-          ${adresse ? `<div><dt>Adresse</dt><dd data-champ="adresse">${echapper(adresse)}</dd></div>` : ''}
+          <div><dt>Adresse</dt><dd data-champ="adresse">${valeur(adresse)}</dd></div>
           <div><dt>Directeur de la publication</dt><dd data-champ="directeur">${valeur(config.nom)}</dd></div>
         </dl>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="ml-cgv">
+        <h2 id="ml-cgv">Abonnement Premium</h2>
+        <p>Les conditions de l'abonnement Premium (prix, paiement, résiliation, rétractation, médiation) sont dans les <a href="#/cgv">conditions générales de vente</a>.</p>
       </section>
 
       <section class="cp-carte ap-bloc" aria-labelledby="ml-hebergeur">
@@ -103,6 +109,74 @@ export function rendreMentions(zone, config = EDITEUR, hote = location.hostname)
         <h2 id="ml-pi">Propriété intellectuelle et licences</h2>
         <p>Le contenu et le code de Carnet Patte sont la propriété de l'éditeur, sauf les éléments tiers ci-dessous, utilisés selon leurs licences.</p>
         <ul class="ap-liste">${LICENCES.map(([t, d]) => `<li><strong>${echapper(t)}</strong> : ${echapper(d)}</li>`).join('')}</ul>
+      </section>
+    </div>`;
+}
+
+/** Page « Conditions générales de vente » de l'abonnement Premium. `config` ne sert qu'aux tests. */
+export function rendreCgv(zone, config = EDITEUR) {
+  zone.classList.add('page-large');
+  const mail = String(config.email ?? '').trim();
+  const contact = mail ? `<a href="mailto:${echapper(mail)}">${echapper(mail)}</a>` : aCompleter;
+  const note = (texte) => `<p class="ap-note"><strong>À compléter avant l'ouverture du paiement.</strong> ${texte}</p>`;
+  const prix = `${echapper(PREMIUM.prix)} € TTC par ${echapper(PREMIUM.periode)}`;
+  zone.innerHTML = `
+    <div class="cp pg ap-page">
+      ${entete('Conditions générales de vente', `Abonnement Premium de Carnet Patte. Dernière mise à jour : ${echapper(MISE_A_JOUR)}. En clair : ${prix}, sans engagement, résiliable en quelques clics.`, { href: '#/compte', texte: 'Compte' })}
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-vendeur">
+        <h2 id="cg-vendeur">Le vendeur</h2>
+        <dl class="ap-dl">
+          <div><dt>Nom</dt><dd data-champ="nom">${valeur(config.nom)}</dd></div>
+          <div><dt>Statut</dt><dd data-champ="statut">${valeur(config.statut)}</dd></div>
+          <div><dt>SIRET</dt><dd data-champ="siret">${valeur(config.siret)}</dd></div>
+          <div><dt>Adresse</dt><dd data-champ="adresse">${valeur(config.adresse)}</dd></div>
+          <div><dt>Contact</dt><dd data-champ="email">${contact}</dd></div>
+        </dl>
+        ${String(config.adresse ?? '').trim() ? '' : note("L'adresse du vendeur est obligatoire dans les conditions de vente et sur les factures.")}
+        <p>Ces conditions s'appliquent à l'abonnement Premium, dès son ouverture. Les autres informations légales du site sont dans les <a href="#/mentions">mentions légales</a>.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-objet">
+        <h2 id="cg-objet">Ce que comprend le Premium</h2>
+        <p>Carnet Patte est utilisable gratuitement, sans compte, avec toutes vos données sur votre appareil. Le Premium ajoute la <strong>sauvegarde cloud</strong> et la <strong>synchronisation entre vos appareils</strong> : vos animaux, soins, pesées, fiches de garde, documents et photos (100 Mo de fichiers) sont copiés dans un espace privé en Europe. Rien de ce qui est gratuit ne devient payant.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-prix">
+        <h2 id="cg-prix">Prix et paiement</h2>
+        <p><strong>${prix}</strong>. <strong>TVA non applicable, art. 293 B du CGI.</strong></p>
+        <p>Le paiement se fait par carte bancaire sur la page sécurisée de Stripe : Carnet Patte ne voit et ne garde jamais votre numéro de carte. Le premier prélèvement a lieu à la souscription, puis chaque mois à la même date. Une facture vous est envoyée par e-mail à chaque paiement et reste disponible sur le portail de gestion de l'abonnement.</p>
+        <p>Le prix peut évoluer. Tout changement vous est annoncé à l'avance et ne s'applique qu'à la période suivante : vous pouvez résilier avant.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-duree">
+        <h2 id="cg-duree">Durée et résiliation</h2>
+        <p>L'abonnement est <strong>mensuel, sans engagement</strong>. Il se renouvelle chaque mois jusqu'à sa résiliation.</p>
+        <p>Vous pouvez <strong>résilier à tout moment, en quelques clics</strong> : page Compte → « Résilier mon abonnement ». La résiliation prend effet à la fin de la période mensuelle en cours, déjà payée : vous gardez le Premium jusqu'à cette date, puis il n'y a plus aucun prélèvement. La période en cours n'est pas remboursée.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-apres">
+        <h2 id="cg-apres">Après la résiliation ou en cas d'impayé</h2>
+        <p>Votre compte repasse à la formule gratuite : la sauvegarde cloud et la synchronisation s'arrêtent. <strong>Rien n'est supprimé</strong> : vos données restent sur votre appareil et dans votre espace cloud (en lecture seule). Vous pouvez à tout moment télécharger les données de votre compte, ou les récupérer sur un appareil, depuis la page Compte. Vous pouvez aussi supprimer votre compte, ce qui efface tout.</p>
+        <p>Si un paiement échoue, un message s'affiche dans l'appli, vous pouvez mettre à jour votre carte, et Stripe réessaie automatiquement. Sans régularisation, l'abonnement est résilié et le compte repasse à la formule gratuite.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-retractation">
+        <h2 id="cg-retractation">Droit de rétractation</h2>
+        <p>Vous disposez en principe de <strong>14 jours</strong> à compter de la souscription pour vous rétracter (article L. 221-18 du Code de la consommation). Le Premium est un service numérique accessible immédiatement : avant de payer, vous devez cocher la case <em>« ${echapper(TEXTE_CONSENTEMENT)} »</em> (article L. 221-28 du Code de la consommation). Sans cette case cochée, le paiement n'est pas possible. Une fois le paiement fait, vous renoncez donc à ce droit ; vous pouvez en revanche résilier quand vous voulez, comme indiqué plus haut.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-donnees">
+        <h2 id="cg-donnees">Données personnelles</h2>
+        <p>Le traitement de vos données, dont celles du paiement, est détaillé dans la <a href="#/confidentialite">politique de confidentialité</a>.</p>
+      </section>
+
+      <section class="cp-carte ap-bloc" aria-labelledby="cg-litiges">
+        <h2 id="cg-litiges">Réclamations et médiation</h2>
+        <p>Pour toute réclamation, écrivez à ${contact}. Si le litige persiste, vous pouvez recourir gratuitement à un médiateur de la consommation :</p>
+        <p data-champ="mediateur">${valeur(config.mediateur)}</p>
+        ${String(config.mediateur ?? '').trim() ? '' : note('Le vendeur doit désigner un médiateur de la consommation agréé (adhésion auprès d\'un médiateur) et l\'indiquer ici.')}
+        <p>Ces conditions sont soumises au droit français.</p>
       </section>
     </div>`;
 }
@@ -156,10 +230,19 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
         <p><strong>Fondement.</strong> L'exécution du service Premium que vous demandez, activé par vous-même.</p>
       </section>
 
+      <section class="cp-carte ap-bloc" aria-labelledby="cf-paiement">
+        <h2 id="cf-paiement">Abonnement Premium et paiement</h2>
+        <p>Si vous vous abonnez, le serveur garde en plus : l'identifiant de votre client Stripe et de votre abonnement, l'état de l'abonnement (actif, résilié, paiement échoué), la date de fin de la période payée, et la preuve que vous avez demandé l'accès immédiat (texte coché et date). <strong>Jamais</strong> votre numéro de carte : il reste chez Stripe.</p>
+        <p><strong>Pourquoi, et sur quel fondement.</strong> Exécuter l'abonnement que vous demandez ; respecter nos obligations comptables et légales (factures, preuve du consentement).</p>
+        <p><strong>Combien de temps.</strong> L'abonnement est suivi tant qu'il existe. Si vous supprimez votre compte, l'abonnement est annulé chez Stripe (plus aucun prélèvement) et ces informations sont effacées de nos serveurs. Stripe et l'éditeur conservent toutefois les factures pendant la durée légale (jusqu'à 10 ans), comme la loi l'impose.</p>
+        <p>Vous pouvez à tout moment changer de carte, voir vos factures et résilier depuis la page Compte. Voir aussi les <a href="#/cgv">conditions générales de vente</a>.</p>
+      </section>
+
       <section class="cp-carte ap-bloc" aria-labelledby="cf-qui">
         <h2 id="cf-qui">Qui traite quoi</h2>
         <ul class="ap-liste">
           <li><strong>Supabase</strong> : base de données, fichiers (sauvegarde cloud du Premium) et connexion des comptes. Projet hébergé en Europe (Irlande).</li>
+          <li><strong>Stripe</strong> (Stripe Payments Europe) : paiement de l'abonnement Premium. Le paiement se fait sur la page sécurisée de Stripe : l'éditeur ne voit et ne garde jamais votre numéro de carte. Stripe reçoit votre adresse e-mail et les informations de paiement, et envoie les factures.</li>
           <li><strong>Resend</strong> : envoi par e-mail du code de connexion, depuis l'adresse noreply@carnetpatte.com. Ce service reçoit votre adresse e-mail et le code pour l'envoyer ; serveurs en Europe (Irlande).</li>
           <li><strong>Cloudflare</strong> : hébergement du site (voir les mentions légales).</li>
           <li>La Carte contacte OpenStreetMap quand vous l'utilisez (voir les mentions légales).</li>
@@ -169,7 +252,7 @@ export function rendreConfidentialite(zone, config = EDITEUR) {
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-duree">
         <h2 id="cf-duree">Combien de temps</h2>
-        <p>Vos informations de compte sont conservées tant que le compte existe. Si vous supprimez le compte, elles sont effacées du serveur immédiatement et définitivement, avec votre sauvegarde cloud et vos fichiers (Premium). Les prestataires d'envoi d'e-mails gardent un journal technique d'envoi pendant une durée limitée qu'ils fixent.</p>
+        <p>Vos informations de compte sont conservées tant que le compte existe. Si vous supprimez le compte, elles sont effacées du serveur immédiatement et définitivement, avec votre sauvegarde cloud et vos fichiers (Premium) ; un abonnement en cours est d'abord annulé chez Stripe. Les prestataires d'envoi d'e-mails gardent un journal technique d'envoi pendant une durée limitée qu'ils fixent.</p>
       </section>
 
       <section class="cp-carte ap-bloc" aria-labelledby="cf-droits">

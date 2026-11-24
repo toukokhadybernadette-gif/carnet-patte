@@ -1,5 +1,5 @@
 // Lance les tests de bout en bout : démarre un petit serveur local sur le projet, puis exécute chaque script dans Edge (sans fenêtre).
-// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme] [sombre] [demenagement] [compte] [synchro] [recadrage]
+// Usage : node tests/lancer.mjs [--rapide] [--jobs=N] [5e] [5f] [finitions] [5g] [5h] [secours] [migration] [couleurs] [verre] [graphique] [retouches] [toxique] [refonte] [etroit] [carte] [boutique] [carte-reel] [boutique-liens] [installable] [calendrier] [documents] [garde] [ferme] [sombre] [demenagement] [compte] [synchro] [recadrage] [abonnement]
 //   « carte-reel » appelle les VRAIS serveurs OpenStreetMap : il n'est jamais lancé par la suite automatique ni par --rapide, seulement à la main (node tests/lancer.mjs carte-reel)
 //   sans argument : tous les tests, 2 à la fois (--jobs=N change le nombre de tests simultanés)
 //   --rapide : uniquement les tests liés aux fichiers modifiés (non commités + commits de la branche depuis main)
@@ -44,6 +44,7 @@ const TESTS = {
   compte: 'test-compte.mjs',
   synchro: 'test-synchro.mjs',
   recadrage: 'test-recadrage.mjs',
+  abonnement: 'test-abonnement.mjs',
 };
 const MANUELS = new Set(['carte-reel', 'boutique-liens']); // jamais dans « tous les tests » (internet et serveurs publics requis)
 const AUTOMATIQUES = Object.keys(TESTS).filter((t) => !MANUELS.has(t));
@@ -51,9 +52,10 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 // Fichier modifié → tests concernés (première règle qui correspond). Un fichier sans règle est considéré central : on lance tout. [] = sans effet sur les tests.
 const REGLES = [
-  [/^js\/(compte|supabase-config|synchro)\.js$|^modules\/compte\/|^assets\/supabase\/|^supabase\/|^SUPABASE\.md$/, ['compte', 'synchro', 'installable', 'etroit']],
+  [/^js\/(compte|supabase-config|synchro)\.js$|^modules\/compte\/|^assets\/supabase\/|^supabase\/|^SUPABASE\.md$/, ['compte', 'synchro', 'abonnement', 'installable', 'etroit']],
+  [/^ABONNEMENT\.md$/, ['abonnement']],
   [/^css\/bulles\.css$/, ['finitions', '5e', '5f', '5g', '5h', 'ferme', 'retouches', 'verre', 'sombre', 'etroit']],
-  [/^demenagement\.html$|^_headers$|^js\/(adresse|mentions-config)\.js$|^modules\/apropos\/|^outils\/assembler-site\.mjs$/, ['demenagement', 'compte', 'installable', 'etroit']],
+  [/^demenagement\.html$|^_headers$|^js\/(adresse|mentions-config)\.js$|^modules\/apropos\/|^outils\/assembler-site\.mjs$/, ['demenagement', 'compte', 'abonnement', 'installable', 'etroit']],
   [/^css\/(sombre|themes-sombre)\.css$|^js\/couleurs-sombre\.js$/, ['sombre', 'refonte', 'couleurs', 'verre', 'etroit']],
   [/^modules\/ferme\//, ['ferme', '5e', '5f', 'finitions', 'etroit', 'retouches']],
   [/^js\/pdf(-fiche|-icones)?\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],

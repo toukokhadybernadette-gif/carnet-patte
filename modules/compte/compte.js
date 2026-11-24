@@ -5,6 +5,7 @@ import { echapper } from '../../js/utils.js';
 import { toast, confirmer } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, alerte, confirmer as demander } from '../../js/composants.js';
+import { PREMIUM } from '../../js/mentions-config.js';
 
 const RENVOI_SECONDES = 60;
 
@@ -119,6 +120,32 @@ function vueConnecte(cadre, zone, u) {
       <p class="cp-doux" data-attente-etat role="status"></p>
       <div class="cm-actions">${bouton({ texte: "Me prévenir à l'ouverture", icone: 'bell', desactive: true, attrs: { 'data-attente': true } })}</div>
     </section>
+    <section class="cp-carte cm-form" aria-labelledby="cm-achat" data-achat hidden>
+      <h2 id="cm-achat">Passer Premium</h2>
+      <p class="cp-doux" data-achat-formule>Votre formule : Gratuite.</p>
+      <p><strong>${PREMIUM.prix} € TTC par ${PREMIUM.periode}</strong>, sans engagement, résiliable à tout moment en quelques clics. Sauvegarde cloud, synchronisation entre vos appareils, documents et photos (100 Mo). La formule gratuite reste disponible.</p>
+      <label class="cm-case"><input type="checkbox" data-consentement><span>${echapper(compte.TEXTE_CONSENTEMENT)}</span></label>
+      <p class="cp-doux">Sans cette case cochée, le paiement n'est pas possible. En continuant, vous acceptez les <a href="#/cgv">conditions générales de vente</a>. Paiement sécurisé par Stripe : Carnet Patte ne voit jamais votre numéro de carte.</p>
+      <div class="cm-actions">${bouton({ texte: `Passer Premium – ${PREMIUM.prix} €/${PREMIUM.periode}`, icone: 'check', desactive: true, attrs: { 'data-payer': true } })}</div>
+      <p class="cp-doux" data-achat-etat role="status"></p>
+    </section>
+    <section class="cp-carte cm-form" aria-labelledby="cm-abonnement" data-abonnement hidden>
+      <h2 id="cm-abonnement">Votre abonnement Premium</h2>
+      <div data-abonnement-alerte></div>
+      <p data-abonnement-texte role="status"></p>
+      <div class="cm-actions">
+        ${bouton({ texte: 'Gérer mon abonnement et mes factures', variante: 'secondaire', icone: 'file-text', attrs: { 'data-portail': 'gerer' } })}
+        ${bouton({ texte: 'Résilier mon abonnement', variante: 'secondaire', icone: 'x', attrs: { 'data-portail': 'resilier' } })}
+      </div>
+      <p class="cp-doux" data-abonnement-etat role="status"></p>
+      <p class="cp-doux">Changer de carte, voir vos factures et résilier se font sur le portail sécurisé de Stripe. La résiliation prend effet à la fin de la période déjà payée. <a href="#/cgv">Conditions générales de vente</a>.</p>
+    </section>
+    <section class="cp-carte cm-form" aria-labelledby="cm-lecture" data-lecture-seule hidden>
+      <h2 id="cm-lecture">Votre sauvegarde cloud est conservée</h2>
+      <p>Votre compte est en formule gratuite : la sauvegarde et la synchronisation sont arrêtées, mais <strong>rien n'a été supprimé</strong>. Vos données du cloud restent en lecture seule : vous pouvez les télécharger (« Télécharger les données de mon compte », plus bas) ou les récupérer sur cet appareil.</p>
+      <div class="cm-actions">${bouton({ texte: 'Récupérer mon carnet sur cet appareil', variante: 'secondaire', icone: 'download', attrs: { 'data-recuperer': true } })}</div>
+      <p class="cp-doux" data-lecture-etat role="status"></p>
+    </section>
     <section class="cp-carte cm-form" aria-labelledby="cm-cloud" data-cloud hidden>
       <h2 id="cm-cloud">Sauvegarde cloud et synchronisation</h2>
       <p>Formule : <strong>Premium</strong>. Votre carnet (animaux, soins, pesées, documents, photos) est copié dans un espace privé en Europe et retrouvé sur vos autres appareils. L'appli reste utilisable hors ligne : tout s'enregistre d'abord sur l'appareil.</p>
@@ -137,7 +164,7 @@ function vueConnecte(cadre, zone, u) {
         <li data-etat="attente"><span class="sy-etat__point" aria-hidden="true"></span>Point marron : en attente (hors ligne, espace plein ou en pause)</li>
         <li data-etat="erreur"><span class="sy-etat__point" aria-hidden="true"></span>Point rouge : erreur, la sauvegarde sera retentée</li>
       </ul>
-      <p class="cp-doux">Désactiver arrête les envois depuis cet appareil, sans rien supprimer. Supprimer votre compte efface aussi tout le cloud. <a href="#/confidentialite">Confidentialité</a>.</p>
+      <p class="cp-doux">Désactiver arrête les envois depuis cet appareil, sans rien supprimer. Supprimer votre compte efface aussi tout le cloud (et annule votre abonnement). <a href="#/confidentialite">Confidentialité</a> · <a href="#/cgv">Conditions générales de vente</a>.</p>
     </section>
     <section class="cp-carte cm-form" aria-labelledby="cm-donnees" data-donnees>
       <h2 id="cm-donnees">Vos données et votre vie privée</h2>
@@ -155,6 +182,7 @@ function vueConnecte(cadre, zone, u) {
   });
   brancherPremium(cadre);
   brancherDonnees(cadre, zone);
+  brancherRetourPaiement(cadre, zone);
 }
 
 /** Le texte du bloc « Connecté » : il dit ce qui est VRAIMENT envoyé, selon la formule et l'activation de la sauvegarde cloud. */
@@ -172,6 +200,7 @@ async function brancherPremium(cadre) {
     if (!cadre.isConnected) return;
     inscrit = attente;
     formule.textContent = `Formule : ${p.plan === 'premium' ? 'Premium' : 'Gratuite'}`;
+    brancherAbonnement(cadre, p.plan);
     if (p.plan === 'premium') { cadre.querySelector('[data-premium]').hidden = true; brancherCloud(cadre); return; } // Premium : la liste d'attente n'a plus lieu d'être
     texteConnecte(cadre, "Se connecter ne change rien d'autre : vos animaux restent sur cet appareil, et rien n'est envoyé. La sauvegarde cloud et la synchronisation sont réservées à la formule Premium (pas encore ouverte au public).");
   } catch (err) {
@@ -188,6 +217,100 @@ async function brancherPremium(cadre) {
     btn.disabled = false; afficher();
   });
 }
+
+const dateLongue = (ms) => new Date(ms).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+/**
+ * Paiement et abonnement. Gratuit : la carte « Passer Premium » (seulement si le serveur dit que le paiement est ouvert pour ce compte), et, s'il reste des données
+ * dans le cloud, leur récupération en lecture seule. Abonné : l'état, « Gérer mon abonnement et mes factures » et « Résilier mon abonnement ».
+ */
+async function brancherAbonnement(cadre, plan) {
+  const abonnement = await compte.monAbonnement().catch(() => null);
+  if (!cadre.isConnected) return;
+  const enCours = abonnement && ['active', 'trialing', 'past_due'].includes(abonnement.statut);
+  if (enCours) brancherGestion(cadre, abonnement);
+  if (plan === 'gratuit') {
+    if (await compte.paiementDisponible() && cadre.isConnected) brancherAchat(cadre);
+    if (!enCours && await compte.aDesDonneesCloud().catch(() => false) && cadre.isConnected) brancherLectureSeule(cadre);
+  }
+}
+
+function brancherAchat(cadre) {
+  cadre.querySelector('[data-premium]').hidden = true; // le paiement est ouvert pour ce compte : la liste d'attente « Me prévenir à l'ouverture » n'a plus lieu d'être (les inscrits restent en place)
+  const bloc = cadre.querySelector('[data-achat]');
+  const caseA = bloc.querySelector('[data-consentement]');
+  const btn = bloc.querySelector('[data-payer]');
+  const etat = bloc.querySelector('[data-achat-etat]');
+  bloc.hidden = false;
+  caseA.addEventListener('change', () => { btn.disabled = !caseA.checked; }); // sans la case, impossible de payer
+  btn.addEventListener('click', async () => {
+    if (!caseA.checked) return;
+    btn.disabled = true; etat.textContent = 'Ouverture de la page de paiement sécurisée…';
+    try { location.assign(await compte.adresseDePaiement(true)); } catch (err) { etat.textContent = compte.messageErreur(err); btn.disabled = !caseA.checked; }
+  });
+}
+
+function brancherGestion(cadre, a) {
+  const bloc = cadre.querySelector('[data-abonnement]');
+  const texteEl = bloc.querySelector('[data-abonnement-texte]');
+  const etat = bloc.querySelector('[data-abonnement-etat]');
+  bloc.hidden = false;
+  if (a.paiementEchoue || a.statut === 'past_due') {
+    bloc.querySelector('[data-abonnement-alerte]').innerHTML = alerte({ type: 'attention', titre: 'Votre dernier paiement a échoué', texte: "Mettez à jour votre carte pour garder Premium. Stripe réessaiera automatiquement ; sans régularisation, votre compte repassera à la formule gratuite (rien n'est supprimé)." });
+  }
+  const fin = a.finPeriode ? dateLongue(a.finPeriode) : '';
+  texteEl.textContent = a.resiliationPrevue
+    ? `Abonnement résilié. Vous gardez Premium${fin ? ` jusqu'au ${fin}` : ' jusqu\'à la fin de la période payée'}, puis votre compte repasse à la formule gratuite : rien n'est supprimé.`
+    : `Abonnement actif : ${PREMIUM.prix} € par ${PREMIUM.periode}, sans engagement.${fin ? ` Prochain paiement le ${fin}.` : ''}`;
+  bloc.querySelectorAll('[data-portail]').forEach((b) => b.addEventListener('click', async () => {
+    bloc.querySelectorAll('[data-portail]').forEach((x) => { x.disabled = true; });
+    etat.textContent = 'Ouverture du portail sécurisé de Stripe…';
+    try { location.assign(await compte.adresseDuPortail(b.dataset.portail)); } catch (err) { etat.textContent = compte.messageErreur(err); bloc.querySelectorAll('[data-portail]').forEach((x) => { x.disabled = false; }); }
+  }));
+}
+
+/** Compte gratuit qui a encore des données dans le cloud : les récupérer sur cet appareil, une seule fois, sans rien remplacer ni supprimer. */
+function brancherLectureSeule(cadre) {
+  const bloc = cadre.querySelector('[data-lecture-seule]');
+  const btn = bloc.querySelector('[data-recuperer]');
+  const etat = bloc.querySelector('[data-lecture-etat]');
+  bloc.hidden = false;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      const u = await compte.utilisateur();
+      const synchro = await import('../../js/synchro.js');
+      const { cloud, exemples } = await synchro.analyserPremiereConnexion();
+      if (!cloud) { etat.textContent = "Il n'y a rien à récupérer."; return; }
+      const exemplesTexte = exemples ? ` Les ${exemples} animaux d'exemple de cet appareil seront retirés, pour ne pas se mélanger à votre carnet.` : '';
+      const ok = await demander({ titre: 'Récupérer votre carnet ?', danger: false, libelle: 'Récupérer mon carnet',
+        message: `${cloud} élément(s) du cloud seront ajoutés sur cet appareil. Ce qui s'y trouve déjà n'est ni remplacé ni supprimé.${exemplesTexte} La sauvegarde cloud reste arrêtée (formule gratuite).` });
+      if (!ok) return;
+      if (exemples) synchro.retirerExemples();
+      const { ajoutes } = await synchro.recupererSeulement(u.id);
+      etat.textContent = `${ajoutes} élément(s) ajouté(s) sur cet appareil.`;
+      toast('Carnet récupéré');
+    } catch (err) { etat.textContent = compte.messageErreur(err); } finally { btn.disabled = false; }
+  });
+}
+
+/** Retour de la page de paiement Stripe (?paiement=ok) : le webhook peut mettre quelques secondes à arriver, on attend le passage en Premium. */
+async function brancherRetourPaiement(cadre, zone) {
+  const retour = new URLSearchParams(location.search).get('paiement');
+  if (!retour) return;
+  history.replaceState(null, '', `${location.pathname}${location.hash}`); // l'adresse redevient propre
+  if (retour === 'annule') { toast("Paiement annulé : rien n'a été débité.", 'info'); return; }
+  if (retour !== 'ok') return;
+  const message = cadre.querySelector('[data-connecte-texte]');
+  message.textContent = 'Paiement reçu : activation de Premium en cours…';
+  for (let i = 0; i < 30 && cadre.isConnected; i++) {
+    try { if ((await compte.profil()).plan === 'premium') { toast('Bienvenue dans Premium !'); const u = await compte.utilisateur(); if (u) vueConnecte(cadre, zone, u); return; } } catch { /* réseau : on réessaie */ }
+    await new Promise((ok) => setTimeout(ok, 2000));
+  }
+  if (cadre.isConnected) message.textContent = "Le paiement est en cours de traitement. Rechargez cette page dans un instant : Premium s'activera tout seul.";
+}
+
+let propositionOuverte = false; // la proposition « Activer la sauvegarde cloud » est ouverte : pas de deuxième par-dessus
 
 const mo = (octets) => `${(octets / 1048576).toFixed(1).replace('.', ',')} Mo`;
 
@@ -231,8 +354,10 @@ async function brancherCloud(cadre) {
   window.addEventListener('synchro-changee', afficher);
   window.addEventListener('synchro-terminee', majEspace);
 
-  /** Compare l'appareil et le cloud, explique, et n'active qu'après un « oui ». */
+  /** Compare l'appareil et le cloud, explique, et n'active qu'après un « oui ». Une seule proposition à la fois (la page peut se redessiner juste après un paiement). */
   async function activerAvecChoix() {
+    if (propositionOuverte) return;
+    propositionOuverte = true;
     btnActiver.disabled = true;
     try {
       const { cas, local, cloud, exemples } = await synchro.analyserPremiereConnexion();
@@ -249,7 +374,7 @@ async function brancherCloud(cadre) {
       if (exemples && cloud) synchro.retirerExemples();
       await synchro.activer(u.id);
       toast('Sauvegarde cloud activée');
-    } catch (err) { toast(compte.messageErreur(err), 'erreur'); } finally { btnActiver.disabled = false; afficher(); }
+    } catch (err) { toast(compte.messageErreur(err), 'erreur'); } finally { propositionOuverte = false; btnActiver.disabled = false; afficher(); }
   }
   btnActiver.addEventListener('click', activerAvecChoix);
   btnSynchro.addEventListener('click', async () => { btnSynchro.disabled = true; await synchro.synchroniser(); btnSynchro.disabled = false; afficher(); });
@@ -278,7 +403,7 @@ function brancherDonnees(cadre, zone) {
   });
   cadre.querySelector('[data-supprimer-compte]').addEventListener('click', async (e) => {
     const b = e.currentTarget; // à garder avant le « await » : l'événement n'a plus de cible ensuite
-    if (!await confirmer('Supprimer définitivement votre compte ? Votre adresse e-mail, vos inscriptions et, pour un compte Premium, toute votre sauvegarde cloud (données et fichiers) seront effacées du serveur, sans retour possible. Vos animaux, sur cet appareil, ne sont pas touchés.', 'Supprimer mon compte')) return;
+    if (!await confirmer('Supprimer définitivement votre compte ? Votre adresse e-mail, vos inscriptions et, pour un compte Premium, votre abonnement (annulé chez Stripe, sans nouveau prélèvement) et toute votre sauvegarde cloud (données et fichiers) seront supprimés, sans retour possible. Vos animaux, sur cet appareil, ne sont pas touchés.', 'Supprimer mon compte')) return;
     b.disabled = true;
     try {
       await compte.supprimerMonCompte();

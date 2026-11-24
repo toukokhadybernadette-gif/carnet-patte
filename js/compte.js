@@ -45,9 +45,12 @@ export const clientSupabase = client;
 /** Cette erreur vient-elle d'un réseau absent ou coupé (et non d'un refus du serveur) ? */
 export const estHorsLigne = (e) => !!e && (/hors connexion|fetch|network|AuthRetryableFetchError|Failed to load|load failed/i.test(`${e?.name} ${e?.message ?? ''}`) || (Number(e?.status ?? e?.statusCode ?? -1) === 0));
 
+/** Le texte de la case à cocher avant le paiement. Il est gardé par le serveur comme preuve du consentement : il doit rester identique à celui de supabase/functions/_shared/traitement.js. */
+export const TEXTE_CONSENTEMENT = "Je demande l'accès immédiat au Premium et je reconnais perdre mon droit de rétractation de 14 jours";
+
 /** Une erreur de Supabase ou du réseau, en français et sans jargon. */
 export function messageErreur(e) {
-  const code = String(e?.code ?? e?.error_code ?? '');
+  const code = String(e?.code ?? e?.error_code ?? e?.erreur ?? '');
   const texte = String(e?.message ?? e?.msg ?? '');
   const statut = Number(e?.status ?? 0);
   if (/hors connexion|fetch|network|AuthRetryableFetchError|Failed to load/i.test(`${e?.name} ${texte}`) || statut === 0 && /fetch/i.test(texte)) return "Pas de connexion à internet : se connecter à un compte en a besoin. L'appli reste utilisable sans compte.";
@@ -55,6 +58,12 @@ export function messageErreur(e) {
   if (/otp_expired|expired|invalid/i.test(`${code} ${texte}`) && !/email address|format/i.test(texte)) return 'Code incorrect ou expiré. Vérifiez les 6 chiffres, ou demandez un nouveau code.';
   if (/validation_failed|email address|format/i.test(`${code} ${texte}`)) return 'Cette adresse e-mail ne semble pas valide.';
   if (/non configuré/.test(texte)) return "Les comptes ne sont pas encore activés sur ce site.";
+  if (code === 'non_disponible') return "Le paiement n'est pas encore ouvert.";
+  if (code === 'consentement_requis') return 'Cochez la case pour continuer.';
+  if (code === 'deja_abonne') return 'Vous avez déjà un abonnement Premium.';
+  if (code === 'pas_abonne') return "Aucun abonnement n'est associé à ce compte.";
+  if (code === 'annulation_impossible' || /abonnement_actif/.test(texte)) return "Votre abonnement n'a pas pu être annulé pour le moment : votre compte n'a PAS été supprimé. Réessayez, ou résiliez depuis « Gérer mon abonnement ».";
+  if (code === 'serveur' || code === 'configuration') return "Le paiement est momentanément indisponible. Réessayez dans un instant.";
   if (/fichiers_restants/.test(texte)) return "Des fichiers du cloud n'ont pas pu être supprimés. Réessayez : votre compte n'a pas été supprimé.";
   if (/quota_depasse/.test(texte)) return "L'espace cloud de 100 Mo est plein. Supprimez des documents pour en ajouter.";
   if (/PGRST20[245]|42P01|42883|schema cache|does not exist/i.test(`${code} ${texte}`)) return "Cette fonction du compte n'est pas encore prête côté serveur. Réessayez plus tard.";
@@ -100,6 +109,50 @@ async function moi() {
   return u;
 }
 
+/** Appelle une Edge Function (Stripe) au nom de la personne connectée. Lève une erreur dont `code` est le code renvoyé par le serveur (« non_disponible », « consentement_requis »…). */
+async function fonction(nom, corps = {}) {
+  await moi();
+  const { data, error } = await (await client()).functions.invoke(nom, { body: { origine: location.origin, ...corps } });
+  if (error) {
+    let code = '';
+    try { code = (await error.context.json()).erreur ?? ''; } catch { /* pas de corps lisible : erreur réseau */ }
+    const e = new Error(code || error.message); e.code = code; e.name = error.name;
+    throw e;
+  }
+  return data;
+}
+
+/** Une adresse de paiement ou de portail n'est suivie que si elle mène chez Stripe (ou, pour les tests, au faux serveur de la configuration). */
+function adresseSure(url) {
+  let u; try { u = new URL(url); } catch { throw new Error('adresse illisible'); }
+  const hotes = ['checkout.stripe.com', 'billing.stripe.com', new URL(config.url).host];
+  if (!hotes.includes(u.host)) throw new Error('adresse refusée');
+  return u.href;
+}
+
+/** Le paiement est-il ouvert pour ce compte ? (Pendant les tests : seulement les adresses autorisées côté serveur ; le bouton n'apparaît que si oui.) */
+export async function paiementDisponible() {
+  try { return (await fonction('stripe-checkout', { action: 'disponible' })).disponible === true; } catch { return false; }
+}
+
+/** L'adresse de la page de paiement Stripe pour « Passer Premium ». `consentement` : la case a été cochée (sinon le serveur refuse). */
+export async function adresseDePaiement(consentement) {
+  return adresseSure((await fonction('stripe-checkout', { consentement: consentement === true })).url);
+}
+
+/** L'adresse du portail Stripe : gérer l'abonnement (carte, factures) ou, avec action « resilier », directement l'écran de résiliation. */
+export async function adresseDuPortail(action = 'gerer') {
+  return adresseSure((await fonction('stripe-portail', { action })).url);
+}
+
+/** L'état de l'abonnement : { statut, finPeriode, resiliationPrevue, paiementEchoue }, ou null (aucun abonnement, ou fonction pas encore installée). */
+export async function monAbonnement() {
+  await moi();
+  const { data, error } = await (await client()).rpc('mon_abonnement');
+  if (error || !data) return null;
+  return { statut: data.statut, finPeriode: data.fin_periode ? Date.parse(data.fin_periode) : null, resiliationPrevue: !!data.resiliation_prevue, paiementEchoue: !!data.paiement_echoue };
+}
+
 /** Le profil du compte : { plan: 'gratuit' | 'premium', creeLe } (ligne créée par le serveur à la création du compte). */
 export async function profil() {
   await moi();
@@ -141,7 +194,7 @@ export async function exporterMesDonnees() {
 }
 
 /** Reste-t-il quelque chose dans le cloud pour ce compte (par exemple après un retour à la formule gratuite) ? */
-async function aDesDonneesCloud() {
+export async function aDesDonneesCloud() {
   const { count, error } = await (await client()).from('elements').select('item_id', { count: 'exact', head: true });
   return !error && (count ?? 0) > 0;
 }
@@ -149,6 +202,9 @@ async function aDesDonneesCloud() {
 /** Supprime DÉFINITIVEMENT le compte et ses données sur le serveur, puis la session de cet appareil. Les animaux de l'appareil ne sont pas touchés. */
 export async function supprimerMonCompte() {
   const u = await moi();
+  // 0. Un abonnement en cours est ANNULÉ chez Stripe d'abord : tant que Stripe n'a pas confirmé, rien n'est supprimé (le serveur refuse aussi de supprimer le compte sinon)
+  const abonnement = await monAbonnement();
+  if (abonnement && ['trialing', 'active', 'past_due', 'unpaid', 'paused'].includes(abonnement.statut)) await fonction('abonnement-annuler');
   // 1. Les fichiers du cloud (documents, photos) : supprimés par l'API Storage, puis vérifiés. Le serveur refuse de supprimer le compte s'il en reste.
   await (await import('./synchro.js')).supprimerFichiersCloud(u.id);
   // 2. Le compte, et avec lui profil, liste d'attente, éléments et liste des documents

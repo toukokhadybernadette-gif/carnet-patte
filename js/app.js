@@ -25,7 +25,7 @@ import { initialiserTheme } from './theme.js';
 import { initialiserPwa } from './pwa.js';
 import { afficherBandeauDemenagement } from './adresse.js';
 import { rendre as rendreComposants } from '../modules/composants/composants.js';
-import { rendre as rendreApropos, rendreMentions, rendreConfidentialite } from '../modules/apropos/apropos.js';
+import { rendre as rendreApropos, rendreMentions, rendreConfidentialite, rendreCgv } from '../modules/apropos/apropos.js';
 import { rendre as rendreCompte } from '../modules/compte/compte.js';
 
 // ----- Thème de couleur (mémorisé sur l'appareil) -----
@@ -50,6 +50,7 @@ route('compte', rendreCompte); // connexion (facultative) : invisible tant que j
 route('apropos', rendreApropos);
 route('mentions', (zone) => rendreMentions(zone)); // la fonction a d'autres paramètres (tests) : on ne lui passe que la zone
 route('confidentialite', (zone) => rendreConfidentialite(zone)); // idem : seulement la zone
+route('cgv', (zone) => rendreCgv(zone)); // conditions générales de vente de l'abonnement Premium
 route('composants', rendreComposants); // page de référence du design, pas dans le menu
 
 // ----- Données enregistrées illisibles : on n'écrase RIEN, on explique et on propose de les exporter (js/secours.js) -----

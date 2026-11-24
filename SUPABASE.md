@@ -129,6 +129,11 @@ Le fichier `supabase/etape3.sql` (à lancer **après** l'étape 2) crée :
 - Un appareil resté hors ligne plus de 90 jours peut ressusciter des éléments supprimés entre-temps (leurs stèles ont été purgées).
 - Pas de restauration d'anciennes versions ni de carnet partagé : prévus plus tard.
 
+
+## 10. Étape 4 : abonnement Premium (Stripe)
+
+Voir **`ABONNEMENT.md`** : le SQL (`supabase/etape4.sql`, `verifier-etape4.sql`), la création du produit, du prix, du portail et du webhook dans Stripe (mode test), les secrets Supabase, le déploiement des 4 Edge Functions, le test avec la carte 4242, et la checklist « Avant le passage en réel ».
+
 ## Limites de l'offre gratuite (rappel) et passage en Pro
 
 

@@ -20,3 +20,11 @@ tests/sortie/
 captures-5h/
 .outils-temp/
 __pycache__/
+
+# Secrets : JAMAIS dans le dépôt (il est public). Les clés Stripe se mettent dans les secrets Supabase (voir ABONNEMENT.md).
+.env
+.env.*
+*.env
+stripe.env
+supabase/.temp/
+supabase/.branches/

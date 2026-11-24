@@ -483,6 +483,30 @@ export async function activer(userId) {
   return synchroniser();
 }
 
+/**
+ * Récupère le carnet du cloud sur CET appareil UNE SEULE FOIS, sans activer la synchronisation : pour un compte repassé à la formule gratuite
+ * (la sauvegarde s'est arrêtée, mais rien n'a été supprimé). Ce qui est déjà sur l'appareil n'est jamais remplacé ni supprimé : seuls les éléments
+ * qui manquent sont ajoutés. Retourne { ajoutes } (nombre d'éléments et de documents ajoutés).
+ */
+export async function recupererSeulement(userId) {
+  const c = await compte.clientSupabase();
+  const comptage = async () => {
+    const s = storage.instantane();
+    return ['animaux', 'soins', 'pesees', 'oeufs', 'stocks'].reduce((n, k) => n + s[k].length, 0) + Object.keys(s.fichesGarde).length + (await docs.listerDocuments()).length;
+  };
+  const avant = await comptage();
+  const reglageAvant = reglage; const brutAvant = (() => { try { return localStorage.getItem(CLE); } catch { return null; } })();
+  reglage = { userId, actif: false, curE: null, curD: null, meta: {} };
+  try {
+    releverChangements(Number.MAX_SAFE_INTEGER); await releverDocuments(Number.MAX_SAFE_INTEGER); // ce qui est déjà ici passe pour « plus récent que tout » : le cloud n'écrase rien
+    await tirer(c, userId);
+  } finally {
+    reglage = reglageAvant; // l'activation de la sauvegarde cloud (ou son absence) reste exactement comme avant
+    try { if (brutAvant === null) localStorage.removeItem(CLE); else localStorage.setItem(CLE, brutAvant); } catch { /* stockage bloqué */ }
+  }
+  return { ajoutes: (await comptage()) - avant };
+}
+
 /** Arrête la sauvegarde cloud sur CET appareil. Rien n'est supprimé, ni ici ni dans le cloud. */
 export function desactiver() {
   clearTimeout(minuteur);

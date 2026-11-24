@@ -1,0 +1,16 @@
+# Configuration des Edge Functions (Supabase CLI : « npx supabase functions deploy »). Voir ABONNEMENT.md.
+# verify_jwt = false partout : le webhook de Stripe n'envoie pas de jeton Supabase (sa signature est vérifiée dans le code) ;
+# les trois autres fonctions vérifient elles-mêmes le jeton de session (creerAuth, supabase/functions/_shared/supabase.js) : refusé si absent ou invalide.
+project_id = "tiqtmoyxxqzabgaaiwfa"
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.stripe-checkout]
+verify_jwt = false
+
+[functions.stripe-portail]
+verify_jwt = false
+
+[functions.abonnement-annuler]
+verify_jwt = false

@@ -137,9 +137,9 @@ await controler('À propos à 375 px'); await axe('#contenu', 'À propos');
 await aller('#/mentions'); await dort(500);
 verifier(await texte('h1') === 'Mentions légales', 'page Mentions légales');
 const vides = await ev(`[...document.querySelectorAll('[data-champ]')].filter((e) => e.querySelector('.ap-vide')).map((e) => e.dataset.champ)`);
-verifier(vides.length === 0, `nom, SIRET et directeur de la publication renseignés (js/mentions-config.js), plus de « [à compléter] »`);
+verifier(JSON.stringify(vides) === JSON.stringify(['adresse']), `nom, SIRET et directeur de la publication renseignés ; seule l’adresse reste « [à compléter] » (choix à faire avant le passage en réel) : ${vides.join(', ')}`);
 verifier(await ev(`document.querySelector('[data-champ=email] a')?.getAttribute('href')`) === 'mailto:contact@carnetpatte.com' && (await texte('[aria-labelledby=ml-donnees]')).includes('contact@carnetpatte.com'), 'e-mail de contact : contact@carnetpatte.com (éditeur et droits sur les données) ');
-verifier(await texte('[data-champ=statut]') === 'Entrepreneur individuel (EI) – micro-entreprise' && await ev(`!document.querySelector('[data-champ=adresse]')`), 'statut « Entrepreneur individuel (EI) – micro-entreprise » ; AUCUNE adresse postale affichée pour l’éditeur');
+verifier(await texte('[data-champ=statut]') === 'Entrepreneur individuel (EI) – micro-entreprise' && (await texte('[data-champ=adresse]')) === '[à compléter]', 'statut « Entrepreneur individuel (EI) – micro-entreprise » ; adresse « [à compléter] » tant qu’elle n’est pas choisie pour l’éditeur');
 verifier(await texte('[data-champ=hebergeur]') === 'Cloudflare, Inc.' && (await texte('[aria-labelledby=ml-hebergeur]')).includes('101 Townsend Street'), 'hébergeur : Cloudflare, Inc. et son adresse');
 verifier((await texte('[aria-labelledby=ml-donnees]')).includes('Compte facultatif, aucun suivi') && (await texte('[aria-labelledby=ml-donnees]')).includes('OpenStreetMap') && (await texte('[aria-labelledby=ml-donnees]')).includes('Tout effacer'), 'données personnelles : rien collecté, ce qui sort de l’appareil, comment tout effacer');
 await controler('Mentions légales à 375 px'); await ecran('mentions-vides'); await axe('#contenu', 'Mentions légales (champs vides)');
@@ -147,7 +147,7 @@ await controler('Mentions légales à 375 px'); await ecran('mentions-vides'); a
 await ev(`import('/modules/apropos/apropos.js').then((m) => m.rendreMentions(document.querySelector('#contenu > div'), { nom: 'Jeanne <b>Martin</b>', statut: 'Micro-entreprise', siret: '123 456 789 00012', email: 'contact@exemple.fr', adresse: '1 rue des Lilas, 35000 Rennes' }, 'quelquun.github.io'))`); await dort(300);
 const rempli = await ev(`({ vides: document.querySelectorAll('.ap-vide').length, nom: document.querySelector('[data-champ=nom]').textContent, gras: !!document.querySelector('[data-champ=nom] b'), mail: document.querySelector('[data-champ=email] a')?.getAttribute('href'), directeur: document.querySelector('[data-champ=directeur]').textContent, adresse: document.querySelector('[data-champ=adresse]')?.textContent, heb: document.querySelector('[data-champ=hebergeur]').textContent })`);
 verifier(rempli.vides === 0 && rempli.nom === 'Jeanne <b>Martin</b>' && !rempli.gras && rempli.mail === 'mailto:contact@exemple.fr' && rempli.directeur === rempli.nom, 'champs remplis : plus de « [à compléter] », le texte saisi est protégé (pas de HTML), le directeur de la publication est l’éditeur');
-verifier(rempli.adresse === '1 rue des Lilas, 35000 Rennes' && rempli.heb === 'GitHub, Inc.', 'l’adresse n’apparaît que si on la renseigne ; sur *.github.io l’hébergeur affiché est GitHub');
+verifier(rempli.adresse === '1 rue des Lilas, 35000 Rennes' && rempli.heb === 'GitHub, Inc.', 'l’adresse renseignée s’affiche ; sur *.github.io l’hébergeur affiché est GitHub');
 await axe('#contenu', 'Mentions légales (champs remplis)');
 await taille(390, 844); await aller('#/mentions'); await dort(400); await controler('Mentions légales à 390 px'); await taille(375, 812);
 
