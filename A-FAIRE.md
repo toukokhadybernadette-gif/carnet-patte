@@ -4,7 +4,7 @@ Marche à suivre complète : `DEPLOIEMENT-CLOUDFLARE.md`. Version d'avant : tag 
 
 ## À faire par vous
 - Créer le projet Cloudflare Pages (étapes dans `DEPLOIEMENT-CLOUDFLARE.md`), puis tester l'adresse sur l'iPhone.
-- **Mentions légales** : remplir `js/mentions-config.js` : nom et SIRET (l'e-mail de contact `contact@carnetpatte.com` et le statut « Micro-entreprise » sont déjà écrits). Tant qu'un champ est vide, la page affiche « [à compléter] ». **L'adresse postale n'est volontairement pas affichée** : ne la remplir que si vous décidez de la publier. Vérifier avec un comptable que l'hébergeur indiqué suffit pour ne pas publier votre adresse personnelle. Le numéro de téléphone de Cloudflare vient de sa documentation publique : à revérifier avant publication définitive.
+- **Mentions légales** : remplir `js/mentions-config.js` : nom et SIRET (l'e-mail de contact `contact@carnetpatte.com` et le statut « Entrepreneur individuel (EI) – micro-entreprise » sont déjà écrits). Tant qu'un champ est vide, la page affiche « [à compléter] ». **L'adresse postale n'est volontairement pas affichée** : ne la remplir que si vous décidez de la publier. Vérifier avec un comptable que l'hébergeur indiqué suffit pour ne pas publier votre adresse personnelle. Le numéro de téléphone de Cloudflare vient de sa documentation publique : à revérifier avant publication définitive.
 - **Fermer l'ancienne adresse GitHub Pages : SEULEMENT après votre OK.** D'ici là elle garde l'appli complète, avec un bandeau « Carnet Patte a déménagé » (`js/adresse.js`) et la page `demenagement.html`.
 
 ## Ce qui dépend de l'adresse (vérifié)
