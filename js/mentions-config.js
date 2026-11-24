@@ -8,7 +8,7 @@
 export const EDITEUR = {
   nom: 'Touko Khady Bernadette',                         // Nom et prénom de l'éditeur (c'est aussi le directeur de la publication)
   statut: 'Micro-entreprise',      // Statut juridique
-  siret: '131211997',                       // 14 chiffres, sur l'avis de situation INSEE
+  siret: '13121199700013',                       // 14 chiffres, sur l'avis de situation INSEE
   email: 'contact@carnetpatte.com', // Adresse e-mail de contact (droits sur les données, questions, signalements)
   adresse: '',                     // NE PAS REMPLIR sans décision de votre part : n'est affichée que si ce champ est rempli
 };
