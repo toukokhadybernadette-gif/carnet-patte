@@ -61,7 +61,7 @@ Supabase gardera plus tard les comptes et (pour Premium) les données synchronis
 
 ## 6. Ensuite (je m'en occupe)
 
-Je les écris dans `js/supabase-config.js` (public par conception), je pousse la branche `comptes`, et vous testez la connexion sur l'iPhone (voir l'écran **Profil → Compte (essai)**). Les tables et les règles de sécurité (RLS) arrivent à l'étape 2, avec les sauvegardes automatiques **avant** de mettre de vraies données.
+Je les écris dans `js/supabase-config.js` (public par conception), je pousse la branche `comptes`, et vous testez la connexion sur l'iPhone (voir l'écran **Profil → Compte**). Les tables et les règles de sécurité (RLS) arrivent à l'étape 2, avec les sauvegardes automatiques **avant** de mettre de vraies données.
 
 ## 7. Vrai envoi d'e-mails : Resend avec carnetpatte.com (Cloudflare)
 
@@ -89,7 +89,7 @@ Sans SMTP personnalisé, Supabase n'autorise pas à changer le modèle d'e-mail 
 9. **Authentication** → **Emails** → **Templates** : les modèles sont maintenant modifiables. **Magic Link** et **Confirm signup**, chacun avec le sujet et le corps de l'étape 10 ci-dessus (`{{ .Token }}` = le code à 6 chiffres).
 10. **URL Configuration** : *Site URL* = `https://carnetpatte.com`, *Redirect URLs* = `https://carnetpatte.com/**`.
 
-**Test** : sur l'iPhone, Profil → Compte (essai), saisissez votre e-mail : le code arrive de `noreply@carnetpatte.com`.
+**Test** : sur l'iPhone, Profil → Compte, saisissez votre e-mail : le code arrive de `noreply@carnetpatte.com`.
 
 ## 8. Étape 2 : tables, règles de sécurité (RLS), suppression de compte
 

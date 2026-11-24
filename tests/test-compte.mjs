@@ -119,7 +119,7 @@ verifier(!/service_role|sb_secret_/i.test(sql), 'aucune clé secrète dans le sc
 log('--- 3. Parcours de connexion ---');
 configServie = 'faux'; await send('Page.reload'); await dort(2000); // la page relit la config servie (maintenant le faux serveur)
 await aller('#/profil'); await dort(400);
-verifier(await ev(`[...document.querySelectorAll('a[href="#/compte"]')].some((a) => a.textContent.includes('Compte (essai)'))`), 'Profil : la ligne « Compte (essai) » apparaît quand c’est configuré');
+verifier(await ev(`[...document.querySelectorAll('a[href="#/compte"]')].some((a) => a.textContent.includes('Compte'))`), 'Profil : la ligne « Compte » apparaît quand c’est configuré');
 await aller('#/compte'); await dort(500);
 verifier((await texte('h1')) === 'Compte' && (await texte('#contenu')).includes('facultatif') && await ev(`!!document.querySelector('#cm-email')`), 'page Compte : « facultatif », champ e-mail');
 verifier(!(await ressources()).some((u) => /supabase\.js/.test(u)), 'ouvrir la page sans être connecté ne télécharge toujours rien (jamais connecté)');
@@ -152,7 +152,7 @@ const verif = journal.filter((j) => j.chemin.startsWith('/auth/v1/verify')).at(-
 verifier(verif.corps.token === '123456' && verif.corps.type === 'email' && verif.corps.email === 'ok@exemple.fr', 'vérification : code + e-mail, type « email »');
 const garde = JSON.parse(await stockage());
 verifier(garde?.access_token && garde?.refresh_token && garde?.user?.email === 'ok@exemple.fr', 'la session est gardée sur l’appareil (stockage local)');
-verifier((await texte('[data-essai]')).includes('navigateur (Safari)') && /Connecté depuis/.test(await texte('[data-essai]')) && (await texte('[data-essai]')).includes('rouvrez-la'), 'bloc « Essai » : mode d’ouverture, heure de connexion, consigne de test');
+verifier(await ev(`!document.querySelector('[data-essai]')`) && !/essai/i.test(await texte('#contenu')), 'plus aucun bloc ni mot « essai » sur la page Compte');
 await controler('Compte (connecté) à 375 px'); await axe('#contenu', 'compte : connecté'); await ecran('compte-connecte');
 await taille(390, 844); await controler('Compte (connecté) à 390 px'); await taille(375, 812);
 

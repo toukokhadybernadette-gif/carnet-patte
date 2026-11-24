@@ -46,7 +46,7 @@ route('profil', rendreProfil);
 route('toxique', rendreToxique);
 route('donnees', rendreDonnees);
 route('bientot', rendreBientot);
-route('compte', rendreCompte); // essai de connexion (facultatif) : invisible tant que js/supabase-config.js est vide
+route('compte', rendreCompte); // connexion (facultative) : invisible tant que js/supabase-config.js est vide
 route('apropos', rendreApropos);
 route('mentions', (zone) => rendreMentions(zone)); // la fonction a d'autres paramètres (tests) : on ne lui passe que la zone
 route('confidentialite', (zone) => rendreConfidentialite(zone)); // idem : seulement la zone

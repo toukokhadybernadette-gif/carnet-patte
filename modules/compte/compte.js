@@ -1,5 +1,4 @@
-// Page « Compte » (essai) : connexion par code à 6 chiffres reçu par e-mail, sans mot de passe. Facultatif : l'appli marche sans compte.
-// Étape 0 du plan : vérifier que la connexion tient dans l'appli installée sur l'iPhone (la session doit survivre à la fermeture de l'appli).
+// Page « Compte » : connexion par code à 6 chiffres reçu par e-mail, sans mot de passe. Facultatif : l'appli marche sans compte.
 
 import * as compte from '../../js/compte.js';
 import { echapper } from '../../js/utils.js';
@@ -8,16 +7,13 @@ import { icone } from '../../js/icons.js';
 import { bouton, champ, alerte } from '../../js/composants.js';
 
 const RENVOI_SECONDES = 60;
-const modeAffichage = () => (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches ? "appli installée (écran d'accueil)" : 'navigateur (Safari)');
-const heure = (ms) => new Date(ms).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-const depuis = (ms) => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000)); return m < 1 ? "moins d'une minute" : m < 120 ? `${m} min` : `${Math.round(m / 60)} h`; };
 
 export async function rendre(zone) {
   zone.classList.add('page-large');
   const entete = `
     <a class="pg-lien fi-retour" href="#/profil">${icone('arrow-left', { taille: 18 })} Profil</a>
     <header class="pg-entete"><h1 tabindex="-1">Compte</h1>
-      <p>Un compte est <strong>facultatif</strong> : tout Carnet Patte marche sans, avec vos données sur cet appareil. Cet écran est un essai de connexion, sans mot de passe.</p></header>`;
+      <p>Un compte est <strong>facultatif</strong> : tout Carnet Patte marche sans, avec vos données sur cet appareil. La connexion se fait par un code reçu par e-mail, sans mot de passe.</p></header>`;
   if (!compte.estConfigure()) {
     zone.innerHTML = `<div class="cp pg cm-page">${entete}${alerte({ type: 'info', titre: 'Pas encore activé', texte: "Les comptes ne sont pas encore activés sur ce site. Vos données restent sur cet appareil, comme d'habitude." })}</div>`;
     return;
@@ -131,15 +127,6 @@ function vueConnecte(cadre, zone, u) {
         ${bouton({ texte: 'Supprimer mon compte', variante: 'danger', icone: 'trash-2', attrs: { 'data-supprimer-compte': true } })}
       </div>
       <p class="cp-doux">Supprimer le compte efface définitivement ces informations sur le serveur. Vos animaux, sur cet appareil, ne sont pas touchés.</p>
-    </section>
-    <section class="cp-carte cm-essai" aria-labelledby="cm-essai-titre" data-essai>
-      <h2 id="cm-essai-titre">Essai : la connexion tient-elle ?</h2>
-      <dl class="ap-dl">
-        <div><dt>Ouvert dans</dt><dd data-mode>${echapper(modeAffichage())}</dd></div>
-        <div><dt>Connecté depuis</dt><dd data-depuis>${u.connecteLe ? `${echapper(heure(u.connecteLe))} (il y a ${echapper(depuis(u.connecteLe))})` : 'inconnu'}</dd></div>
-        <div><dt>Session valable jusqu'au</dt><dd data-expire>${u.expireLe ? echapper(heure(u.expireLe)) : 'inconnu'} <span class="cp-doux">(elle se renouvelle toute seule)</span></dd></div>
-      </dl>
-      <p class="cp-doux">À tester : fermez l'appli complètement, rouvrez-la 1 minute plus tard, puis le lendemain : vous devez toujours être connecté, sans redemander de code.</p>
     </section>`;
   cadre.querySelector('[data-deconnecter]').addEventListener('click', async () => {
     await compte.deconnecter();
