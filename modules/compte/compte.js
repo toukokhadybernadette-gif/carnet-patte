@@ -231,7 +231,8 @@ async function brancherAbonnement(cadre, plan) {
   if (enCours) brancherGestion(cadre, abonnement);
   if (plan === 'gratuit') {
     if (await compte.paiementDisponible() && cadre.isConnected) brancherAchat(cadre);
-    if (!enCours && await compte.aDesDonneesCloud().catch(() => false) && cadre.isConnected) brancherLectureSeule(cadre);
+    // Seulement pour un compte qui a eu un abonnement : un compte qui n'a jamais été Premium ne contacte pas les tables cloud
+    if (abonnement && abonnement.statut !== 'aucun' && !enCours && await compte.aDesDonneesCloud().catch(() => false) && cadre.isConnected) brancherLectureSeule(cadre);
   }
 }
 
