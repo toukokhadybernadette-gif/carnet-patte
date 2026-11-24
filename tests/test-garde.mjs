@@ -190,6 +190,26 @@ await aller('#/animaux/inconnu/garde'); await dort(300);
 verifier((await texte('#contenu')).includes("n'existe pas"), 'animal inconnu : message clair');
 await importer({ ...fichier, fichesGarde: { a: stock } });
 
+// Dates de garde raccourcies : même mois, même année, années différentes, un seul jour ; la pastille tient sur une ligne à 375 px, à l'écran et dans le PDF
+log('--- 3b. Dates de garde courtes ---');
+const exemplesDates = [['2026-11-24', '2026-11-28', 'Garde du 24 au 28 nov. 2026'], ['2026-11-28', '2026-12-03', 'Garde du 28 nov. au 3 déc. 2026'],
+  ['2026-12-28', '2027-01-03', 'Garde du 28 déc. 2026 au 3 janv. 2027'], ['2026-11-24', '2026-11-24', 'Garde le 24 nov. 2026']];
+for (const [du, au, attendu] of exemplesDates) {
+  await ev(`import('/js/storage.js').then((m) => m.enregistrerFicheGarde('a', { ...m.lireFicheGarde('a'), gardeDu: '${du}', gardeAu: '${au}' }))`);
+  await aller('#/animaux/a'); await aller('#/animaux/a/garde/apercu'); await dort(400);
+  const pastille = await ev(`(() => { const e = document.querySelector('.gd-garde-pastille'); const r = e.getBoundingClientRect(); return { texte: e.textContent.trim(), h: r.height, droite: r.right, ecran: window.innerWidth }; })()`);
+  verifier(pastille.texte === attendu, `dates « ${du} » → « ${au} » : « ${pastille.texte} »`);
+  if (au.slice(0, 4) === du.slice(0, 4) && du !== au) verifier(pastille.h < 40 && pastille.droite <= pastille.ecran - 8, `à 375 px, la pastille tient sur une ligne (${Math.round(pastille.h)} px de haut)`);
+  if (du === '2026-11-24' && au === '2026-11-28' || du === '2026-11-28') {
+    await ev(`document.querySelector('[data-act=pdf]').click()`);
+    const pd = lirePdf(await dernierPdf(1));
+    verifier(pd.texte.includes(attendu) && pd.pages === 1, `et dans le PDF : « ${attendu} »`);
+    await ev(`window.__pdf.length = 0`); // le test du PDF complet, plus bas, repart de zéro
+  }
+}
+await ev(`window.__pdf.length = 0; window.__telechargements.length = 0`);
+await importer({ ...fichier, fichesGarde: { a: stock } });
+
 // ===== 4. PDF =====
 log('--- 4. PDF ---');
 await aller('#/animaux/a/garde/apercu'); await dort(500);

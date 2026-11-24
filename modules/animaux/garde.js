@@ -6,7 +6,7 @@
 // Le contenu (modeleFiche) est le même pour l'écran et pour le PDF (js/pdf-fiche.js).
 
 import * as storage from '../../js/storage.js';
-import { echapper, age, formatDate, formatPoids, aujourdhui, ajouterJours, joursEntre } from '../../js/utils.js';
+import { echapper, age, formatDate, formatPoids, aujourdhui, ajouterJours, joursEntre, lireISO } from '../../js/utils.js';
 import { toast } from '../../js/ui.js';
 import { icone } from '../../js/icons.js';
 import { bouton, champ, alerte, avatar, couleurAnimal, vide, confirmer } from '../../js/composants.js';
@@ -56,6 +56,22 @@ const SECTIONS = [
     { cle: 'infos', label: 'Autres informations utiles', long: true, placeholder: 'Ex. : où sont les croquettes, les sacs, la laisse' } ] },
 ];
 
+/**
+ * Les dates de garde, aussi courtes que possible : « Garde du 24 au 28 nov. 2026 » (même mois), « Garde du 28 nov. au 3 déc. 2026 » (même année),
+ * « Garde du 28 déc. 2026 au 3 janv. 2027 » (années différentes), « Garde le 24 nov. 2026 » (un seul jour).
+ */
+export function libelleDatesGarde(du, au) {
+  if (!du && !au) return '';
+  if (!au) return `Garde à partir du ${formatDate(du)}`;
+  if (!du) return `Garde jusqu'au ${formatDate(au)}`;
+  if (du === au) return `Garde le ${formatDate(du)}`;
+  const [a, b] = [lireISO(du), lireISO(au)];
+  const court = (d) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (a.getFullYear() !== b.getFullYear()) return `Garde du ${formatDate(du)} au ${formatDate(au)}`;
+  if (a.getMonth() === b.getMonth()) return `Garde du ${a.getDate()} au ${court(b)} ${b.getFullYear()}`;
+  return `Garde du ${court(a)} au ${court(b)} ${b.getFullYear()}`;
+}
+
 const lienTel = (t) => `tel:${String(t).replace(/[^\d+]/g, '')}`;
 
 // ----- Le contenu de la fiche (le même pour l'écran et pour le PDF) -----
@@ -90,7 +106,7 @@ export function modeleFiche(animal, fiche) {
   const identification = [['Puce (transpondeur)', fiche.puce], ['Tatouage', fiche.tatouage]].filter(([, v]) => v).map(([libelle, valeur]) => ({ libelle, valeur }));
   const du = fiche.gardeDu; const au = fiche.gardeAu && (!du || fiche.gardeAu >= du) ? fiche.gardeAu : '';
   const jours = du && au ? Array.from({ length: Math.min(45, joursEntre(du, au) + 1) }, (_, i) => ajouterJours(du, i)) : [];
-  const libelleGarde = du && au ? `Garde du ${formatDate(du)} au ${formatDate(au)}` : du ? `Garde à partir du ${formatDate(du)}` : au ? `Garde jusqu'au ${formatDate(au)}` : '';
+  const libelleGarde = libelleDatesGarde(du, au);
   return {
     nom: animal.nom,
     details,

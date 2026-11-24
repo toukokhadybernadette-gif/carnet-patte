@@ -328,7 +328,7 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 .gd-hero__texte h1 { margin: 0; overflow-wrap: anywhere; }
 .gd-hero__texte p { margin: 0; color: var(--cp-texte-doux); }
 .gd-hero .gd-surtitre { font-size: var(--cp-taille-s); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cp-foret-texte); }
-.gd-garde-pastille { display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-top: 4px !important; padding: 4px 12px; border-radius: 999px; background: var(--cp-foret); color: var(--cp-texte-inverse) !important; font-size: var(--cp-taille-s); font-weight: 600; }
+.gd-garde-pastille { display: inline-flex; white-space: nowrap; max-width: 100%; align-items: center; gap: 6px; width: fit-content; margin-top: 4px !important; padding: 4px 12px; border-radius: 999px; background: var(--cp-foret); color: var(--cp-texte-inverse) !important; font-size: var(--cp-taille-s); font-weight: 600; }
 @media (max-width: 520px) { .gd-hero { flex-direction: column; text-align: center; } .gd-hero__texte { justify-items: center; } }
 .gd-form { display: grid; gap: var(--cp-espace-3); }
 .gd-section { padding: 0; border-radius: 28px; background: var(--cp-verre-fond); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 1px solid var(--cp-verre-bordure); box-shadow: var(--cp-verre-ombre); }
