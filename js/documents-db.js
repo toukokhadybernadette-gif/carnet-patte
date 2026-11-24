@@ -22,6 +22,9 @@ export const TYPES_DOCUMENT = [
 export const nomTypeDocument = (id) => (TYPES_DOCUMENT.find((t) => t.id === id) ?? TYPES_DOCUMENT[TYPES_DOCUMENT.length - 1]).nom;
 const MIMES_ACCEPTES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']);
 
+/** Prévient la synchronisation cloud (js/synchro.js) qu'un document a changé sur cet appareil. */
+const signaler = () => { try { dispatchEvent(new Event('documents-modifies')); } catch { /* pas grave */ } };
+
 let promesseBase = null;
 function base() {
   promesseBase ??= new Promise((ok, ko) => {
@@ -64,6 +67,14 @@ export async function ajouterDocument({ animalId, titre, date, type, blob, nom }
   const doc = { id: uid(), animalId, titre, date, type, mime: blob.type, nom: nom || '', taille: blob.size, blob, ajouteLe: new Date().toISOString() };
   await transaction('readwrite', (m) => m.put(doc));
   demanderStockageDurable();
+  signaler();
+  return doc;
+}
+
+/** Enregistre un document tel quel (venu du cloud, avec son identifiant) : sans événement, l'appelant sait ce qu'il fait. */
+export async function enregistrerDocument(doc) {
+  await transaction('readwrite', (m) => m.put(doc));
+  demanderStockageDurable();
   return doc;
 }
 
@@ -73,10 +84,11 @@ export async function modifierDocument(id, { titre, date, type }) {
   if (!doc) return null;
   const nouveau = { ...doc, titre: String(titre).trim().slice(0, 120) || doc.titre, date: /^\d{4}-\d{2}-\d{2}$/.test(date ?? '') ? date : doc.date, type: TYPES_DOCUMENT.some((t) => t.id === type) ? type : doc.type };
   await transaction('readwrite', (m) => m.put(nouveau));
+  signaler();
   return nouveau;
 }
 
-export const supprimerDocument = (id) => transaction('readwrite', (m) => m.delete(id));
+export const supprimerDocument = (id) => transaction('readwrite', (m) => m.delete(id)).then((r) => { signaler(); return r; });
 
 export async function supprimerDocumentsAnimal(animalId) {
   const db = await base();
@@ -86,6 +98,7 @@ export async function supprimerDocumentsAnimal(animalId) {
     curseur.onsuccess = () => { const c = curseur.result; if (c) { t.objectStore(STORE).delete(c.primaryKey); c.continue(); } };
     t.oncomplete = ok; t.onerror = () => ko(t.error); t.onabort = () => ko(t.error);
   });
+  signaler();
 }
 
 export const toutEffacerDocuments = () => transaction('readwrite', (m) => m.clear());

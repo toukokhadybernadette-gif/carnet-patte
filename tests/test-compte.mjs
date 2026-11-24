@@ -48,6 +48,7 @@ const faux = http.createServer((req, res) => {
       if (req.method === 'POST') { etat.attente = true; res.writeHead(201, cors).end(); return; }
       if (req.method === 'DELETE') { etat.attente = false; res.writeHead(204, cors).end(); return; }
     }
+    if (url.pathname.startsWith('/storage/v1/object/list/')) return json(200, []); // aucun fichier cloud (compte gratuit)
     if (url.pathname === '/rest/v1/rpc/supprimer_mon_compte') { etat.supprime = true; res.writeHead(204, cors).end(); return; }
     json(404, { msg: 'inconnu' });
   });

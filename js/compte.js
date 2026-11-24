@@ -2,8 +2,9 @@
 // L'appli reste 100 % utilisable SANS compte : rien de ce fichier ne se charge tant qu'on n'ouvre pas la page « Compte », et la bibliothèque
 // Supabase (assets/supabase/, licence MIT) n'est téléchargée qu'à ce moment-là. Les données des animaux ne sont ni lues ni envoyées ici.
 //
-// Étape 0 : connexion, session conservée, déconnexion. Étape 2 : profil, liste d'attente Premium, export des données du compte, suppression du compte
-// (tables et règles : supabase/etape2.sql). La synchronisation des animaux (Premium) viendra ensuite : aujourd'hui, AUCUNE donnée d'animal ne part de l'appareil.
+// Connexion, session conservée, déconnexion. Étape 2 : profil, liste d'attente Premium, export des données du compte, suppression du compte
+// (tables et règles : supabase/etape2.sql). Étape 3 : la sauvegarde cloud et la synchronisation (Premium) sont dans js/synchro.js (supabase/etape3.sql) ;
+// sans compte Premium dont la sauvegarde est activée sur cet appareil, AUCUNE donnée d'animal ne part de l'appareil.
 
 import { SUPABASE } from './supabase-config.js';
 
@@ -38,6 +39,12 @@ async function client() {
   return promesseClient;
 }
 
+/** Le client Supabase, pour la synchronisation cloud (js/synchro.js). */
+export const clientSupabase = client;
+
+/** Cette erreur vient-elle d'un réseau absent ou coupé (et non d'un refus du serveur) ? */
+export const estHorsLigne = (e) => !!e && (/hors connexion|fetch|network|AuthRetryableFetchError|Failed to load|load failed/i.test(`${e?.name} ${e?.message ?? ''}`) || (Number(e?.status ?? e?.statusCode ?? -1) === 0));
+
 /** Une erreur de Supabase ou du réseau, en français et sans jargon. */
 export function messageErreur(e) {
   const code = String(e?.code ?? e?.error_code ?? '');
@@ -48,6 +55,8 @@ export function messageErreur(e) {
   if (/otp_expired|expired|invalid/i.test(`${code} ${texte}`) && !/email address|format/i.test(texte)) return 'Code incorrect ou expiré. Vérifiez les 6 chiffres, ou demandez un nouveau code.';
   if (/validation_failed|email address|format/i.test(`${code} ${texte}`)) return 'Cette adresse e-mail ne semble pas valide.';
   if (/non configuré/.test(texte)) return "Les comptes ne sont pas encore activés sur ce site.";
+  if (/fichiers_restants/.test(texte)) return "Des fichiers du cloud n'ont pas pu être supprimés. Réessayez : votre compte n'a pas été supprimé.";
+  if (/quota_depasse/.test(texte)) return "L'espace cloud de 100 Mo est plein. Supprimez des documents pour en ajouter.";
   if (/PGRST20[245]|42P01|42883|schema cache|does not exist/i.test(`${code} ${texte}`)) return "Cette fonction du compte n'est pas encore prête côté serveur. Réessayez plus tard.";
   return "Une erreur est survenue. Réessayez dans un instant.";
 }
@@ -124,14 +133,27 @@ export async function exporterMesDonnees() {
     compte: { identifiant: u.id, email: u.email, creeLe: u.creeLe, derniereConnexion: u.derniereConnexion },
     profil: { formule: p.plan, creeLe: p.creeLe },
     listeAttentePremium: attente,
-    remarque: "Vos animaux, soins, pesées et documents ne sont pas stockés sur nos serveurs : ils restent sur votre appareil (menu Sauvegarde pour les exporter).",
+    ...(p.plan === 'premium' || await aDesDonneesCloud() ? { donneesCloud: await (await import('./synchro.js')).exporterCloud(u.id) } : {}),
+    remarque: p.plan === 'premium'
+      ? 'La section « donneesCloud » contient votre sauvegarde cloud (Premium). Les données restées sur vos appareils sont dans le menu Sauvegarde.'
+      : "Vos animaux, soins, pesées et documents ne sont pas stockés sur nos serveurs : ils restent sur votre appareil (menu Sauvegarde pour les exporter).",
   };
+}
+
+/** Reste-t-il quelque chose dans le cloud pour ce compte (par exemple après un retour à la formule gratuite) ? */
+async function aDesDonneesCloud() {
+  const { count, error } = await (await client()).from('elements').select('item_id', { count: 'exact', head: true });
+  return !error && (count ?? 0) > 0;
 }
 
 /** Supprime DÉFINITIVEMENT le compte et ses données sur le serveur, puis la session de cet appareil. Les animaux de l'appareil ne sont pas touchés. */
 export async function supprimerMonCompte() {
-  await moi();
+  const u = await moi();
+  // 1. Les fichiers du cloud (documents, photos) : supprimés par l'API Storage, puis vérifiés. Le serveur refuse de supprimer le compte s'il en reste.
+  await (await import('./synchro.js')).supprimerFichiersCloud(u.id);
+  // 2. Le compte, et avec lui profil, liste d'attente, éléments et liste des documents
   const { error } = await (await client()).rpc('supprimer_mon_compte');
   if (error) throw error;
+  try { localStorage.removeItem('carnetpatte.synchro'); } catch { /* stockage bloqué */ }
   await deconnecter();
 }

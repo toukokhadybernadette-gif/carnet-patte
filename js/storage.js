@@ -238,6 +238,7 @@ export function importer(texte) {
   donnees = normaliser(obj);
   donnees.exemplesAjoutes = true; // pas de ré-ajout d'exemples après une importation
   sauver();
+  window.dispatchEvent(new Event('donnees-remplacees')); // la synchronisation cloud (js/synchro.js) se met en pause : un import ne supprime rien dans le cloud
 }
 
 export function toutEffacer() {
@@ -247,4 +248,41 @@ export function toutEffacer() {
   donnees.exemplesAjoutes = true;
   sauver();
   window.dispatchEvent(new Event('donnees-effacees')); // les documents (js/documents-db.js) sont effacés aussi
+  window.dispatchEvent(new Event('donnees-remplacees')); // idem : la synchronisation cloud se met en pause
+}
+
+// ----- Synchronisation cloud (js/synchro.js) : lecture d'ensemble et application des changements venus d'un autre appareil -----
+
+/** Copie de tout ce qui peut être synchronisé : { animaux, soins, pesees, oeufs, stocks, fichesGarde, profil }. */
+export function instantane() {
+  const copie = {};
+  for (const c of [...COLLECTIONS, ...COLLECTIONS_FERME]) copie[c] = donnees[c].map((e) => ({ ...e }));
+  copie.fichesGarde = Object.fromEntries(Object.entries(donnees.fichesGarde).map(([id, f]) => [id, { ...f }]));
+  copie.profil = { ...donnees.profil };
+  return copie;
+}
+
+/**
+ * Applique des changements venus du cloud, SANS cascade (chaque élément arrive avec sa propre stèle) et sans effacer le reste.
+ * `operations` : [{ collection, id, donnees }] pour ajouter ou remplacer, [{ collection, id, supprimer: true }] pour retirer.
+ * 'profil' : seul le prénom ; 'fichesGarde' : la fiche de l'animal `id`. Un élément qui n'a pas la forme attendue est ignoré.
+ */
+export function appliquerDistant(operations) {
+  if (probleme) return 0; // jamais d'écriture par-dessus des données illisibles
+  let n = 0;
+  for (const op of operations) {
+    const { collection: c, id } = op;
+    if (c === 'profil') { if (!op.supprimer) { donnees.profil = profilValide(op.donnees); n++; } continue; }
+    if (c === 'fichesGarde') {
+      const propre = op.supprimer ? null : fichesValides({ [id]: op.donnees })[id];
+      if (propre) donnees.fichesGarde[id] = propre; else delete donnees.fichesGarde[id];
+      n++; continue;
+    }
+    if (![...COLLECTIONS, ...COLLECTIONS_FERME].includes(c) || typeof id !== 'string') continue;
+    donnees[c] = donnees[c].filter((e) => e.id !== id);
+    if (!op.supprimer && op.donnees && typeof op.donnees === 'object') donnees[c].push({ ...op.donnees, id });
+    n++;
+  }
+  if (n) { donnees.exemplesAjoutes = true; sauver(); }
+  return n;
 }

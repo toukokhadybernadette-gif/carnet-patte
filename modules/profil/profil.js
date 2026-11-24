@@ -109,7 +109,7 @@ export function rendre(zone) {
         </div>
       </section>
 
-      ${alerte({ type: 'info', titre: 'Un compte est facultatif', texte: 'Avec ou sans compte, vos animaux, soins et pesées sont enregistrés sur cet appareil. La sauvegarde et la synchronisation en ligne seront réservées à la formule Premium : en attendant, pensez à faire une sauvegarde de temps en temps.' })}
+      ${alerte({ type: 'info', titre: 'Un compte est facultatif', texte: 'Avec ou sans compte, vos animaux, soins et pesées sont enregistrés sur cet appareil. La sauvegarde et la synchronisation en ligne sont réservées à la formule Premium (pas encore ouverte au public) : en attendant, pensez à faire une sauvegarde de temps en temps.' })}
 
       <section class="pg-section" aria-labelledby="pf-donnees">
         <div class="pg-section__tete"><h2 id="pf-donnees">Mes données</h2></div>

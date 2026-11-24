@@ -66,6 +66,9 @@ if (etatDonnees) {
   // ----- Démarrage -----
   demarrer(document.getElementById('contenu'), majNavigation);
 
+  // ----- Sauvegarde cloud (Premium) : chargée seulement si elle a été activée sur cet appareil ; sinon rien n'est téléchargé -----
+  try { if (JSON.parse(localStorage.getItem('carnetpatte.synchro'))?.actif) import('./synchro.js').then((m) => m.demarrer()).catch(() => {}); } catch { /* stockage bloqué : pas de synchro */ }
+
   // ----- Décor animé : figé automatiquement si l'appareil a du mal à le jouer (js/fond.js) -----
   mesurerEtAdapter();
 }
