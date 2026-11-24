@@ -64,6 +64,12 @@ const blobVersDataUrl = (blob) => new Promise((ok, ko) => { const l = new FileRe
 // ----- État affiché (indicateur discret) -----
 
 const LIBELLES = { ok: 'Sauvegardé', attente: 'En attente (hors ligne)', erreur: 'Erreur', encours: 'Sauvegarde…', quota: 'Espace cloud plein', gratuit: 'Formule gratuite', suspendu: 'Synchronisation en pause', inactif: '' };
+const EXPLICATIONS = {
+  ok: 'toutes vos modifications sont dans le cloud.', encours: 'envoi ou réception en cours.',
+  attente: 'les modifications sont gardées sur cet appareil et partiront au retour du réseau.',
+  erreur: "la sauvegarde a échoué, elle sera retentée toute seule.", quota: "l'espace cloud est plein : les nouveaux fichiers attendent de la place.",
+  gratuit: 'la sauvegarde cloud est réservée à la formule Premium.', suspendu: "en pause sur cet appareil, rien n'a été supprimé dans le cloud.", inactif: '',
+};
 let etatCourant = { etat: 'inactif', message: '' };
 export const etat = () => etatCourant;
 function changerEtat(nom, message = '') {
@@ -73,7 +79,7 @@ function changerEtat(nom, message = '') {
   if (ind) {
     ind.dataset.etat = nom; ind.hidden = nom === 'inactif';
     ind.setAttribute('aria-label', `Sauvegarde cloud : ${LIBELLES[nom]}${message ? ` (${message})` : ''}`);
-    ind.title = message || LIBELLES[nom];
+    ind.title = `${LIBELLES[nom]} : ${message || EXPLICATIONS[nom]} (point vert = sauvegardé, marron = en attente, rouge = erreur)`;
     ind.querySelector('[data-libelle]').textContent = LIBELLES[nom];
   }
 }
@@ -456,7 +462,16 @@ export async function analyserPremiereConnexion() {
   const { elements } = lireInstantane();
   const local = [...elements.keys()].filter((k) => !k.startsWith('profil/')).length + (await docs.listerDocuments()).length;
   const cas = !local && !cloud ? 'rien' : !local ? 'recuperer' : !cloud ? 'envoyer' : 'fusionner';
-  return { cas, local, cloud };
+  const exemples = storage.lister('animaux').filter((a) => a.exemple).length; // les animaux d'exemple ne sont jamais synchronisés
+  return { cas, local, cloud, exemples };
+}
+
+/**
+ * Retire les animaux d'exemple (avec leurs soins, pesées et documents) de cet appareil. À appeler seulement APRÈS une confirmation :
+ * quand le carnet du cloud arrive, les deux animaux d'exemple se mélangeraient à de vrais animaux. Ils ne sont jamais dans le cloud.
+ */
+export function retirerExemples() {
+  for (const a of storage.lister('animaux').filter((x) => x.exemple)) storage.supprimer('animaux', a.id);
 }
 
 /** Active la sauvegarde cloud sur cet appareil pour ce compte (le choix a déjà été confirmé par l'utilisateur) et lance un premier tour. */

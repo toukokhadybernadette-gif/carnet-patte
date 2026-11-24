@@ -109,7 +109,7 @@ function vueConnecte(cadre, zone, u) {
     <section class="cp-carte cm-form" data-etape="connecte" aria-labelledby="cm-connecte">
       <h2 id="cm-connecte">Connecté</h2>
       <p>Vous êtes connecté avec <strong data-email>${echapper(u.email)}</strong>.</p>
-      <p class="cp-doux">Se connecter ne change rien d'autre : vos animaux restent sur cet appareil, et rien n'est envoyé. La sauvegarde cloud et la synchronisation sont réservées à la formule Premium (pas encore ouverte au public).</p>
+      <p class="cp-doux" data-connecte-texte>Vos animaux restent d'abord sur cet appareil.</p>
       <div class="cm-actions">${bouton({ texte: 'Se déconnecter', variante: 'secondaire', icone: 'x', attrs: { 'data-deconnecter': true } })}</div>
     </section>
     <section class="cp-carte cm-form" aria-labelledby="cm-premium" data-premium>
@@ -132,6 +132,11 @@ function vueConnecte(cadre, zone, u) {
         ${bouton({ texte: 'Synchroniser maintenant', variante: 'secondaire', icone: 'save', attrs: { 'data-cloud-synchro': true } })}
         ${bouton({ texte: 'Désactiver sur cet appareil', variante: 'discret', attrs: { 'data-cloud-desactiver': true } })}
       </div>
+      <ul class="cm-legende" aria-label="Signification du point de couleur en haut de l'écran">
+        <li data-etat="ok"><span class="sy-etat__point" aria-hidden="true"></span>Point vert : sauvegardé</li>
+        <li data-etat="attente"><span class="sy-etat__point" aria-hidden="true"></span>Point marron : en attente (hors ligne, espace plein ou en pause)</li>
+        <li data-etat="erreur"><span class="sy-etat__point" aria-hidden="true"></span>Point rouge : erreur, la sauvegarde sera retentée</li>
+      </ul>
       <p class="cp-doux">Désactiver arrête les envois depuis cet appareil, sans rien supprimer. Supprimer votre compte efface aussi tout le cloud. <a href="#/confidentialite">Confidentialité</a>.</p>
     </section>
     <section class="cp-carte cm-form" aria-labelledby="cm-donnees" data-donnees>
@@ -152,6 +157,9 @@ function vueConnecte(cadre, zone, u) {
   brancherDonnees(cadre, zone);
 }
 
+/** Le texte du bloc « Connecté » : il dit ce qui est VRAIMENT envoyé, selon la formule et l'activation de la sauvegarde cloud. */
+const texteConnecte = (cadre, t) => { const el = cadre.querySelector('[data-connecte-texte]'); if (el) el.textContent = t; };
+
 /** Formule et liste d'attente Premium (lues au serveur : hors connexion, on l'explique sans bloquer le reste de la page). */
 async function brancherPremium(cadre) {
   const formule = cadre.querySelector('[data-formule]');
@@ -165,6 +173,7 @@ async function brancherPremium(cadre) {
     inscrit = attente;
     formule.textContent = `Formule : ${p.plan === 'premium' ? 'Premium' : 'Gratuite'}`;
     if (p.plan === 'premium') { cadre.querySelector('[data-premium]').hidden = true; brancherCloud(cadre); return; } // Premium : la liste d'attente n'a plus lieu d'être
+    texteConnecte(cadre, "Se connecter ne change rien d'autre : vos animaux restent sur cet appareil, et rien n'est envoyé. La sauvegarde cloud et la synchronisation sont réservées à la formule Premium (pas encore ouverte au public).");
   } catch (err) {
     if (!cadre.isConnected) return;
     formule.textContent = 'Formule : non disponible pour le moment';
@@ -199,6 +208,9 @@ async function brancherCloud(cadre) {
     if (!cadre.isConnected) { window.removeEventListener('synchro-etat', afficher); window.removeEventListener('synchro-changee', afficher); return; }
     const r = synchro.reglages();
     const actif = r.actif && r.userId === u.id;
+    texteConnecte(cadre, actif
+      ? "La sauvegarde cloud est activée sur cet appareil : votre carnet (animaux, soins, pesées, documents, photos) est copié dans votre espace privé et synchronisé avec vos autres appareils."
+      : "Vous êtes Premium. Pour l'instant, vos animaux restent sur cet appareil et rien n'est envoyé : activez la sauvegarde cloud ci-dessous pour les retrouver sur vos autres appareils.");
     btnActiver.hidden = actif; btnSynchro.hidden = !actif; btnDesactiver.hidden = !actif;
     if (actif) {
       const e = synchro.etat(); etatEl.textContent = `${synchro.libelleEtat(e.etat) || 'Sauvegarde cloud activée'}${e.message ? ` : ${e.message}` : ''}`;
@@ -223,16 +235,18 @@ async function brancherCloud(cadre) {
   async function activerAvecChoix() {
     btnActiver.disabled = true;
     try {
-      const { cas, local, cloud } = await synchro.analyserPremiereConnexion();
+      const { cas, local, cloud, exemples } = await synchro.analyserPremiereConnexion();
+      const exemplesTexte = exemples && cloud ? ` Les ${exemples} animaux d'exemple de cet appareil seront retirés, pour ne pas se mélanger à votre carnet.` : '';
       const autreCompte = synchro.reglages().userId && synchro.reglages().userId !== u.id ? ' Cet appareil était relié à un autre compte : ses données seront ajoutées à celui-ci.' : '';
       const textes = {
         rien: ['Activer la sauvegarde cloud ?', 'Cet appareil et le cloud sont vides. Dès que vous ajouterez des animaux, ils seront sauvegardés et retrouvés sur vos autres appareils.', 'Activer'],
-        recuperer: ['Récupérer votre carnet ?', `Votre carnet du cloud contient ${cloud} élément(s) et cet appareil est vide. Il sera copié ici. Rien n'est supprimé.`, 'Récupérer mon carnet'],
+        recuperer: ['Récupérer votre carnet ?', `Votre carnet du cloud contient ${cloud} élément(s) et cet appareil est vide. Il sera copié ici.${exemplesTexte} Rien d'autre n'est supprimé.`, 'Récupérer mon carnet'],
         envoyer: ['Sauvegarder votre carnet ?', `Le cloud est vide et cet appareil contient ${local} élément(s). Ils seront envoyés dans le cloud.${autreCompte} Rien n'est supprimé.`, 'Envoyer mon carnet'],
-        fusionner: ['Fusionner les deux carnets ?', `Cet appareil contient ${local} élément(s) et le cloud ${cloud}. Les deux sont fusionnés : tout est conservé, rien n'est supprimé. Si un même élément a été modifié des deux côtés, la modification la plus récente est gardée.${autreCompte}`, 'Fusionner'],
+        fusionner: ['Fusionner les deux carnets ?', `Cet appareil contient ${local} élément(s) et le cloud ${cloud}. Les deux sont fusionnés : tout est conservé, rien n'est supprimé. Si un même élément a été modifié des deux côtés, la modification la plus récente est gardée.${exemplesTexte}${autreCompte}`, 'Fusionner'],
       }[cas];
       const ok = await demander({ titre: textes[0], message: textes[1], libelle: textes[2], danger: false });
       if (!ok) { synchro.refuserProposition(u.id); afficher(); return; }
+      if (exemples && cloud) synchro.retirerExemples();
       await synchro.activer(u.id);
       toast('Sauvegarde cloud activée');
     } catch (err) { toast(compte.messageErreur(err), 'erreur'); } finally { btnActiver.disabled = false; afficher(); }

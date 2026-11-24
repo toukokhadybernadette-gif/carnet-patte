@@ -120,10 +120,12 @@ Le fichier `supabase/etape3.sql` (à lancer **après** l'étape 2) crée :
 5. 3 règles Storage (lire, déposer, supprimer) ; 6. `peut_ecrire_cloud` et `supprimer_mon_compte` exécutables par `authenticated` seulement, `entretien_cloud` par personne ;
 7. 4 déclencheurs ; 8. la tâche `carnetpatte-entretien` existe et `active = true` ; 9. `peut_lire_les_fichiers = true` ; 10. aucune ligne de fichiers orphelins.
 
+**Étape 3b (quota réel)** : collez ensuite `supabase/etape3b.sql` → Run, puis `supabase/verifier-etape3b.sql` : la requête 1 doit renvoyer **0 ligne** (aucune règle « update » sur les fichiers : l'appli dépose avec `upsert = false`), la requête 2 doit montrer `octets_cloud_reels()` et `104857600` dans `with_check`, la requête 4 `authenticated = true` et `anon = false`.
+
 **Tester sans paiement** : dans l'éditeur Supabase, ouvrez `supabase/premium-on.sql`, remplacez l'adresse par la vôtre **dans l'éditeur seulement** (jamais dans le fichier du dépôt), Run : « UPDATE 1 ». `supabase/premium-off.sql` remet le compte en gratuit : ses données cloud restent lisibles, mais il ne peut plus rien y écrire.
 
 **Limites à connaître**
-- Le quota de 100 Mo est contrôlé à l'enregistrement du fichier (taille déclarée) puis toutes les heures (taille réelle) : Supabase n'autorise pas de déclencheur sur `storage.objects`. Un utilisateur malveillant pourrait donc dépasser brièvement 100 Mo (au plus 300 fichiers de 15 Mo avant le prochain contrôle) ; si cela devient un risque, il faudra une Edge Function.
+- Le quota de 100 Mo est contrôlé à l'enregistrement du fichier (taille déclarée), puis, avec l'étape 3b, à chaque dépôt sur la taille **réelle** des fichiers déjà là, et toutes les heures. Supabase n'autorise pas de déclencheur sur `storage.objects`. Un utilisateur malveillant qui mentirait sur la taille ne peut dépasser que d'un fichier (15 Mo au plus) ; si cela devient un risque, il faudra une Edge Function.
 - Un appareil resté hors ligne plus de 90 jours peut ressusciter des éléments supprimés entre-temps (leurs stèles ont été purgées).
 - Pas de restauration d'anciennes versions ni de carnet partagé : prévus plus tard.
 
