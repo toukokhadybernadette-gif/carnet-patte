@@ -56,7 +56,7 @@ const REGLES = [
   [/^demenagement\.html$|^_headers$|^js\/(adresse|mentions-config)\.js$|^modules\/apropos\/|^outils\/assembler-site\.mjs$/, ['demenagement', 'compte', 'installable', 'etroit']],
   [/^css\/(sombre|themes-sombre)\.css$|^js\/couleurs-sombre\.js$/, ['sombre', 'refonte', 'couleurs', 'verre', 'etroit']],
   [/^modules\/ferme\//, ['ferme', '5e', '5f', 'finitions', 'etroit', 'retouches']],
-  [/^js\/pdf\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],
+  [/^js\/pdf(-fiche|-icones)?\.js$|^modules\/animaux\/garde\.js$/, ['garde', 'etroit']],
   [/^js\/documents-db\.js$|^js\/sauvegarde\.js$|^js\/donnees\.js$|^modules\/animaux\/documents\.js$/, ['documents', 'migration', 'secours', 'synchro', 'etroit']],
   [/^js\/ics\.js$|^modules\/animaux\/calendrier\.js$/, ['calendrier', '5f', '5e', 'finitions', 'etroit']],
   [/^js\/pwa\.js$|^sw\.js$|^manifest\.webmanifest$|^css\/pwa\.css$|^assets\/icons\/pwa\/|^outils\/(preparer-sw|generer-icones-pwa)\.mjs$|^\.github\/workflows\/pages\.yml$|^tests\/outil-cdp\.mjs$/, ['installable', 'calendrier', 'etroit']],

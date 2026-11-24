@@ -321,33 +321,70 @@ label.cp-btn:has(input:focus-visible) { outline: 2px solid var(--cp-focus); outl
 /* ---------- Fiche de garde ---------- */
 .fi-garde { display: flex; align-items: center; gap: var(--cp-espace-3); flex-wrap: wrap; margin-block: var(--cp-espace-3); }
 .fi-garde .cp-doux { flex: 1 1 200px; min-width: 0; }
+/* Grande photo ronde et titre, puis des cartes à bulles (verre, comme l'accueil) */
+.gd-hero { display: flex; align-items: center; gap: var(--cp-espace-4); padding: var(--cp-espace-4); border-radius: 32px; background: var(--cp-verre-fond); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 1px solid var(--cp-verre-bordure); box-shadow: var(--cp-verre-ombre); }
+.gd-photo .cp-avatar--grand { width: 112px; height: 112px; font-size: 36px; box-shadow: var(--cp-ombre-m); border: 4px solid var(--cp-carte); }
+.gd-hero__texte { min-width: 0; display: grid; gap: 2px; }
+.gd-hero__texte h1 { margin: 0; overflow-wrap: anywhere; }
+.gd-hero__texte p { margin: 0; color: var(--cp-texte-doux); }
+.gd-hero .gd-surtitre { font-size: var(--cp-taille-s); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cp-foret-texte); }
+.gd-garde-pastille { display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-top: 4px !important; padding: 4px 12px; border-radius: 999px; background: var(--cp-foret); color: var(--cp-texte-inverse) !important; font-size: var(--cp-taille-s); font-weight: 600; }
+@media (max-width: 520px) { .gd-hero { flex-direction: column; text-align: center; } .gd-hero__texte { justify-items: center; } }
 .gd-form { display: grid; gap: var(--cp-espace-3); }
-.gd-section { padding: 0; }
-.gd-section__titre { display: flex; align-items: center; gap: var(--cp-espace-3); padding: var(--cp-espace-4); cursor: pointer; list-style: none; font-weight: 600; min-height: 48px; }
+.gd-section { padding: 0; border-radius: 28px; background: var(--cp-verre-fond); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 1px solid var(--cp-verre-bordure); box-shadow: var(--cp-verre-ombre); }
+.gd-section__titre { display: flex; align-items: center; gap: var(--cp-espace-3); padding: 12px var(--cp-espace-4) 12px 12px; cursor: pointer; list-style: none; font-weight: 600; min-height: 56px; }
 .gd-section__titre::-webkit-details-marker { display: none; }
-.gd-section__icone { display: inline-flex; color: var(--cp-foret-texte); }
+.gd-section__icone { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cp-sauge-verre-fort); color: var(--cp-foret-texte); box-shadow: var(--cp-sauge-verre-ombre); }
 .gd-section__nb { margin-left: auto; font-weight: 500; font-size: var(--cp-taille-s); color: var(--cp-texte-doux); }
 .gd-section__fleche { display: inline-flex; transition: transform var(--cp-duree-rapide, .15s); }
 .gd-section[open] .gd-section__fleche { transform: rotate(180deg); }
-.gd-section__titre:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -2px; border-radius: var(--cp-rayon-carte); }
+.gd-section__titre:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: -2px; border-radius: 28px; }
 .gd-section__corps { display: grid; gap: var(--cp-espace-4); padding: 0 var(--cp-espace-4) var(--cp-espace-4); }
+.gd-sous-titre { margin: 0; font-size: var(--cp-taille-s); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cp-texte-doux); }
+.gd-traitements { display: grid; gap: var(--cp-espace-3); }
+.gd-trait { display: grid; gap: var(--cp-espace-2); padding: var(--cp-espace-3); border-radius: 20px; background: var(--cp-surface-2); }
+.gd-trait .cp-btn { justify-self: end; }
+.gd-date-erreur { margin: 0; color: var(--cp-terre); font-weight: 600; }
 .gd-statut { margin: 0; }
 .gd-actions { display: flex; gap: var(--cp-espace-3); flex-wrap: wrap; }
-.gd-feuille { display: grid; gap: var(--cp-espace-4); padding: var(--cp-espace-5); }
-.gd-feuille__tete { display: flex; align-items: center; gap: var(--cp-espace-4); }
-.gd-feuille__id { min-width: 0; }
-.gd-feuille__id h2 { margin: 0; overflow-wrap: anywhere; }
-.gd-feuille__id p { margin: 2px 0 0; }
-.gd-vaccins { display: flex; align-items: flex-start; gap: var(--cp-espace-2); margin: 0; padding: var(--cp-espace-3); border-radius: var(--cp-rayon-champ); background: var(--cp-surface-2); }
-.gd-vaccins--retard { background: var(--cp-terre-pale); }
-.gd-bloc h3 { margin: 0 0 var(--cp-espace-2); font-size: var(--cp-taille-m); color: var(--cp-foret-texte); }
+
+/* Aperçu : la feuille */
+.gd-feuille { display: grid; gap: var(--cp-espace-4); }
+.gd-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cp-espace-4); align-items: start; }
+@media (min-width: 760px) { .gd-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gd-carte--suivi { grid-column: 1 / -1; } }
+.gd-carte { display: grid; gap: var(--cp-espace-3); padding: var(--cp-espace-4); border-radius: 28px; background: var(--cp-verre-fond); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); border: 1px solid var(--cp-verre-bordure); box-shadow: var(--cp-verre-ombre); }
+.gd-carte h2 { margin: 0; display: flex; align-items: center; gap: var(--cp-espace-2); font-size: var(--cp-taille-l); color: var(--cp-texte); }
+.gd-carte__icone { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cp-sauge-verre-fort); color: var(--cp-foret-texte); box-shadow: var(--cp-sauge-verre-ombre); }
+.gd-carte--urgence { border: 2px solid var(--cp-terre); background: var(--cp-terre-pale); }
+.gd-carte--urgence .gd-carte__icone { background: var(--cp-terre); color: var(--cp-texte-inverse); box-shadow: none; }
+.gd-hors-horaires { margin: 0; padding-top: var(--cp-espace-3); border-top: 1px dashed var(--cp-terre); font-weight: 700; }
+.gd-vaccins { display: flex; align-items: flex-start; gap: var(--cp-espace-2); margin: 0; padding: var(--cp-espace-3); border-radius: 20px; background: var(--cp-surface-2); }
+.gd-vaccins p { margin: 2px 0 0; }
+.gd-vaccins .cp-btn { margin-top: var(--cp-espace-2); }
+.gd-vaccins--retard { background: var(--cp-terre-pale); border: 1px solid var(--cp-terre); }
 .gd-liste { margin: 0; display: grid; gap: var(--cp-espace-3); padding: 0; list-style: none; }
 .gd-liste dt { font-size: var(--cp-taille-s); font-weight: 600; color: var(--cp-texte-doux); }
 .gd-liste dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
-.gd-bloc--poison { padding-top: var(--cp-espace-3); border-top: 1px solid var(--cp-bordure); }
-.gd-bloc--poison p { margin: 0 0 var(--cp-espace-2); }
+.gd-trait-liste { margin: 0; padding-left: 1.2em; display: grid; gap: var(--cp-espace-1); }
+.gd-poison { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--cp-espace-3); }
 .gd-poison li { display: grid; justify-items: start; gap: 2px; }
+.gd-poison strong { font-size: var(--cp-taille-m); }
+.gd-poison a { font-size: var(--cp-taille-l); font-weight: 700; }
+.gd-carte--urgence p { margin: 0; }
 .gd-feuille__pied, .gd-vide { margin: 0; }
+
+/* Suivi du jour */
+.gd-jours { display: flex; gap: var(--cp-espace-2); overflow-x: auto; padding-bottom: 2px; }
+.gd-jour { flex: none; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cp-bordure-forte); background: var(--cp-carte); color: var(--cp-texte); font: inherit; font-size: var(--cp-taille-s); cursor: pointer; }
+.gd-jour--choisi { background: var(--cp-foret); border-color: var(--cp-foret); color: var(--cp-texte-inverse); font-weight: 600; }
+.gd-jour:focus-visible, .gd-tache input:focus-visible + .gd-tache__case { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.gd-suivi__date { margin: 0; font-weight: 600; }
+.gd-taches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-espace-2); }
+.gd-tache { position: relative; display: flex; align-items: center; gap: var(--cp-espace-2); min-height: 48px; padding: 0 var(--cp-espace-3); border-radius: 20px; background: var(--cp-surface-2); cursor: pointer; }
+.gd-tache input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.gd-tache__case { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--cp-bordure-champ); background: var(--cp-carte); color: transparent; }
+.gd-tache input:checked + .gd-tache__case { background: var(--cp-foret); border-color: var(--cp-foret); color: var(--cp-texte-inverse); }
+.gd-tache input:checked ~ span:last-child { text-decoration: line-through; color: var(--cp-texte-doux); }
 
 /* ---------- Ferme / basse-cour ---------- */
 .al-entete__actions { display: flex; gap: var(--cp-espace-3); flex-wrap: wrap; }
