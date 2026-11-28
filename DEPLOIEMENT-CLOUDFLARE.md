@@ -53,7 +53,7 @@ Le domaine est dans le même compte Cloudflare : le branchement est quasi automa
 **B3. Vérifier que l'e-mail n'a pas bougé**
 1. Retournez dans **DNS → Records** : les lignes **MX** et **TXT** de B1 doivent être **exactement les mêmes**. Il y a en plus UNE ligne nouvelle : CNAME `carnetpatte.com` (nuage orange). C'est normal : Cloudflare la traite sans gêner les MX (« CNAME flattening »).
 2. **Email** → **Email Routing** : l'état doit rester « Enabled / Activé » et les enregistrements DNS « Configured ».
-3. **Test réel** : depuis une autre boîte (pas contact@ lui-même), envoyez un message à `contact@carnetpatte.com` et vérifiez qu'il arrive dans `mycarnet.pette@gmail.com` (regardez aussi les indésirables).
+3. **Test réel** : depuis une autre boîte (pas contact@ lui-même), envoyez un message à `contact@carnetpatte.com` et vérifiez qu'il arrive bien dans la boîte de destination configurée dans Email Routing (regardez aussi les indésirables).
 4. Si un avertissement mentionne un conflit d'enregistrements : **ne supprimez rien**, dites-le-moi.
 
 **B4. Ajouter www et le rediriger vers carnetpatte.com**
